@@ -30,6 +30,12 @@ class ModeleTest {
     }
 
     @Test
+    fun `argent arrondit au centime le plus proche`() {
+        assertEquals(BigDecimal("10.01"), BigDecimal("10.005").argent())
+        assertEquals(BigDecimal("10.00"), BigDecimal("10.004").argent())
+    }
+
+    @Test
     fun `un plafond est confirme par defaut`() {
         val plafond = PlafondAnnuel(Compte.CELI, 2019, BigDecimal("6000.00"))
         assertEquals(true, plafond.confirme)
