@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  API 31 et plus. Meme perimetre que regles_sauvegarde.xml pour la sauvegarde
+  infonuagique.
+
+  Le transfert d'appareil a appareil est autorise: il reste local aux deux
+  telephones et ne passe par aucun service tiers, donc il porte moins de risque
+  que la sauvegarde infonuagique tout en couvrant le cas du remplacement de
+  telephone.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="cache" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="cache" path="." />
+    </device-transfer>
+</data-extraction-rules>

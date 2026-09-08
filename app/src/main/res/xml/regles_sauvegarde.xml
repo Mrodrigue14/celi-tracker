@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Sauvegarde Android pour les appareils sous API 30 et anterieurs.
+
+  Seule la base Room est sauvegardee. Elle contient des donnees financieres
+  personnelles, ce qui est un choix assume: sans copie hors de l'appareil, un
+  telephone perdu ferait perdre tout l'historique de cotisation, soit une
+  regression par rapport au classeur Excel synchronise que cette application
+  remplace. La destination est le compte Google du proprietaire de l'appareil.
+
+  Les preferences partagees et le cache sont exclus: rien d'utile a restaurer,
+  et pas de raison de les envoyer ailleurs.
+-->
+<full-backup-content>
+    <include domain="database" path="." />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="cache" path="." />
+</full-backup-content>
