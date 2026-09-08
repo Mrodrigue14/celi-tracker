@@ -4,12 +4,14 @@ import android.app.Application
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.room.Room
 import dev.celitracker.app.ui.accueil.AccueilViewModel
 import dev.celitracker.app.ui.detail.DetailCeliViewModel
 import dev.celitracker.app.ui.detail.DetailCeliappViewModel
 import dev.celitracker.app.ui.reglages.ReglagesViewModel
+import dev.celitracker.data.CeliTrackerBase
 import dev.celitracker.data.Depot
-import dev.celitracker.data.ouvrirBase
+import dev.celitracker.data.configurerBase
 import java.io.File
 
 /**
@@ -24,7 +26,8 @@ class CeliTrackerApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        val depot = Depot(ouvrirBase(File(filesDir, "celi-tracker.db").absolutePath))
+        val builder = Room.databaseBuilder(this, CeliTrackerBase::class.java, File(filesDir, "celi-tracker.db").absolutePath)
+        val depot = Depot(configurerBase(builder))
         viewModelFactory = viewModelFactory {
             initializer { AccueilViewModel(depot) }
             initializer { DetailCeliViewModel(depot) }

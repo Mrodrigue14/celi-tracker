@@ -1,5 +1,6 @@
 package dev.celitracker.data
 
+import androidx.room.Room
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.PlafondAnnuel
 import dev.celitracker.engine.Profil
@@ -21,11 +22,11 @@ import kotlinx.coroutines.test.runTest
 class ExportJsonTest {
 
     private val fichier = File.createTempFile("celi-tracker-export-test", ".db")
-    private val base = ouvrirBase(fichier.absolutePath)
+    private val base = configurerBase(Room.databaseBuilder<CeliTrackerBase>(name = fichier.absolutePath))
     private val depot = Depot(base)
 
     private val fichierVierge = File.createTempFile("celi-tracker-export-test-vierge", ".db")
-    private val baseVierge = ouvrirBase(fichierVierge.absolutePath)
+    private val baseVierge = configurerBase(Room.databaseBuilder<CeliTrackerBase>(name = fichierVierge.absolutePath))
     private val depotVierge = Depot(baseVierge)
 
     @AfterTest

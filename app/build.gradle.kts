@@ -51,6 +51,12 @@ dependencies {
     // un appel a depot.profil().
     implementation(project(":engine"))
     implementation(project(":data"))
+    // :data ne construit plus la base (androidx.room y est `implementation`,
+    // donc invisible ici) : c'est :app qui appelle Room.databaseBuilder avec
+    // la surcharge Android, il lui faut donc sa propre dependance Room.
+    // Coordonnee generique : resolue en variante -android car :app est un
+    // module Android.
+    implementation("androidx.room:room-runtime:2.8.4")
 
     // compose-bom 2026.08.00+ (compose-ui 1.12.0), navigation-compose 2.10.0,
     // lifecycle-*-compose 2.11.0 et core-ktx 1.19.0 exigent compileSdk 37 (leur
@@ -77,13 +83,14 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test:2.4.10")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:2.4.10")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
-    // CeliTrackerBase (RoomDatabase) apparait dans les tests qui ouvrent une
-    // vraie base temporaire: androidx.room est `implementation` dans :data,
-    // donc invisible ici sans cette dependance de test explicite. Coordonnee
-    // -jvm explicite: dans un module Android, la resolution de variante prend
-    // sinon room-runtime-android, incompatible avec le CeliTrackerBase compile
-    // par :data (kotlin("jvm")) contre la variante JVM (NoSuchMethodError sur
-    // RoomDatabase.Builder au runtime des tests).
+    // DepotDeTest construit une vraie base Room dans un test JVM (pas de
+    // Context Android disponible hors instrumentation) : il appelle donc
+    // lui-meme la surcharge JVM (contextless) de Room.databaseBuilder.
+    // La dependance `implementation` de ce module resout la variante
+    // -android (Context requis) ; ces coordonnees -jvm explicites restent
+    // necessaires pour exposer l'autre surcharge au code de test. Verifie :
+    // sans elles, compileDebugUnitTestKotlin echoue avec
+    // "No value passed for parameter 'context'".
     testImplementation("androidx.room:room-runtime-jvm:2.8.4")
     testImplementation("androidx.sqlite:sqlite-bundled-jvm:2.7.0")
     testImplementation("androidx.sqlite:sqlite-jvm:2.7.0")

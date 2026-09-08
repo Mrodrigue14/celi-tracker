@@ -1,8 +1,9 @@
 package dev.celitracker.app
 
+import androidx.room.Room
 import dev.celitracker.data.CeliTrackerBase
 import dev.celitracker.data.Depot
-import dev.celitracker.data.ouvrirBase
+import dev.celitracker.data.configurerBase
 import java.io.File
 
 /**
@@ -13,7 +14,7 @@ import java.io.File
  */
 class DepotDeTest {
     private val fichier = File.createTempFile("celi-tracker-app-test", ".db")
-    val base: CeliTrackerBase = ouvrirBase(fichier.absolutePath)
+    val base: CeliTrackerBase = configurerBase(Room.databaseBuilder<CeliTrackerBase>(name = fichier.absolutePath))
     val depot = Depot(base)
 
     fun fermer() {
