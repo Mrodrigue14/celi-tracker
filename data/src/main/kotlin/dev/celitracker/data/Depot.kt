@@ -98,4 +98,13 @@ class Depot(private val base: CeliTrackerBase) {
     suspend fun enregistrerReglages(reglages: Reglages) {
         dao.enregistrerReglages(ReglagesEntity(urlPageArc = reglages.urlPageArc, dateDerniereVerification = reglages.dateDerniereVerification))
     }
+
+    /** Reserve a `importerJson` : remplace tout le contenu en une transaction. */
+    internal suspend fun remplacerTout(
+        profil: ProfilEntity?,
+        plafonds: List<PlafondEntity>,
+        transactions: List<TransactionEntity>,
+        snapshots: List<SnapshotArcEntity>,
+        reglages: ReglagesEntity,
+    ) = dao.remplacerTout(profil, plafonds, transactions, snapshots, reglages)
 }
