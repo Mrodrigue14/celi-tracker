@@ -82,7 +82,7 @@ dependencies {
     // pointe la coordonnee explicitement.
     testImplementation("org.jetbrains.kotlin:kotlin-test:2.4.10")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:2.4.10")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
     // DepotDeTest construit une vraie base Room dans un test JVM (pas de
     // Context Android disponible hors instrumentation) : il appelle donc
     // lui-meme la surcharge JVM (contextless) de Room.databaseBuilder.
