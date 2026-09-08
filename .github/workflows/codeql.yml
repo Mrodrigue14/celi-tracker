@@ -1,0 +1,58 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [ main ]
+    # Changements purement documentaires : pas d'analyse de code nécessaire.
+    # Le scan hebdomadaire (schedule) tourne de toute façon.
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
+      - '.gitignore'
+      - '.gitattributes'
+  # PAS de paths-ignore ici : `Analyze (java-kotlin)` est un check REQUIS par la
+  # protection de `main`. Skippé, il ne rapporte aucun statut et bloque la PR
+  # indéfiniment. Le filtre reste sur `push`, où il n'y a rien à réanalyser.
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (java-kotlin)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      # Composite action plutôt qu'un setup-java isolé : elle apporte le cache
+      # Gradle. En lecture seule : ce workflow consomme le cache écrit par
+      # build.yml sans gonfler le budget du dépôt.
+      - name: Setup Java + Gradle
+        uses: ./.github/actions/setup-java-gradle
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd # v4.37.7
+        with:
+          languages: java-kotlin
+          build-mode: autobuild
+          # Suite security-and-quality.
+          config-file: ./.github/codeql/codeql-config.yml
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd # v4.37.7
+        with:
+          category: "/language:java-kotlin"
