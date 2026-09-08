@@ -32,7 +32,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       # Seul workflow autorisé à ÉCRIRE le cache Gradle (cf. composite action).
       - name: Setup Java + Gradle
@@ -48,7 +48,7 @@ jobs:
 
       - name: Rapport de tests (en cas d'échec)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-report
           path: '**/build/reports/tests/'
