@@ -109,7 +109,7 @@ différents selon le moteur consulté. `ajouterTransaction` lève
 
 **Tests obligatoires :** aller-retour de chaque type sur une base réelle en
 fichier temporaire ; un montant à deux décimales relu exactement
-(`4321.28` reste `4321.28`, jamais `4321.2800000000002`) ; la colonne de
+(`1234.56` reste `1234.56`, jamais `1234.5600000000002`) ; la colonne de
 montant est bien de type `TEXT` ; chacune des règles de validation ci-dessus ;
 suppression d'une transaction.
 

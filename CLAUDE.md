@@ -52,7 +52,11 @@ automatiquement sur le site de l'ARC est enregistré avec `confirme = false` et
 reste inerte jusqu'à validation par l'utilisateur. Aucune modification
 silencieuse des droits.
 
-**5. Aucune donnée financière nominative dans le dépôt.** Il est public. Les
+**5. Aucune donnée financière nominative dans le dépôt.** Vérifie-le
+mécaniquement avant de committer : `bash tools/verifier-confidentialite.sh`.
+Les motifs privés vivent dans `local-data/motifs-prives.txt`, gitignoré — les
+écrire dans un fichier suivi les publierait, ce qui est précisément le
+problème. Sans ce fichier le script ne vérifie rien et le dit. Il est public. Les
 fixtures de test sont des scénarios anonymes, sans nom d'institution ni
 formulation à la première personne. Les bases et les exports JSON sont exclus
 par `.gitignore`.
