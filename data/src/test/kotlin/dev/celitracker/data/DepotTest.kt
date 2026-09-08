@@ -80,12 +80,12 @@ class DepotTest {
     @Test
     fun `transaction fait l'aller-retour et un montant a deux decimales reste exact`() = runTest {
         depot.enregistrerProfil(profilCeli)
-        val transaction = Transaction(Compte.CELI, LocalDate.of(2026, 1, 15), TypeTx.DEPOT, BigDecimal("4321.28"))
+        val transaction = Transaction(Compte.CELI, LocalDate.of(2026, 1, 15), TypeTx.DEPOT, BigDecimal("1234.56"))
 
         depot.ajouterTransaction(transaction)
 
         val relue = depot.transactions().single()
-        assertEquals("4321.28", relue.montant.toPlainString())
+        assertEquals("1234.56", relue.montant.toPlainString())
         assertEquals(transaction.compte, relue.compte)
         assertEquals(transaction.date, relue.date)
         assertEquals(transaction.type, relue.type)

@@ -48,7 +48,7 @@ class ExportJsonTest {
         depot.enregistrerPlafond(PlafondAnnuel(Compte.CELIAPP, 2026, BigDecimal("8000.00"), confirme = true))
         depot.enregistrerPlafond(PlafondAnnuel(Compte.CELI, 2026, BigDecimal("7000.00"), confirme = true))
         depot.enregistrerPlafond(PlafondAnnuel(Compte.CELI, 2020, BigDecimal("6000.00"), confirme = false))
-        depot.ajouterTransaction(Transaction(Compte.CELI, LocalDate.of(2026, 1, 15), TypeTx.DEPOT, BigDecimal("4321.28")))
+        depot.ajouterTransaction(Transaction(Compte.CELI, LocalDate.of(2026, 1, 15), TypeTx.DEPOT, BigDecimal("1234.56")))
         depot.ajouterTransaction(Transaction(Compte.CELIAPP, LocalDate.of(2023, 7, 1), TypeTx.DEPOT, BigDecimal("1000.00")))
         depot.enregistrerSnapshotArc(SnapshotArc(0, Compte.CELI, LocalDate.of(2026, 1, 1), BigDecimal("1234.56")))
         depot.enregistrerReglages(Reglages(urlPageArc = "https://arc.gc.ca", dateDerniereVerification = Instant.parse("2026-09-08T12:00:00Z")))
@@ -68,15 +68,15 @@ class ExportJsonTest {
     @Test
     fun `un montant a deux decimales survit a l'export et a l'import`() = runTest {
         depot.enregistrerProfil(profilCeli)
-        depot.ajouterTransaction(Transaction(Compte.CELI, LocalDate.of(2026, 1, 15), TypeTx.DEPOT, BigDecimal("4321.28")))
+        depot.ajouterTransaction(Transaction(Compte.CELI, LocalDate.of(2026, 1, 15), TypeTx.DEPOT, BigDecimal("1234.56")))
 
         val export = depot.exporterJson()
 
-        assertTrue(export.contains("\"montant\":\"4321.28\""))
+        assertTrue(export.contains("\"montant\":\"1234.56\""))
 
         depotVierge.importerJson(export)
         val relue = depotVierge.transactions().single()
-        assertEquals("4321.28", relue.montant.toPlainString())
+        assertEquals("1234.56", relue.montant.toPlainString())
     }
 
     @Test
