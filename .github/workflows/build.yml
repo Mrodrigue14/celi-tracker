@@ -48,6 +48,13 @@ jobs:
       - name: Tests + couverture
         run: ./gradlew koverVerify :engine:koverHtmlReport -PwarningsAsErrors=true
 
+      # Lint Android attrape les erreurs de ressources et de manifeste que ni les
+      # tests ni koverVerify ne voient. Des regles de sauvegarde malformees sont
+      # passees jusqu'a CodeQL, qui les a signalees par accident: ce n'est pas
+      # son role, c'est celui de lint.
+      - name: Lint Android
+        run: ./gradlew :app:lintDebug
+
       - name: Publier le rapport de couverture
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:

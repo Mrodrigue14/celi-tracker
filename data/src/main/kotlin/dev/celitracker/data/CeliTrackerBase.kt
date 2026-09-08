@@ -1,7 +1,6 @@
 package dev.celitracker.data
 
 import androidx.room.Database
-import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
@@ -22,9 +21,16 @@ abstract class CeliTrackerBase : RoomDatabase() {
     abstract fun dao(): CeliTrackerDao
 }
 
-/** [chemin] est un chemin de fichier absolu; pas de SDK Android, pas de Context. */
-fun ouvrirBase(chemin: String): CeliTrackerBase =
-    Room.databaseBuilder<CeliTrackerBase>(name = chemin)
+/**
+ * Applique la configuration commune (pilote SQLite embarque, contexte de
+ * coroutines pour les requetes) a un [builder] deja cree par l'appelant avec
+ * la surcharge de `Room.databaseBuilder` propre a sa plateforme, puis
+ * construit la base. `:data` ne reference ainsi plus aucune surcharge de
+ * `Room.databaseBuilder`: c'est a chaque consommateur (JVM ou Android) de
+ * creer le builder avec la sienne.
+ */
+fun configurerBase(builder: RoomDatabase.Builder<CeliTrackerBase>): CeliTrackerBase =
+    builder
         .setDriver(BundledSQLiteDriver())
         .setQueryCoroutineContext(Dispatchers.IO)
         .build()

@@ -11,3 +11,4 @@ rootProject.name = "celi-tracker"
 
 include(":engine")
 include(":data")
+include(":app")

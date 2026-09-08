@@ -1,5 +1,6 @@
 package dev.celitracker.data
 
+import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.PlafondAnnuel
@@ -23,7 +24,7 @@ import kotlinx.coroutines.test.runTest
 class DepotTest {
 
     private val fichier = File.createTempFile("celi-tracker-test", ".db")
-    private val base = ouvrirBase(fichier.absolutePath)
+    private val base = configurerBase(Room.databaseBuilder<CeliTrackerBase>(name = fichier.absolutePath))
     private val depot = Depot(base)
 
     @AfterTest
