@@ -88,6 +88,18 @@ empêche Dependabot d'en ouvrir pour Gradle, et le `if:` du workflow
 d'auto-merge exclut toute majeure pour les autres écosystèmes. Elles restent
 en revue manuelle.
 
+## Contraintes de versions
+
+**Kotlin est plafonné par CodeQL, pas par Gradle.** L'extracteur Kotlin de
+CodeQL refuse toute version qu'il ne connaît pas encore
+(`KotlinVersionTooRecentError`), et `Analyze (java-kotlin)` est un check requis
+sur `main`. Une montée de Kotlin trop en avance échoue donc en CI — c'est
+voulu, et c'est le check qui fait autorité. Aucun plafond n'est figé dans
+`dependabot.yml` : la PR reste simplement bloquée jusqu'à ce que CodeQL
+rattrape, ce qui s'auto-résout sans maintenance.
+
+Constaté le 2026-09-08 : Kotlin 2.4.20 rejeté, 2.4.10 accepté.
+
 ## Licence
 
 PolyForm Shield License 1.0.0 — libre d'usage, de modification et de
