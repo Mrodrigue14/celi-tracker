@@ -27,14 +27,28 @@ object SurCotisation {
         transactions: List<Transaction>,
         jusqua: YearMonth,
     ): List<ExcedentMensuel> {
+        // Même borne que CeliMoteur, qui itère a partir de l'annee
+        // d'admissibilite: une transaction anterieure lui est invisible. Sans
+        // ce filtre, une telle transaction n'aurait aucun effet sur les droits
+        // mais deviendrait ici un excedent integralement facture -- deux
+        // semantiques pour une meme saisie.
+        //
+        // Le rejet d'une telle saisie appartient a la couche de saisie, pas au
+        // moteur: ici on se contente de ne pas inventer d'excedent.
         val txCeli = transactions
-            .filter { it.compte == Compte.CELI }
+            .filter { it.compte == Compte.CELI && it.date.year >= profil.anneeAdmissibiliteCeli }
             .sortedBy { it.date }
         val premier = txCeli.firstOrNull() ?: return emptyList()
 
         val droitsDebutParAnnee = CeliMoteur
             .droitsParAnnee(profil, plafonds, transactions, jusqua.year)
             .associate { it.annee to it.droitsDebut }
+
+        // Un seul passage au lieu d'un refiltrage par mois (O(N) au lieu de
+        // O(mois x N)). Utiliser YearMonth comme cle passe par hashCode/equals
+        // et evite l'operateur `==` sur un type value-based, qui declenche un
+        // avertissement du compilateur.
+        val txParMois = txCeli.groupBy { YearMonth.from(it.date) }
 
         val resultat = mutableListOf<ExcedentMensuel>()
         var mois = YearMonth.from(premier.date)
@@ -69,7 +83,7 @@ object SurCotisation {
             // L'excedent reporte du mois precedent est deja facturable.
             var excedentMax = excedent
 
-            for (tx in txCeli.filter { YearMonth.from(it.date) == mois }) {
+            for (tx in txParMois[mois].orEmpty()) {
                 if (tx.type == TypeTx.DEPOT) {
                     val absorbe = minOf(droitsRestants, tx.montant)
                     droitsRestants -= absorbe

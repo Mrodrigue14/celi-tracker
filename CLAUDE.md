@@ -83,8 +83,10 @@ fixtures synthétiques, à traiter avec la même rigueur.
 laisser la CI verte avant de merger.
 
 Les PRs Dependabot patch et mineures sont auto-mergées une fois la CI verte.
-Les montées majeures sont bloquées par `.github/dependabot.yml` et restent en
-revue manuelle.
+Les montées majeures ne sont jamais auto-mergées : `.github/dependabot.yml`
+empêche Dependabot d'en ouvrir pour Gradle, et le `if:` du workflow
+d'auto-merge exclut toute majeure pour les autres écosystèmes. Elles restent
+en revue manuelle.
 
 ## Licence
 

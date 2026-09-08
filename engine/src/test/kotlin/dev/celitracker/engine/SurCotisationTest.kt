@@ -120,4 +120,18 @@ class SurCotisationTest {
 
         assertTrue(excedents.isEmpty())
     }
+
+    @Test
+    fun `une transaction anterieure a l'admissibilite ne cree aucun excedent`() {
+        // CeliMoteur ignore cette transaction (sa boucle demarre en 2019).
+        // SurCotisation doit l'ignorer aussi, sans quoi les 9000 deviendraient
+        // un excedent facture a 1 % par mois.
+        val transactions = listOf(tx("2018-05-01", TypeTx.DEPOT, "9000.00"))
+
+        val excedents = SurCotisation.excedentsCeli(
+            profil, plafonds, transactions, jusqua = YearMonth.of(2019, 12),
+        )
+
+        assertTrue(excedents.isEmpty())
+    }
 }

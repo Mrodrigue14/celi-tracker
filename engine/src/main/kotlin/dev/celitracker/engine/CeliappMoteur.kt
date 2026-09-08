@@ -53,7 +53,11 @@ object CeliappMoteur {
 
             val vieRestantAvant = (PLAFOND_VIE - cotisationsCumulees)
                 .coerceAtLeast(BigDecimal.ZERO)
-            val droitsAnnee = minOf(PLAFOND_ANNUEL + reportEntrant, vieRestantAvant)
+            // Le min() interne est redondant tant que reportEntrant est borne
+            // en amont, mais il rend l'invariant explicite plutot qu'implicite:
+            // le report ne se cumule pas, et c'est le piege du regime.
+            val reportUtilisable = minOf(reportEntrant, REPORT_MAX)
+            val droitsAnnee = minOf(PLAFOND_ANNUEL + reportUtilisable, vieRestantAvant)
 
             // min(..., REPORT_MAX) et NON une accumulation: c'est toute la
             // difference avec le CELI et le REER.

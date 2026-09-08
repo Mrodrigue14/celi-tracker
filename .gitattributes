@@ -1,0 +1,5 @@
+# Les scripts du wrapper Gradle doivent garder des fins de ligne LF: la CI
+# tourne sous Ubuntu et un gradlew en CRLF y est inexecutable.
+* text=auto eol=lf
+*.jar binary
+*.bat text eol=crlf
