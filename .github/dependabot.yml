@@ -1,0 +1,27 @@
+version: 2
+updates:
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      gradle-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      # Les montées majeures de la chaîne d'outils (AGP, Kotlin, wrapper Gradle,
+      # Room, Compose) demandent une migration manuelle et cassent le build si
+      # elles sont appliquées à l'aveugle. Les avis de sécurité continuent
+      # d'apparaître dans les alertes Dependabot de l'onglet Security.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns: ["*"]

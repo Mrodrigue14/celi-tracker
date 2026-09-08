@@ -1,0 +1,55 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+    # Ne pas lancer le build pour des changements purement documentaires : ils
+    # ne peuvent pas casser le code. Un push qui touche AUSSI du code déclenche
+    # quand même le workflow.
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
+      - '.gitignore'
+  # PAS de paths-ignore ici : ce job est destiné à être un check REQUIS par la
+  # protection de `main`. Un workflow skippé ne rapporte aucun statut, et un
+  # check requis qui ne rapporte jamais reste « Expected » — la PR devient
+  # impossible à merger. Le filtre reste sur `push` : après le merge d'une PR
+  # purement documentaire, il n'y a effectivement rien à re-tester.
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+# Annule le run devenu obsolète quand un nouveau push arrive sur la même ref
+# (event_name dans la clé pour qu'un run planifié n'annule pas un run de push).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # Seul workflow autorisé à ÉCRIRE le cache Gradle (cf. composite action).
+      - name: Setup Java + Gradle
+        uses: ./.github/actions/setup-java-gradle
+        with:
+          cache-read-only: "false"
+
+      # Le moteur de calcul est un module Kotlin pur : ses tests tournent sans
+      # SDK Android ni émulateur. C'est le coeur de correction de l'app, donc
+      # la barrière CI porte d'abord là-dessus.
+      - name: Tests
+        run: ./gradlew test
+
+      - name: Rapport de tests (en cas d'échec)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: '**/build/reports/tests/'
+          retention-days: 7

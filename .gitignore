@@ -1,0 +1,28 @@
+# ─── Données personnelles — ne JAMAIS committer ───────────────────────────
+# Le journal de cotisations est de la donnée financière nominative. Il vit sur
+# le téléphone et dans les sauvegardes, jamais dans le dépôt.
+*.db
+*.db-shm
+*.db-wal
+celi-export*.json
+celiapp-export*.json
+/local-data/
+
+# ─── Android / Gradle ─────────────────────────────────────────────────────
+.gradle/
+build/
+local.properties
+*.apk
+*.aab
+*.keystore
+*.jks
+captures/
+.cxx/
+.kotlin/
+
+# ─── IDE ──────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+
+# Espace de travail des sous-agents (scratch, jamais versionne)
+/.superpowers/
