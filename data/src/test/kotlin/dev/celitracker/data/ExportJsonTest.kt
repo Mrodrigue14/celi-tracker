@@ -106,6 +106,41 @@ class ExportJsonTest {
     }
 
     @Test
+    fun `un echec en cours d'ecriture ne laisse pas la base a moitie videe`() = runTest {
+        peuplerDonneesTest()
+        val avant = depot.exporterJson()
+
+        // Version et JSON valides, mais deux transactions partagent le meme id :
+        // la deuxieme insertion viole la cle primaire apres que les tables aient
+        // deja ete videes et qu'une partie (profil, plafonds) ait deja ete ecrite.
+        val exportEcritureEchoue = """
+            {"version":1,
+             "profil":{"anneeAdmissibiliteCeli":2020,"anneeNaissance":2000,"dateOuvertureCeliapp":"2023-06-01"},
+             "plafonds":[{"compte":"CELI","annee":2026,"montant":"7000.00","confirme":true}],
+             "transactions":[
+               {"id":1,"compte":"CELI","date":"2026-01-15","type":"DEPOT","montant":"100.00"},
+               {"id":1,"compte":"CELI","date":"2026-01-16","type":"DEPOT","montant":"200.00"}
+             ],
+             "snapshotsArc":[],
+             "reglages":{"urlPageArc":"https://arc.gc.ca","dateDerniereVerification":null}}
+        """.trimIndent()
+
+        assertFailsWith<Throwable> {
+            depot.importerJson(exportEcritureEchoue)
+        }
+
+        assertEquals(avant, depot.exporterJson())
+        assertEquals(profilCeli, depot.profil())
+        assertEquals(3, depot.plafonds().size)
+        assertEquals(2, depot.transactions().size)
+        assertEquals(1, depot.snapshotsArc().size)
+        assertEquals(
+            Reglages(urlPageArc = "https://arc.gc.ca", dateDerniereVerification = Instant.parse("2026-09-08T12:00:00Z")),
+            depot.reglages(),
+        )
+    }
+
+    @Test
     fun `l'export est deterministe`() = runTest {
         peuplerDonneesTest()
 
