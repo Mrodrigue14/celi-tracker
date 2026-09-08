@@ -1,6 +1,7 @@
 package dev.celitracker.engine
 
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -49,5 +50,27 @@ class ModeleTest {
             dateOuvertureCeliapp = null,
         )
         assertEquals(null, profil.dateOuvertureCeliapp)
+    }
+
+    @Test
+    fun `un snapshot arc conserve le compte et les droits declares`() {
+        val snapshot = SnapshotArc(
+            id = 1,
+            compte = Compte.CELIAPP,
+            dateReference = LocalDate.of(2026, 1, 1),
+            droitsDeclares = BigDecimal("6000.00"),
+        )
+        assertEquals(Compte.CELIAPP, snapshot.compte)
+        assertEquals(snapshot, snapshot.copy())
+    }
+
+    @Test
+    fun `des reglages sans verification recente sont acceptes`() {
+        val reglages = Reglages(urlPageArc = "https://arc.gc.ca", dateDerniereVerification = null)
+        assertEquals(null, reglages.dateDerniereVerification)
+        assertEquals(reglages, reglages.copy(dateDerniereVerification = null))
+
+        val verifies = reglages.copy(dateDerniereVerification = Instant.parse("2026-09-08T00:00:00Z"))
+        assertEquals(Instant.parse("2026-09-08T00:00:00Z"), verifies.dateDerniereVerification)
     }
 }

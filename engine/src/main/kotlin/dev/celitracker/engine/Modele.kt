@@ -2,6 +2,7 @@ package dev.celitracker.engine
 
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.time.Instant
 import java.time.LocalDate
 
 /**
@@ -20,6 +21,8 @@ data class Transaction(
     val date: LocalDate,
     val type: TypeTx,
     val montant: BigDecimal,
+    /** 0 = pas encore persistee. Permet la suppression via [Depot]. */
+    val id: Long = 0,
 )
 
 /**
@@ -41,6 +44,19 @@ data class Profil(
     val anneeNaissance: Int,
     /** Demarre l'accumulation des droits CELIAPP ET l'horloge des 15 ans. */
     val dateOuvertureCeliapp: LocalDate?,
+)
+
+/** Instantane des droits declares sur le site de l'ARC, pour comparaison. */
+data class SnapshotArc(
+    val id: Long,
+    val compte: Compte,
+    val dateReference: LocalDate,
+    val droitsDeclares: BigDecimal,
+)
+
+data class Reglages(
+    val urlPageArc: String,
+    val dateDerniereVerification: Instant?,
 )
 
 /**
