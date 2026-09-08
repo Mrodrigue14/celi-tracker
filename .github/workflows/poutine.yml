@@ -1,0 +1,52 @@
+name: Pipeline SAST (poutine)
+
+# Analyse statique des workflows CI/CD eux-mêmes (GitHub Actions) avec poutine
+# de BoostSecurity : détecte les mauvaises configurations de pipeline —
+# injection de commande, usage dangereux de pull_request_target, "pwn request"
+# Dependabot, actions non épinglées, etc. Les résultats sont publiés dans
+# Security → Code scanning (format SARIF). N'échoue pas le build : il remonte
+# les findings pour triage.
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
+      - '.gitignore'
+      - '.gitattributes'
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
+      - '.gitignore'
+      - '.gitattributes'
+  # Scan périodique : re-vérifie les workflows existants avec les règles
+  # poutine les plus récentes, même sans nouveau push (lundi 04:00 UTC).
+  schedule:
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  poutine:
+    name: Analyse des pipelines (poutine)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: poutine - GitHub Actions SAST
+        uses: boostsecurityio/poutine-action@e240ebd3eff8b2db5a8e5f6b28f58739d7db2247 # v1.1.4
+
+      - name: Upload poutine SARIF
+        uses: github/codeql-action/upload-sarif@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd # v4.37.7
+        with:
+          sarif_file: results.sarif
