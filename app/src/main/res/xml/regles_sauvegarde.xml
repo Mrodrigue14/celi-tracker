@@ -8,11 +8,9 @@
   regression par rapport au classeur Excel synchronise que cette application
   remplace. La destination est le compte Google du proprietaire de l'appareil.
 
-  Les preferences partagees et le cache sont exclus: rien d'utile a restaurer,
-  et pas de raison de les envoyer ailleurs.
+  Une liste d'inclusion est deja une liste blanche: tout ce qui n'y figure pas
+  (preferences, cache, fichiers) est exclu d'office.
 -->
 <full-backup-content>
     <include domain="database" path="." />
-    <exclude domain="sharedpref" path="." />
-    <exclude domain="cache" path="." />
 </full-backup-content>
