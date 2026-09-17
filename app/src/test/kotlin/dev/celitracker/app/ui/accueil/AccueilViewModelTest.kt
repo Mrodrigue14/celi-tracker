@@ -58,7 +58,6 @@ class AccueilViewModelTest {
     @Test
     fun `avec profil et plafond, les droits proviennent du moteur`() = runTest {
         val profil = Profil(
-            anneeAdmissibiliteCeli = anneeCourante,
             anneeNaissance = 1990,
             dateOuvertureCeliapp = null,
         )

@@ -17,11 +17,20 @@ import java.time.LocalDate
  * tels que persistes, rien de plus.
  */
 
-private const val VERSION_EXPORT = 1
+private const val VERSION_EXPORT = 2
+
+/**
+ * La version 1 portait une annee d'admissibilite CELI saisie a la main, qui se
+ * calcule maintenant depuis l'annee de naissance. Un export de version 1 reste
+ * lisible : le champ en trop est ignore plutot que de rendre une ancienne
+ * sauvegarde inutilisable, ce qui est tout l'interet de l'export.
+ */
+private val VERSIONS_ACCEPTEES = setOf(1, VERSION_EXPORT)
+
+private val json = Json { ignoreUnknownKeys = true }
 
 @Serializable
 private data class ProfilJson(
-    val anneeAdmissibiliteCeli: Int,
     val anneeNaissance: Int,
     val dateOuvertureCeliapp: String?,
 )
@@ -68,7 +77,7 @@ private data class ExportDonnees(
 )
 
 /**
- * Serialise la base en JSON, `version` = 1. Les montants sont des chaines,
+ * Serialise la base en JSON. Les montants sont des chaines,
  * jamais des nombres JSON : un nombre JSON transite par un `double` chez la
  * plupart des lecteurs, ce qui detruirait l'exactitude de [BigDecimal]. Les
  * collections sont triees par une cle stable pour qu'a contenu egal, deux
@@ -79,7 +88,6 @@ suspend fun Depot.exporterJson(): String {
         version = VERSION_EXPORT,
         profil = profil()?.let {
             ProfilJson(
-                anneeAdmissibiliteCeli = it.anneeAdmissibiliteCeli,
                 anneeNaissance = it.anneeNaissance,
                 dateOuvertureCeliapp = it.dateOuvertureCeliapp?.toString(),
             )
@@ -95,7 +103,7 @@ suspend fun Depot.exporterJson(): String {
             .map { SnapshotArcJson(it.id, it.compte.name, it.dateReference.toString(), it.droitsDeclares.toPlainString()) },
         reglages = reglages().let { ReglagesJson(it.urlPageArc, it.dateDerniereVerification?.toString()) },
     )
-    return Json.encodeToString(ExportDonnees.serializer(), donnees)
+    return json.encodeToString(ExportDonnees.serializer(), donnees)
 }
 
 /**
@@ -104,13 +112,13 @@ suspend fun Depot.exporterJson(): String {
  * remplies. Un import qui echoue - version inconnue, JSON malforme - ne
  * modifie jamais la base existante.
  */
-suspend fun Depot.importerJson(json: String) {
+suspend fun Depot.importerJson(contenu: String) {
     val donnees = try {
-        val version = Json.parseToJsonElement(json).jsonObject["version"]?.jsonPrimitive?.intOrNull
-        require(version == VERSION_EXPORT) {
-            "Version d'export non prise en charge : $version. Seule la version $VERSION_EXPORT est acceptee."
+        val version = json.parseToJsonElement(contenu).jsonObject["version"]?.jsonPrimitive?.intOrNull
+        require(version in VERSIONS_ACCEPTEES) {
+            "Version d'export non prise en charge : $version. Versions acceptees : ${VERSIONS_ACCEPTEES.sorted().joinToString()}."
         }
-        Json.decodeFromString(ExportDonnees.serializer(), json)
+        json.decodeFromString(ExportDonnees.serializer(), contenu)
     } catch (e: IllegalArgumentException) {
         throw e
     } catch (e: Exception) {
@@ -119,7 +127,6 @@ suspend fun Depot.importerJson(json: String) {
 
     val profil = donnees.profil?.let {
         ProfilEntity(
-            anneeAdmissibiliteCeli = it.anneeAdmissibiliteCeli,
             anneeNaissance = it.anneeNaissance,
             dateOuvertureCeliapp = it.dateOuvertureCeliapp?.let(LocalDate::parse),
         )

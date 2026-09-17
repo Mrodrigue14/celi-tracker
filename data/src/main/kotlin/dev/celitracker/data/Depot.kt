@@ -19,7 +19,6 @@ class Depot(private val base: CeliTrackerBase) {
 
     suspend fun profil(): Profil? = dao.profil()?.let {
         Profil(
-            anneeAdmissibiliteCeli = it.anneeAdmissibiliteCeli,
             anneeNaissance = it.anneeNaissance,
             dateOuvertureCeliapp = it.dateOuvertureCeliapp,
         )
@@ -28,7 +27,6 @@ class Depot(private val base: CeliTrackerBase) {
     suspend fun enregistrerProfil(profil: Profil) {
         dao.enregistrerProfil(
             ProfilEntity(
-                anneeAdmissibiliteCeli = profil.anneeAdmissibiliteCeli,
                 anneeNaissance = profil.anneeNaissance,
                 dateOuvertureCeliapp = profil.dateOuvertureCeliapp,
             ),

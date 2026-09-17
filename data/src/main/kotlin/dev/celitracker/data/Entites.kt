@@ -17,7 +17,6 @@ import java.time.LocalDate
 @Entity(tableName = "profil")
 data class ProfilEntity(
     @PrimaryKey val id: Int = 0,
-    val anneeAdmissibiliteCeli: Int,
     val anneeNaissance: Int,
     val dateOuvertureCeliapp: LocalDate?,
 )

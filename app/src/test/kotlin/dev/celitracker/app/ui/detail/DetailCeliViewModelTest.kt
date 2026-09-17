@@ -53,7 +53,8 @@ class DetailCeliViewModelTest {
 
     @Test
     fun `un plafond absent est signale plafondManquant`() = runTest {
-        depot.enregistrerProfil(Profil(anneeCourante - 1, 1990, null))
+        // Naissance il y a 19 ans: admissible au CELI depuis l'an dernier.
+        depot.enregistrerProfil(Profil(anneeCourante - 19, null))
         // Aucun plafond enregistre pour anneeCourante - 1 ni anneeCourante.
 
         val viewModel = DetailCeliViewModel(depot)
@@ -64,7 +65,7 @@ class DetailCeliViewModelTest {
 
     @Test
     fun `un plafond confirme n'est pas signale`() = runTest {
-        depot.enregistrerProfil(Profil(anneeCourante, 1990, null))
+        depot.enregistrerProfil(Profil(anneeCourante - 18, null))
         depot.enregistrerPlafond(PlafondAnnuel(Compte.CELI, anneeCourante, BigDecimal("7000.00"), confirme = true))
 
         val viewModel = DetailCeliViewModel(depot)

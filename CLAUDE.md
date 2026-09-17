@@ -24,6 +24,12 @@ recalculée à la lecture. Ajouter une table `droits_par_annee` ou mettre en cac
 un solde en base réintroduit exactement le bug du classeur Excel que ce projet
 corrige.
 
+**1 bis. L'année d'admissibilité au CELI se calcule, elle ne se saisit pas.**
+`Profil.anneeAdmissibiliteCeli` est une propriété dérivée : l'année des 18 ans,
+jamais avant 2009. Elle suppose la résidence canadienne depuis cet âge, ce qui
+est le cas de l'unique utilisateur. La stocker en base ou la ressaisir dans
+l'interface ferait diverger deux sources pour le même fait.
+
 **2. Deux moteurs séparés, CELI et CELIAPP.** Ne pas les fusionner en un moteur
 paramétré par un drapeau de type de compte. Les règles divergent partout :
 

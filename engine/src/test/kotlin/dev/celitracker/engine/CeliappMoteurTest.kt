@@ -15,7 +15,6 @@ private fun retraitFhsa(date: String, montant: String) = Transaction(Compte.CELI
 class CeliappMoteurTest {
 
     private val profilOuvert2023 = Profil(
-        anneeAdmissibiliteCeli = 2019,
         anneeNaissance = 2001,
         dateOuvertureCeliapp = LocalDate.of(2023, 4, 1),
     )
@@ -58,7 +57,7 @@ class CeliappMoteurTest {
 
     @Test
     fun `aucun droit sans compte ouvert`() {
-        val profilSansCompte = Profil(2019, 2001, dateOuvertureCeliapp = null)
+        val profilSansCompte = Profil(2001, dateOuvertureCeliapp = null)
 
         assertTrue(CeliappMoteur.droitsParAnnee(profilSansCompte, emptyList(), 2026).isEmpty())
     }
@@ -127,7 +126,6 @@ class CeliappMoteurTest {
     @Test
     fun `la branche des 71 ans l'emporte quand elle est plus rapprochee`() {
         val profilAge = Profil(
-            anneeAdmissibiliteCeli = 1975,
             anneeNaissance = 1960, // 71 ans en 2031
             dateOuvertureCeliapp = LocalDate.of(2023, 4, 1), // 15 ans -> 2038
         )
@@ -140,7 +138,7 @@ class CeliappMoteurTest {
 
     @Test
     fun `aucune echeance sans compte ouvert`() {
-        val profilSansCompte = Profil(2019, 2001, dateOuvertureCeliapp = null)
+        val profilSansCompte = Profil(2001, dateOuvertureCeliapp = null)
 
         assertEquals(null, CeliappMoteur.finPeriodeParticipation(profilSansCompte))
     }

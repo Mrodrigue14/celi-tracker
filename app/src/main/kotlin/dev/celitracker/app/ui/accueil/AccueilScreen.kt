@@ -197,7 +197,7 @@ private fun CarteCeliapp(
 private fun AccueilContenuApercu() {
     AccueilContenu(
         etat = AccueilUiState(
-            profil = Profil(2010, 1995, LocalDate.of(2023, 4, 1)),
+            profil = Profil(1995, LocalDate.of(2023, 4, 1)),
             anneeCourante = 2026,
             moisCourant = 9,
             droitsCeli = listOf(

@@ -14,7 +14,6 @@ import kotlin.test.assertNull
 class AccueilUiStateTest {
 
     private val profil = Profil(
-        anneeAdmissibiliteCeli = 2010,
         anneeNaissance = 1995,
         dateOuvertureCeliapp = LocalDate.of(2023, 4, 1),
     )

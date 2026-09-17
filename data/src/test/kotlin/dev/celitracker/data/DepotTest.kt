@@ -34,8 +34,7 @@ class DepotTest {
     }
 
     private val profilCeli = Profil(
-        anneeAdmissibiliteCeli = 2020,
-        anneeNaissance = 2000,
+        anneeNaissance = 2002, // admissible au CELI en 2020
         dateOuvertureCeliapp = LocalDate.of(2023, 6, 1),
     )
 

@@ -27,7 +27,9 @@ class JournalViewModelTest {
 
     private val fixture = DepotDeTest()
     private val depot = fixture.depot
-    private val profil = Profil(anneeAdmissibiliteCeli = 2020, anneeNaissance = 2000, dateOuvertureCeliapp = LocalDate.of(2023, 6, 1))
+
+    /** Naissance en 2002: admissible au CELI en 2020. */
+    private val profil = Profil(anneeNaissance = 2002, dateOuvertureCeliapp = LocalDate.of(2023, 6, 1))
 
     @AfterTest
     fun apres() = fixture.fermer()

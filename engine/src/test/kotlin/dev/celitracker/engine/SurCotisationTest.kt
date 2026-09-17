@@ -11,7 +11,7 @@ private fun argent(valeur: String): BigDecimal = BigDecimal(valeur).argent()
 
 class SurCotisationTest {
 
-    private val profil = Profil(2019, 2001, null)
+    private val profil = Profil(2001, null)
     private val plafonds = listOf(
         PlafondAnnuel(Compte.CELI, 2019, argent("6000.00")),
         PlafondAnnuel(Compte.CELI, 2020, argent("6000.00")),
