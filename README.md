@@ -1,54 +1,58 @@
 # celi-tracker
 
-Application Android de suivi des droits de cotisation **CELI** (compte d'épargne
-libre d'impôt) et **CELIAPP** (compte d'épargne libre d'impôt pour l'achat d'une
-première propriété), pour un usage personnel.
+Application Android personnelle pour suivre ses droits de cotisation au CELI
+(compte d'épargne libre d'impôt) et au CELIAPP (compte d'épargne libre d'impôt
+pour l'achat d'une première propriété).
 
-Elle remplace un classeur Excel dont les droits année par année étaient saisis à
-la main plutôt que calculés — un chiffre corrigé dans le journal des
-transactions désynchronisait silencieusement tout le reste.
+Elle remplace un classeur Excel où les droits de chaque année étaient saisis à
+la main au lieu d'être calculés. Corriger un montant dans le journal des
+transactions désynchronisait tout le reste sans avertissement.
 
 ## Principe
 
-**Rien de calculé n'est stocké.** La base ne contient que des saisies brutes :
-le profil, la table des plafonds annuels, le journal des dépôts et retraits. Les
-droits de cotisation sont une fonction pure de ces trois entrées, recalculée à
-chaque affichage. Il n'existe aucune table de droits par année.
+La base ne stocke aucun résultat de calcul. Elle contient seulement les
+saisies : le profil, la table des plafonds annuels et le journal des dépôts et
+retraits. L'application recalcule les droits à partir de ces trois entrées à
+chaque affichage, et il n'y a pas de table de droits par année.
 
-Deux moteurs distincts, jamais un moteur unique paramétré par un drapeau : les
-règles CELI et CELIAPP divergent sur chaque axe — début de l'accumulation,
-restitution des droits après un retrait, plafond à vie, report des droits
-inutilisés.
+Le CELI et le CELIAPP ont chacun leur moteur de calcul. Leurs règles diffèrent
+sur le début de l'accumulation, la restitution des droits après un retrait, le
+plafond à vie et le report des droits inutilisés, alors un moteur commun
+paramétré par un drapeau ne tiendrait pas.
 
 ## État
 
-En conception. Le design est dans
+Le design est dans
 [`docs/superpowers/specs/`](docs/superpowers/specs/2026-09-07-suivi-celi-celiapp-design.md).
 
-Ordre de livraison prévu :
+Déjà livré :
 
-0. Installation du SDK Android en ligne de commande + wrapper Gradle
-1. Moteur de calcul (module Kotlin pur) + tests
-2. Persistance Room + export / import JSON
-3. Interface Compose
-4. Lecture des plafonds de l'ARC + sauvegarde automatique Android
-5. APK
+0. Installation du SDK Android en ligne de commande et wrapper Gradle
+1. Moteur de calcul (module Kotlin pur) et ses tests
+2. Persistance Room, export et import JSON
+3. Interface Compose : accueil, détail d'un compte, réglages de base
+
+À venir :
+
+4. Journal des transactions et réglages complets
+5. Lecture des plafonds sur le site de l'ARC et sauvegarde automatique Android
+6. APK
 
 ## Avertissement
 
-Ce projet ne donne aucun conseil fiscal ou financier. Les montants qu'il affiche
-sont des calculs à partir de données saisies par l'utilisateur et n'ont aucune
-valeur officielle. La source de vérité sur vos droits de cotisation reste
-**Mon dossier** de l'Agence du revenu du Canada.
+Ce projet ne donne aucun conseil fiscal ou financier. Les montants affichés
+sont calculés à partir des données saisies par l'utilisateur et n'ont aucune
+valeur officielle. Pour connaître vos droits de cotisation, fiez-vous à Mon
+dossier de l'Agence du revenu du Canada.
 
 ## Confidentialité
 
-Ce dépôt est public et ne contient **aucune donnée financière nominative**. Les
-scénarios de test sont anonymes. Les bases de données et les exports JSON sont
-exclus par `.gitignore`.
+Le dépôt est public et ne contient aucune donnée financière nominative. Les
+scénarios de test sont fictifs, et `.gitignore` exclut les bases de données et
+les exports JSON.
 
 ## Licence
 
-[PolyForm Shield License 1.0.0](LICENSE) — usage, modification et
-redistribution libres, à l'exception de la construction d'un produit qui
-concurrence celui du concédant. Cette restriction n'expire pas.
+[PolyForm Shield License 1.0.0](LICENSE). L'usage, la modification et la
+redistribution sont libres, sauf pour construire un produit qui fait
+concurrence à celui du concédant. Cette restriction n'expire pas.
