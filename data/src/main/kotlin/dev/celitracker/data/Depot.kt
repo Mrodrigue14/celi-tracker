@@ -45,12 +45,23 @@ class Depot(private val base: CeliTrackerBase) {
     suspend fun transactions(): List<Transaction> =
         dao.transactions().map { Transaction(it.compte, it.date, it.type, it.montant, it.id) }
 
+    suspend fun ajouterTransaction(transaction: Transaction) {
+        valider(transaction)
+        dao.ajouterTransaction(transaction.versEntite())
+    }
+
+    suspend fun modifierTransaction(transaction: Transaction) {
+        valider(transaction)
+        val lignesModifiees = dao.modifierTransaction(transaction.versEntite())
+        require(lignesModifiees == 1) { "Transaction introuvable." }
+    }
+
     /**
      * Rejette les saisies incoherentes ici, pas dans le moteur: une
      * transaction anterieure a l'annee d'admissibilite produirait des
      * resultats differents selon le moteur consulte.
      */
-    suspend fun ajouterTransaction(transaction: Transaction) {
+    private suspend fun valider(transaction: Transaction) {
         require(transaction.montant > BigDecimal.ZERO) { "Le montant doit etre positif." }
         val profil = requireNotNull(profil()) { "Aucun profil enregistre." }
         when (transaction.compte) {
@@ -66,15 +77,9 @@ class Depot(private val base: CeliTrackerBase) {
                 }
             }
         }
-        dao.ajouterTransaction(
-            TransactionEntity(
-                compte = transaction.compte,
-                date = transaction.date,
-                type = transaction.type,
-                montant = transaction.montant,
-            )
-        )
     }
+
+    private fun Transaction.versEntite() = TransactionEntity(id, compte, date, type, montant)
 
     suspend fun supprimerTransaction(id: Long) = dao.supprimerTransaction(id)
 

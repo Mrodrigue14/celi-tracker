@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 
 @Dao
 interface CeliTrackerDao {
@@ -25,6 +26,9 @@ interface CeliTrackerDao {
 
     @Insert
     suspend fun ajouterTransaction(transaction: TransactionEntity)
+
+    @Update
+    suspend fun modifierTransaction(transaction: TransactionEntity): Int
 
     @Query("DELETE FROM transactions WHERE id = :id")
     suspend fun supprimerTransaction(id: Long)

@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,7 +41,7 @@ private val LARGEUR_COLONNE = 110.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailCeliScreen(onRetour: () -> Unit) {
+fun DetailCeliScreen(onRetour: () -> Unit, onOuvrirJournal: () -> Unit) {
     val application = LocalContext.current.applicationContext as CeliTrackerApplication
     val viewModel: DetailCeliViewModel = viewModel(factory = application.viewModelFactory)
     LaunchedEffect(Unit) { viewModel.charger() }
@@ -53,6 +54,11 @@ fun DetailCeliScreen(onRetour: () -> Unit) {
                 navigationIcon = {
                     IconButton(onClick = onRetour) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onOuvrirJournal) {
+                        Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Journal des transactions")
                     }
                 },
             )
