@@ -2,16 +2,20 @@ package dev.celitracker.app
 
 import android.app.Application
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.room.Room
 import dev.celitracker.app.ui.accueil.AccueilViewModel
 import dev.celitracker.app.ui.detail.DetailCeliViewModel
 import dev.celitracker.app.ui.detail.DetailCeliappViewModel
+import dev.celitracker.app.ui.journal.JournalViewModel
+import dev.celitracker.app.ui.navigation.ARG_COMPTE
 import dev.celitracker.app.ui.reglages.ReglagesViewModel
 import dev.celitracker.data.CeliTrackerBase
 import dev.celitracker.data.Depot
 import dev.celitracker.data.configurerBase
+import dev.celitracker.engine.Compte
 import java.io.File
 
 /**
@@ -33,6 +37,10 @@ class CeliTrackerApplication : Application() {
             initializer { DetailCeliViewModel(depot) }
             initializer { DetailCeliappViewModel(depot) }
             initializer { ReglagesViewModel(depot) }
+            initializer {
+                val compte = checkNotNull(createSavedStateHandle().get<String>(ARG_COMPTE))
+                JournalViewModel(depot, Compte.valueOf(compte))
+            }
         }
     }
 }

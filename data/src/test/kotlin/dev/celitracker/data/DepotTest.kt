@@ -122,6 +122,35 @@ class DepotTest {
     }
 
     @Test
+    fun `modification d'une transaction`() = runTest {
+        depot.enregistrerProfil(profilCeli)
+        depot.ajouterTransaction(Transaction(Compte.CELI, LocalDate.of(2026, 1, 15), TypeTx.DEPOT, BigDecimal("50.00")))
+        val modifiee = depot.transactions().single().copy(type = TypeTx.RETRAIT, montant = BigDecimal("75.25"))
+
+        depot.modifierTransaction(modifiee)
+
+        assertEquals(listOf(modifiee), depot.transactions())
+    }
+
+    @Test
+    fun `modifierTransaction applique la meme validation que l'ajout`() = runTest {
+        depot.enregistrerProfil(profilCeli)
+        depot.ajouterTransaction(Transaction(Compte.CELI, LocalDate.of(2026, 1, 15), TypeTx.DEPOT, BigDecimal("50.00")))
+        val anterieure = depot.transactions().single().copy(date = LocalDate.of(2019, 12, 31))
+
+        assertFailsWith<IllegalArgumentException> { depot.modifierTransaction(anterieure) }
+    }
+
+    @Test
+    fun `modifierTransaction rejette une transaction inexistante`() = runTest {
+        depot.enregistrerProfil(profilCeli)
+
+        assertFailsWith<IllegalArgumentException> {
+            depot.modifierTransaction(Transaction(Compte.CELI, LocalDate.of(2026, 1, 15), TypeTx.DEPOT, BigDecimal("50.00"), id = 42))
+        }
+    }
+
+    @Test
     fun `ajouterTransaction rejette un montant nul ou negatif`() = runTest {
         depot.enregistrerProfil(profilCeli)
 

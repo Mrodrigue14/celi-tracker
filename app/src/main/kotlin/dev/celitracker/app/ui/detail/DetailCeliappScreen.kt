@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,7 +36,7 @@ private val LARGEUR_COLONNE = 130.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailCeliappScreen(onRetour: () -> Unit) {
+fun DetailCeliappScreen(onRetour: () -> Unit, onOuvrirJournal: () -> Unit) {
     val application = LocalContext.current.applicationContext as CeliTrackerApplication
     val viewModel: DetailCeliappViewModel = viewModel(factory = application.viewModelFactory)
     LaunchedEffect(Unit) { viewModel.charger() }
@@ -48,6 +49,11 @@ fun DetailCeliappScreen(onRetour: () -> Unit) {
                 navigationIcon = {
                     IconButton(onClick = onRetour) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onOuvrirJournal) {
+                        Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Journal des transactions")
                     }
                 },
             )
