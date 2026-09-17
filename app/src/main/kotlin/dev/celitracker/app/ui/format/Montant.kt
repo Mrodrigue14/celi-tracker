@@ -9,5 +9,4 @@ import java.util.Locale
  * pour ce type precis: le montant ne transite jamais par un Double, meme au
  * formatage.
  */
-fun BigDecimal.formatMontant(): String =
-    NumberFormat.getCurrencyInstance(Locale.CANADA_FRENCH).format(this)
+fun BigDecimal.formatMontant(): String = NumberFormat.getCurrencyInstance(Locale.CANADA_FRENCH).format(this)

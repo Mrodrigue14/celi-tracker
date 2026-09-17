@@ -2,7 +2,6 @@ package dev.celitracker.app.ui.detail
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -17,9 +20,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -109,7 +109,9 @@ private fun LigneCeli(ligne: DroitsAnnee) {
             // entendre le montant ET l'alerte, pas l'un ou l'autre.
             description = if (ligne.plafondManquant) {
                 "${ligne.plafond.formatMontant()}, plafond non confirmé pour l'année ${ligne.annee}"
-            } else null,
+            } else {
+                null
+            },
         )
         Cellule(ligne.droitsDebut.formatMontant())
         Cellule(ligne.depots.formatMontant())
@@ -153,7 +155,7 @@ private fun DetailCeliContenuApercu() {
                     droitsFin = BigDecimal("8000.00"),
                     plafondManquant = true,
                 ),
-            )
+            ),
         ),
     )
 }

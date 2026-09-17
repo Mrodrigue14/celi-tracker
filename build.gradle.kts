@@ -10,4 +10,26 @@ plugins {
     // org.jetbrains.kotlin.android): voir https://kotl.in/gradle/agp-built-in-kotlin.
     id("com.android.application") version "9.4.0" apply false
     id("org.jetbrains.kotlin.plugin.compose") version "2.4.10" apply false
+    id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
+}
+
+// Le style vit dans `.editorconfig`, lu par ktlint comme par l'IDE. Applique a
+// tous les modules: le code Kotlin est reparti dans :engine, :data et :app.
+allprojects {
+    apply(plugin = "org.jlleitschuh.gradle.ktlint")
+
+    // ktlint-cli est resolu par projet, y compris a la racine, qui n'a sinon
+    // aucun depot declare.
+    repositories {
+        mavenCentral()
+    }
+
+    configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+        version.set("1.8.0")
+        // Le code genere par KSP (les implementations Room) n'est pas ecrit a
+        // la main: le styler ne dirait rien sur le code du depot.
+        filter {
+            exclude { it.file.invariantSeparatorsPath.contains("/build/") }
+        }
+    }
 }

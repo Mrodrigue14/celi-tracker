@@ -17,7 +17,7 @@ kotlin {
 
     compilerOptions {
         allWarningsAsErrors.set(
-            providers.gradleProperty("warningsAsErrors").map { it.toBoolean() }.orElse(false)
+            providers.gradleProperty("warningsAsErrors").map { it.toBoolean() }.orElse(false),
         )
     }
 }

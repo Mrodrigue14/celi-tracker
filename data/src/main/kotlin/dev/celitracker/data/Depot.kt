@@ -31,19 +31,17 @@ class Depot(private val base: CeliTrackerBase) {
                 anneeAdmissibiliteCeli = profil.anneeAdmissibiliteCeli,
                 anneeNaissance = profil.anneeNaissance,
                 dateOuvertureCeliapp = profil.dateOuvertureCeliapp,
-            )
+            ),
         )
     }
 
-    suspend fun plafonds(): List<PlafondAnnuel> =
-        dao.plafonds().map { PlafondAnnuel(it.compte, it.annee, it.montant, it.confirme) }
+    suspend fun plafonds(): List<PlafondAnnuel> = dao.plafonds().map { PlafondAnnuel(it.compte, it.annee, it.montant, it.confirme) }
 
     suspend fun enregistrerPlafond(plafond: PlafondAnnuel) {
         dao.enregistrerPlafond(PlafondEntity(plafond.compte, plafond.annee, plafond.montant, plafond.confirme))
     }
 
-    suspend fun transactions(): List<Transaction> =
-        dao.transactions().map { Transaction(it.compte, it.date, it.type, it.montant, it.id) }
+    suspend fun transactions(): List<Transaction> = dao.transactions().map { Transaction(it.compte, it.date, it.type, it.montant, it.id) }
 
     suspend fun ajouterTransaction(transaction: Transaction) {
         valider(transaction)
@@ -68,6 +66,7 @@ class Depot(private val base: CeliTrackerBase) {
             Compte.CELI -> require(!transaction.date.isBefore(LocalDate.of(profil.anneeAdmissibiliteCeli, 1, 1))) {
                 "Transaction CELI anterieure a l'annee d'admissibilite."
             }
+
             Compte.CELIAPP -> {
                 val ouverture = requireNotNull(profil.dateOuvertureCeliapp) {
                     "Aucune date d'ouverture CELIAPP enregistree."
@@ -83,8 +82,7 @@ class Depot(private val base: CeliTrackerBase) {
 
     suspend fun supprimerTransaction(id: Long) = dao.supprimerTransaction(id)
 
-    suspend fun snapshotsArc(): List<SnapshotArc> =
-        dao.snapshotsArc().map { SnapshotArc(it.id, it.compte, it.dateReference, it.droitsDeclares) }
+    suspend fun snapshotsArc(): List<SnapshotArc> = dao.snapshotsArc().map { SnapshotArc(it.id, it.compte, it.dateReference, it.droitsDeclares) }
 
     suspend fun enregistrerSnapshotArc(snapshot: SnapshotArc) {
         dao.enregistrerSnapshotArc(
@@ -92,13 +90,12 @@ class Depot(private val base: CeliTrackerBase) {
                 compte = snapshot.compte,
                 dateReference = snapshot.dateReference,
                 droitsDeclares = snapshot.droitsDeclares,
-            )
+            ),
         )
     }
 
-    suspend fun reglages(): Reglages =
-        dao.reglages()?.let { Reglages(it.urlPageArc, it.dateDerniereVerification) }
-            ?: Reglages(urlPageArc = "", dateDerniereVerification = null)
+    suspend fun reglages(): Reglages = dao.reglages()?.let { Reglages(it.urlPageArc, it.dateDerniereVerification) }
+        ?: Reglages(urlPageArc = "", dateDerniereVerification = null)
 
     suspend fun enregistrerReglages(reglages: Reglages) {
         dao.enregistrerReglages(ReglagesEntity(urlPageArc = reglages.urlPageArc, dateDerniereVerification = reglages.dateDerniereVerification))

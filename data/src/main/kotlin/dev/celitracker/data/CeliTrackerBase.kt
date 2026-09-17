@@ -29,8 +29,7 @@ abstract class CeliTrackerBase : RoomDatabase() {
  * `Room.databaseBuilder`: c'est a chaque consommateur (JVM ou Android) de
  * creer le builder avec la sienne.
  */
-fun configurerBase(builder: RoomDatabase.Builder<CeliTrackerBase>): CeliTrackerBase =
-    builder
-        .setDriver(BundledSQLiteDriver())
-        .setQueryCoroutineContext(Dispatchers.IO)
-        .build()
+fun configurerBase(builder: RoomDatabase.Builder<CeliTrackerBase>): CeliTrackerBase = builder
+    .setDriver(BundledSQLiteDriver())
+    .setQueryCoroutineContext(Dispatchers.IO)
+    .build()

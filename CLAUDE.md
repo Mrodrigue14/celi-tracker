@@ -92,6 +92,14 @@ empêche Dependabot d'en ouvrir pour Gradle, et le `if:` du workflow
 d'auto-merge exclut toute majeure pour les autres écosystèmes. Elles restent
 en revue manuelle.
 
+## Style
+
+`./gradlew ktlintFormat` avant de committer ; la CI lance `ktlintCheck` avant
+les tests. Le style est dans `.editorconfig` (`intellij_idea`, mesure faite sur
+le code existant : c'est celui qui demandait le moins de corrections). Le code
+genere par KSP dans `build/` est exclu, et les fonctions `@Composable` gardent
+leur PascalCase.
+
 ## Contraintes de versions
 
 **Kotlin est plafonné par CodeQL, pas par Gradle.** L'extracteur Kotlin de

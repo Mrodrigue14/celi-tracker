@@ -29,7 +29,7 @@ class DetailCeliViewModel(private val depot: Depot) : ViewModel() {
             val plafonds = depot.plafonds()
             val transactions = depot.transactions()
             _uiState.value = DetailCeliUiState(
-                lignes = CeliMoteur.droitsParAnnee(profil, plafonds, transactions, LocalDate.now().year)
+                lignes = CeliMoteur.droitsParAnnee(profil, plafonds, transactions, LocalDate.now().year),
             )
         }
     }

@@ -186,7 +186,7 @@ private fun JournalContenuApercu() {
             transactions = listOf(
                 Transaction(Compte.CELI, LocalDate.of(2026, 3, 1), TypeTx.RETRAIT, BigDecimal("500.00"), id = 2),
                 Transaction(Compte.CELI, LocalDate.of(2026, 1, 15), TypeTx.DEPOT, BigDecimal("2000.00"), id = 1),
-            )
+            ),
         ),
         onOuvrirTransaction = {},
     )

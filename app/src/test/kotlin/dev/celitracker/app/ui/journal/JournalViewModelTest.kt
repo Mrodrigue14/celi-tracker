@@ -7,12 +7,6 @@ import dev.celitracker.engine.Compte
 import dev.celitracker.engine.Profil
 import dev.celitracker.engine.Transaction
 import dev.celitracker.engine.TypeTx
-import java.math.BigDecimal
-import java.time.LocalDate
-import kotlin.test.AfterTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -21,6 +15,12 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import java.math.BigDecimal
+import java.time.LocalDate
+import kotlin.test.AfterTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class JournalViewModelTest {
 
@@ -42,8 +42,7 @@ class JournalViewModelTest {
         fun apresTout() = Dispatchers.resetMain()
     }
 
-    private fun depotCeli(date: LocalDate, montant: String) =
-        Transaction(Compte.CELI, date, TypeTx.DEPOT, BigDecimal(montant))
+    private fun depotCeli(date: LocalDate, montant: String) = Transaction(Compte.CELI, date, TypeTx.DEPOT, BigDecimal(montant))
 
     @Test
     fun `n'affiche que les transactions du compte, la plus recente d'abord`() = runTest {

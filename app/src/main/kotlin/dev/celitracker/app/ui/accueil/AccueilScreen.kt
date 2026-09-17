@@ -209,7 +209,7 @@ private fun AccueilContenuApercu() {
                     retraits = BigDecimal.ZERO,
                     droitsFin = BigDecimal("9000.00"),
                     plafondManquant = false,
-                )
+                ),
             ),
             droitsCeliapp = listOf(
                 DroitsAnneeCeliapp(
@@ -220,7 +220,7 @@ private fun AccueilContenuApercu() {
                     retraits = BigDecimal.ZERO,
                     reportSortant = BigDecimal("4000.00"),
                     plafondVieRestant = BigDecimal("28000.00"),
-                )
+                ),
             ),
         ),
         onOuvrirDetail = {},
