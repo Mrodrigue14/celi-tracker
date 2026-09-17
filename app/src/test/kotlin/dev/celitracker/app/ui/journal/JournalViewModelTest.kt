@@ -21,6 +21,7 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class JournalViewModelTest {
 
@@ -69,6 +70,21 @@ class JournalViewModelTest {
         viewModel.uiState.first { it.formulaire == null }
 
         assertEquals(listOf(depotCeli(LocalDate.of(2025, 2, 3), "150.25")), depot.transactions().map { it.copy(id = 0) })
+    }
+
+    @Test
+    fun `le message est efface une fois affiche`() = runTest {
+        depot.enregistrerProfil(profil)
+        val viewModel = JournalViewModel(depot, Compte.CELI)
+
+        viewModel.ouvrirNouvelle()
+        viewModel.modifierDate("2025-02-03")
+        viewModel.modifierMontant("150,25")
+        viewModel.enregistrer()
+        viewModel.uiState.first { it.message != null }
+        viewModel.messageAffiche()
+
+        assertNull(viewModel.uiState.value.message)
     }
 
     @Test

@@ -1,36 +1,65 @@
 package dev.celitracker.app.ui.journal
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,7 +70,9 @@ import dev.celitracker.engine.Compte
 import dev.celitracker.engine.Transaction
 import dev.celitracker.engine.TypeTx
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneOffset
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,11 +80,20 @@ fun JournalScreen(onRetour: () -> Unit) {
     val application = LocalContext.current.applicationContext as CeliTrackerApplication
     val viewModel: JournalViewModel = viewModel(factory = application.viewModelFactory)
     val etat by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbar = remember { SnackbarHostState() }
+
+    // Le message est un imperatif joue une fois, pas un etat durable: il part
+    // dans un snackbar et le ViewModel l'oublie ensuite.
+    LaunchedEffect(etat.message) {
+        val message = etat.message ?: return@LaunchedEffect
+        snackbar.showSnackbar(message)
+        viewModel.messageAffiche()
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Journal ${viewModel.compte.name}") },
+                title = { Text("Journal ${viewModel.compte}") },
                 navigationIcon = {
                     IconButton(onClick = onRetour) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
@@ -61,21 +101,27 @@ fun JournalScreen(onRetour: () -> Unit) {
                 },
             )
         },
+        snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
-            FloatingActionButton(onClick = viewModel::ouvrirNouvelle) {
-                Icon(Icons.Filled.Add, contentDescription = "Ajouter une transaction")
-            }
+            // Etendu plutot qu'un simple rond: l'action principale de l'ecran
+            // merite d'etre nommee, et elle reste dans la zone du pouce.
+            ExtendedFloatingActionButton(
+                text = { Text("Ajouter") },
+                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                onClick = viewModel::ouvrirNouvelle,
+            )
         },
     ) { innerPadding ->
         JournalContenu(
             etat = etat,
             onOuvrirTransaction = viewModel::ouvrirModification,
+            onAjouter = viewModel::ouvrirNouvelle,
             modifier = Modifier.padding(innerPadding),
         )
     }
 
     etat.formulaire?.let { formulaire ->
-        DialogueTransaction(
+        FeuilleTransaction(
             formulaire = formulaire,
             onDate = viewModel::modifierDate,
             onType = viewModel::modifierType,
@@ -91,34 +137,131 @@ fun JournalScreen(onRetour: () -> Unit) {
 fun JournalContenu(
     etat: JournalUiState,
     onOuvrirTransaction: (Transaction) -> Unit,
+    onAjouter: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxSize()) {
-        etat.message?.let { Text(it, modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodySmall) }
-        if (etat.transactions.isEmpty()) {
-            Text("Aucune transaction.", modifier = Modifier.padding(16.dp))
-        }
-        LazyColumn {
-            items(etat.transactions, key = { it.id }) { transaction ->
+    if (etat.transactions.isEmpty()) {
+        JournalVide(onAjouter = onAjouter, modifier = modifier)
+        return
+    }
+    LazyColumn(modifier = modifier.fillMaxSize()) {
+        etat.transactions.groupBy { it.date.year }.forEach { (annee, transactions) ->
+            item(key = "annee-$annee") { EnTeteAnnee(annee) }
+            items(transactions, key = { it.id }) { transaction ->
                 LigneTransaction(transaction, onClick = { onOuvrirTransaction(transaction) })
-                HorizontalDivider()
             }
         }
     }
 }
 
 @Composable
-private fun LigneTransaction(transaction: Transaction, onClick: () -> Unit) {
-    ListItem(
-        headlineContent = { Text(transaction.montant.formatMontant()) },
-        supportingContent = { Text(transaction.type.libelle()) },
-        trailingContent = { Text(transaction.date.toString()) },
-        modifier = Modifier.clickable(onClick = onClick),
+private fun JournalVide(onAjouter: () -> Unit, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Pastille(
+            icone = Icons.AutoMirrored.Filled.List,
+            fond = MaterialTheme.colorScheme.surfaceVariant,
+            teinte = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            "Aucune transaction",
+            modifier = Modifier.padding(top = 16.dp),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Text(
+            "Inscris tes dépôts et tes retraits ici. Les droits de cotisation se recalculent à partir d'eux.",
+            modifier = Modifier.padding(top = 8.dp),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Button(onClick = onAjouter, modifier = Modifier.padding(top = 24.dp)) {
+            Text("Ajouter une transaction")
+        }
+    }
+}
+
+@Composable
+private fun EnTeteAnnee(annee: Int) {
+    Text(
+        annee.toString(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp),
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
     )
 }
 
 @Composable
-private fun DialogueTransaction(
+private fun LigneTransaction(transaction: Transaction, onClick: () -> Unit) {
+    val depot = transaction.type == TypeTx.DEPOT
+    Column(modifier = Modifier.clickable(onClick = onClick)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 72.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Pastille(
+                icone = if (depot) Icons.Filled.KeyboardArrowDown else Icons.Filled.KeyboardArrowUp,
+                fond = if (depot) {
+                    MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    MaterialTheme.colorScheme.tertiaryContainer
+                },
+                teinte = if (depot) {
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                } else {
+                    MaterialTheme.colorScheme.onTertiaryContainer
+                },
+                description = if (depot) "Dépôt" else "Retrait",
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                // Chiffres a chasse fixe: les montants s'alignent d'une ligne a
+                // l'autre, ce qui rend la colonne lisible d'un coup d'oeil.
+                Text(
+                    transaction.montant.formatMontant(),
+                    style = MaterialTheme.typography.titleMedium.copy(fontFamily = FontFamily.Monospace),
+                )
+                Text(
+                    if (depot) "Dépôt" else "Retrait",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Text(
+                transaction.date.toString(),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        HorizontalDivider(modifier = Modifier.padding(start = 72.dp))
+    }
+}
+
+@Composable
+private fun Pastille(icone: ImageVector, fond: Color, teinte: Color, description: String? = null) {
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .background(fond, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icone, contentDescription = description, tint = teinte)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FeuilleTransaction(
     formulaire: FormulaireTransaction,
     onDate: (String) -> Unit,
     onType: (TypeTx) -> Unit,
@@ -127,55 +270,120 @@ private fun DialogueTransaction(
     onSupprimer: () -> Unit,
     onFermer: () -> Unit,
 ) {
-    AlertDialog(
+    var calendrierOuvert by remember { mutableStateOf(false) }
+
+    // Ouverte a pleine hauteur: a moitie deployee, le bouton d'enregistrement
+    // tombait sous le bord de l'ecran.
+    ModalBottomSheet(
         onDismissRequest = onFermer,
-        title = { Text(if (formulaire.estNouvelle) "Nouvelle transaction" else "Modifier la transaction") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = formulaire.date,
-                    onValueChange = onDate,
-                    label = { Text("Date (AAAA-MM-JJ)") },
-                    isError = formulaire.dateValide == null,
-                    singleLine = true,
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TypeTx.entries.forEach { type ->
-                        FilterChip(
-                            selected = formulaire.type == type,
-                            onClick = { onType(type) },
-                            label = { Text(type.libelle()) },
-                        )
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    ) {
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 24.dp)
+                .navigationBarsPadding(),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Text(
+                if (formulaire.estNouvelle) "Nouvelle transaction" else "Modifier la transaction",
+                style = MaterialTheme.typography.titleLarge,
+            )
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                TypeTx.entries.forEachIndexed { index, type ->
+                    SegmentedButton(
+                        selected = formulaire.type == type,
+                        onClick = { onType(type) },
+                        shape = SegmentedButtonDefaults.itemShape(index, TypeTx.entries.size),
+                    ) {
+                        Text(if (type == TypeTx.DEPOT) "Dépôt" else "Retrait")
                     }
                 }
+            }
+            OutlinedTextField(
+                value = formulaire.montant,
+                onValueChange = onMontant,
+                label = { Text("Montant") },
+                suffix = { Text("$") },
+                isError = formulaire.montant.isNotEmpty() && formulaire.montantValide == null,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                singleLine = true,
+                textStyle = MaterialTheme.typography.headlineSmall.copy(fontFamily = FontFamily.Monospace),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            // Champ en lecture seule qui ouvre le calendrier: une date se
+            // choisit, elle ne se tape pas caractere par caractere.
+            Box {
                 OutlinedTextField(
-                    value = formulaire.montant,
-                    onValueChange = onMontant,
-                    label = { Text("Montant") },
-                    isError = formulaire.montant.isNotEmpty() && formulaire.montantValide == null,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    value = formulaire.date,
+                    onValueChange = {},
+                    label = { Text("Date") },
+                    readOnly = true,
                     singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
                 )
-                formulaire.erreur?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable { calendrierOuvert = true },
+                )
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onEnregistrer, enabled = formulaire.valide) { Text("Enregistrer") }
-        },
-        dismissButton = {
-            Row {
-                if (!formulaire.estNouvelle) {
-                    TextButton(onClick = onSupprimer) { Text("Supprimer", color = MaterialTheme.colorScheme.error) }
+            Button(
+                onClick = onEnregistrer,
+                enabled = formulaire.valide,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Enregistrer")
+            }
+            formulaire.erreur?.let {
+                Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+            }
+            if (!formulaire.estNouvelle) {
+                TextButton(onClick = onSupprimer, modifier = Modifier.fillMaxWidth()) {
+                    Text("Supprimer", color = MaterialTheme.colorScheme.error)
                 }
-                TextButton(onClick = onFermer) { Text("Annuler") }
             }
-        },
-    )
+        }
+    }
+
+    if (calendrierOuvert) {
+        Calendrier(
+            dateInitiale = formulaire.dateValide,
+            onChoisie = { date ->
+                onDate(date.toString())
+                calendrierOuvert = false
+            },
+            onFermer = { calendrierOuvert = false },
+        )
+    }
 }
 
-private fun TypeTx.libelle(): String = when (this) {
-    TypeTx.DEPOT -> "Dépôt"
-    TypeTx.RETRAIT -> "Retrait"
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun Calendrier(dateInitiale: LocalDate?, onChoisie: (LocalDate) -> Unit, onFermer: () -> Unit) {
+    val etat = rememberDatePickerState(
+        initialSelectedDateMillis = dateInitiale?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli(),
+    )
+    DatePickerDialog(
+        onDismissRequest = onFermer,
+        confirmButton = {
+            // Le selecteur rend un instant UTC: le relire en UTC evite de
+            // reculer d'un jour selon le fuseau de l'appareil.
+            TextButton(
+                onClick = {
+                    val millis = etat.selectedDateMillis ?: return@TextButton
+                    onChoisie(Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate())
+                },
+                enabled = etat.selectedDateMillis != null,
+            ) {
+                Text("Choisir")
+            }
+        },
+        dismissButton = { TextButton(onClick = onFermer) { Text("Annuler") } },
+    ) {
+        DatePicker(state = etat)
+    }
 }
 
 @Preview(showBackground = true)
@@ -186,8 +394,16 @@ private fun JournalContenuApercu() {
             transactions = listOf(
                 Transaction(Compte.CELI, LocalDate.of(2026, 3, 1), TypeTx.RETRAIT, BigDecimal("500.00"), id = 2),
                 Transaction(Compte.CELI, LocalDate.of(2026, 1, 15), TypeTx.DEPOT, BigDecimal("2000.00"), id = 1),
+                Transaction(Compte.CELI, LocalDate.of(2025, 11, 3), TypeTx.DEPOT, BigDecimal("1500.00"), id = 3),
             ),
         ),
         onOuvrirTransaction = {},
+        onAjouter = {},
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun JournalVideApercu() {
+    JournalVide(onAjouter = {})
 }
