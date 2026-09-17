@@ -3,6 +3,7 @@ package dev.celitracker.app.ui.reglages
 import dev.celitracker.engine.PlafondAnnuel
 import dev.celitracker.engine.Profil
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDate
 
 private const val ANNEE_NAISSANCE_MIN = 1900
@@ -19,8 +20,17 @@ data class ReglagesUiState(
     val plafonds: List<PlafondAnnuel> = emptyList(),
     val nouveauPlafondAnnee: String = "",
     val nouveauPlafondMontant: String = "",
+    val urlPageArc: String = "",
+    val derniereVerificationArc: Instant? = null,
+    val verificationEnCours: Boolean = false,
+    val erreurArc: String? = null,
     val message: String? = null,
 ) {
+    /** Lues sur le site de l'ARC, en attente de confirmation. */
+    val propositions: List<PlafondAnnuel> get() = plafonds.filter { !it.confirme }
+
+    val plafondsConfirmes: List<PlafondAnnuel> get() = plafonds.filter { it.confirme }
+
     val anneeNaissanceValide: Int? get() =
         anneeNaissance.toIntOrNull()?.takeIf { it in ANNEE_NAISSANCE_MIN..LocalDate.now().year }
 

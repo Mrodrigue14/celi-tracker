@@ -24,6 +24,11 @@ class ReglagesViewModelTest {
     private val fixture = DepotDeTest()
     private val depot = fixture.depot
 
+    /** Telechargement bouchonne: aucun test de cette classe ne touche au reseau. */
+    private val pageArc: suspend (String) -> String = {
+        """<p>Le plafond de cotisation à un CELI <span class="nowrap">pour 2027</span> est de 7 500 $.</p>"""
+    }
+
     @AfterTest
     fun apres() = fixture.fermer()
 
@@ -42,7 +47,7 @@ class ReglagesViewModelTest {
 
     @Test
     fun `enregistrerProfil persiste le profil valide`() = runTest {
-        val viewModel = ReglagesViewModel(depot)
+        val viewModel = ReglagesViewModel(depot, pageArc)
         viewModel.modifierAnneeNaissance("1995")
         viewModel.modifierDateOuvertureCeliapp("2023-04-01")
 
@@ -58,7 +63,7 @@ class ReglagesViewModelTest {
 
     @Test
     fun `enregistrerProfil ignore une saisie invalide`() = runTest {
-        val viewModel = ReglagesViewModel(depot)
+        val viewModel = ReglagesViewModel(depot, pageArc)
         viewModel.modifierAnneeNaissance("pas-un-nombre")
 
         viewModel.enregistrerProfil()
@@ -68,7 +73,7 @@ class ReglagesViewModelTest {
 
     @Test
     fun `l'annee d'admissibilite affichee suit l'annee de naissance`() = runTest {
-        val viewModel = ReglagesViewModel(depot)
+        val viewModel = ReglagesViewModel(depot, pageArc)
 
         viewModel.modifierAnneeNaissance("1995")
 
@@ -77,7 +82,7 @@ class ReglagesViewModelTest {
 
     @Test
     fun `une naissance dans le futur n'est pas une saisie valide`() = runTest {
-        val viewModel = ReglagesViewModel(depot)
+        val viewModel = ReglagesViewModel(depot, pageArc)
 
         viewModel.modifierAnneeNaissance((LocalDate.now().year + 1).toString())
 
@@ -85,8 +90,53 @@ class ReglagesViewModelTest {
     }
 
     @Test
+    fun `le plafond lu sur le site de l'ARC attend une confirmation`() = runTest {
+        val viewModel = ReglagesViewModel(depot, pageArc)
+
+        val etat = viewModel.uiState.first { it.propositions.isNotEmpty() }
+
+        val propose = etat.propositions.single()
+        assertEquals(2027, propose.annee)
+        assertEquals(BigDecimal("7500.00"), propose.montant)
+        // La proposition ne compte pas comme un plafond de la table.
+        assertTrue(etat.plafondsConfirmes.isEmpty())
+    }
+
+    @Test
+    fun `confirmer une proposition la fait entrer dans la table`() = runTest {
+        val viewModel = ReglagesViewModel(depot, pageArc)
+        val propose = viewModel.uiState.first { it.propositions.isNotEmpty() }.propositions.single()
+
+        viewModel.confirmerProposition(propose)
+        val etat = viewModel.uiState.first { it.plafondsConfirmes.isNotEmpty() }
+
+        assertEquals(listOf(2027), etat.plafondsConfirmes.map { it.annee })
+        assertTrue(etat.propositions.isEmpty())
+    }
+
+    @Test
+    fun `rejeter une proposition l'efface`() = runTest {
+        val viewModel = ReglagesViewModel(depot, pageArc)
+        val propose = viewModel.uiState.first { it.propositions.isNotEmpty() }.propositions.single()
+
+        viewModel.rejeterProposition(propose)
+        val etat = viewModel.uiState.first { it.propositions.isEmpty() }
+
+        assertTrue(etat.plafonds.isEmpty())
+    }
+
+    @Test
+    fun `une lecture impossible est dite, pas tue`() = runTest {
+        val viewModel = ReglagesViewModel(depot) { throw java.io.IOException("réseau indisponible") }
+
+        val etat = viewModel.uiState.first { it.erreurArc != null }
+
+        assertEquals("réseau indisponible", etat.erreurArc)
+    }
+
+    @Test
     fun `ajouterPlafond persiste et vide les champs de saisie`() = runTest {
-        val viewModel = ReglagesViewModel(depot)
+        val viewModel = ReglagesViewModel(depot, pageArc)
         viewModel.modifierNouveauPlafondAnnee("2026")
         viewModel.modifierNouveauPlafondMontant("7000.00")
 

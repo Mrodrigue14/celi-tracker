@@ -1,5 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Uniquement pour lire la page publique de l'ARC qui annonce le plafond
+         CELI de l'annee. Aucune donnee de l'utilisateur ne sort de l'appareil. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".CeliTrackerApplication"
         android:allowBackup="true"

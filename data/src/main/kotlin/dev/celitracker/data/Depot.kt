@@ -48,6 +48,8 @@ class Depot(private val base: CeliTrackerBase) {
         dao.enregistrerPlafond(PlafondEntity(plafond.compte, plafond.annee, plafond.montant, plafond.confirme))
     }
 
+    suspend fun supprimerPlafond(compte: Compte, annee: Int) = dao.supprimerPlafond(compte, annee)
+
     suspend fun transactions(): List<Transaction> = dao.transactions().map { Transaction(it.compte, it.date, it.type, it.montant, it.id) }
 
     suspend fun ajouterTransaction(transaction: Transaction) {

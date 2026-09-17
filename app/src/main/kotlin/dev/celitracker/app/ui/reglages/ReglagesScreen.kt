@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -48,6 +49,7 @@ import dev.celitracker.app.ui.format.formatMontant
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.PlafondAnnuel
 import java.math.BigDecimal
+import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,6 +87,11 @@ fun ReglagesScreen(onRetour: () -> Unit) {
             onNouveauPlafondAnneeChange = viewModel::modifierNouveauPlafondAnnee,
             onNouveauPlafondMontantChange = viewModel::modifierNouveauPlafondMontant,
             onAjouterPlafond = viewModel::ajouterPlafond,
+            onUrlPageArcChange = viewModel::modifierUrlPageArc,
+            onEnregistrerUrlPageArc = viewModel::enregistrerUrlPageArc,
+            onVerifierArc = { viewModel.verifierArc(demandeExplicite = true) },
+            onConfirmerProposition = viewModel::confirmerProposition,
+            onRejeterProposition = viewModel::rejeterProposition,
         )
     }
 }
@@ -98,6 +105,11 @@ fun ReglagesContenu(
     onNouveauPlafondAnneeChange: (String) -> Unit,
     onNouveauPlafondMontantChange: (String) -> Unit,
     onAjouterPlafond: () -> Unit,
+    onUrlPageArcChange: (String) -> Unit,
+    onEnregistrerUrlPageArc: () -> Unit,
+    onVerifierArc: () -> Unit,
+    onConfirmerProposition: (PlafondAnnuel) -> Unit,
+    onRejeterProposition: (PlafondAnnuel) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -138,15 +150,53 @@ fun ReglagesContenu(
 
         HorizontalDivider(modifier = Modifier.padding(top = 32.dp))
 
+        PropositionsArc(
+            propositions = etat.propositions,
+            onConfirmer = onConfirmerProposition,
+            onRejeter = onRejeterProposition,
+        )
+        etat.erreurArc?.let { EchecLectureArc(it) }
+
+        TitreSection("Source des plafonds")
+        OutlinedTextField(
+            value = etat.urlPageArc,
+            onValueChange = onUrlPageArcChange,
+            label = { Text("Page de l'ARC") },
+            supportingText = {
+                Text(
+                    etat.derniereVerificationArc
+                        ?.let { "Dernière lecture : ${it.atZone(ZoneId.systemDefault()).toLocalDate()}" }
+                        ?: "Jamais lue. L'application vérifie une fois par mois, et seulement s'il manque un plafond.",
+                )
+            },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Row(
+            modifier = Modifier.padding(top = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            OutlinedButton(onClick = onEnregistrerUrlPageArc, modifier = Modifier.weight(1f)) {
+                Text("Enregistrer l'adresse")
+            }
+            Button(
+                onClick = onVerifierArc,
+                enabled = !etat.verificationEnCours,
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(if (etat.verificationEnCours) "Lecture..." else "Vérifier")
+            }
+        }
+
         TitreSection("Plafonds CELI")
-        if (etat.plafonds.isEmpty()) {
+        if (etat.plafondsConfirmes.isEmpty()) {
             Text(
                 "Aucun plafond enregistré. Sans plafond confirmé, les droits de l'année restent à zéro plutôt que d'être devinés.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        etat.plafonds.forEach { plafond -> LignePlafond(plafond) }
+        etat.plafondsConfirmes.forEach { plafond -> LignePlafond(plafond) }
 
         Row(
             modifier = Modifier.padding(top = 16.dp),
@@ -179,6 +229,75 @@ fun ReglagesContenu(
         ) {
             Text("Ajouter le plafond")
         }
+    }
+}
+
+/**
+ * Les plafonds lus sur le site de l'ARC restent inertes tant qu'ils ne sont pas
+ * confirmes: c'est une proposition, pas une modification des droits.
+ */
+@Composable
+private fun PropositionsArc(
+    propositions: List<PlafondAnnuel>,
+    onConfirmer: (PlafondAnnuel) -> Unit,
+    onRejeter: (PlafondAnnuel) -> Unit,
+) {
+    if (propositions.isEmpty()) return
+
+    TitreSection("Proposé par l'ARC")
+    propositions.forEach { plafond ->
+        Column(modifier = Modifier.padding(bottom = 12.dp)) {
+            Text(
+                "${plafond.annee} : ${plafond.montant.formatMontant()}",
+                style = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Monospace),
+            )
+            Text(
+                "Lu sur le site de l'ARC. Il n'entre dans le calcul qu'une fois confirmé.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Row(
+                modifier = Modifier.padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Button(onClick = { onConfirmer(plafond) }, modifier = Modifier.weight(1f)) {
+                    Text("Confirmer")
+                }
+                OutlinedButton(onClick = { onRejeter(plafond) }, modifier = Modifier.weight(1f)) {
+                    Text("Rejeter")
+                }
+            }
+        }
+    }
+}
+
+/** Echec visible, pas de mode degrade silencieux: la saisie manuelle reste juste dessous. */
+@Composable
+private fun EchecLectureArc(raison: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp)
+            .background(MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(12.dp))
+            .padding(16.dp),
+    ) {
+        Text(
+            "Lecture automatique impossible",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onErrorContainer,
+        )
+        Text(
+            raison,
+            modifier = Modifier.padding(top = 4.dp),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onErrorContainer,
+        )
+        Text(
+            "Saisis le plafond à la main plus bas.",
+            modifier = Modifier.padding(top = 4.dp),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onErrorContainer,
+        )
     }
 }
 
@@ -252,7 +371,9 @@ private fun ReglagesContenuApercu() {
             plafonds = listOf(
                 PlafondAnnuel(Compte.CELI, 2025, BigDecimal("7000.00"), confirme = true),
                 PlafondAnnuel(Compte.CELI, 2026, BigDecimal("7000.00"), confirme = true),
+                PlafondAnnuel(Compte.CELI, 2027, BigDecimal("7500.00"), confirme = false),
             ),
+            urlPageArc = "https://www.canada.ca/...",
         ),
         onAnneeNaissanceChange = {},
         onDateOuvertureChange = {},
@@ -260,5 +381,10 @@ private fun ReglagesContenuApercu() {
         onNouveauPlafondAnneeChange = {},
         onNouveauPlafondMontantChange = {},
         onAjouterPlafond = {},
+        onUrlPageArcChange = {},
+        onEnregistrerUrlPageArc = {},
+        onVerifierArc = {},
+        onConfirmerProposition = {},
+        onRejeterProposition = {},
     )
 }
