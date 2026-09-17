@@ -69,7 +69,7 @@ class DepotTest {
 
     @Test
     fun `reglages par defaut puis aller-retour`() = runTest {
-        assertEquals(Reglages(urlPageArc = "", dateDerniereVerification = null), depot.reglages())
+        assertEquals(Reglages(urlPageArc = URL_PAGE_ARC_PAR_DEFAUT, dateDerniereVerification = null), depot.reglages())
 
         val reglages = Reglages(urlPageArc = "https://arc.gc.ca", dateDerniereVerification = Instant.parse("2026-09-08T12:00:00Z"))
         depot.enregistrerReglages(reglages)
