@@ -8,14 +8,11 @@ import kotlin.test.assertEquals
 /** Raccourci: tout litteral monetaire d'un test s'ecrit a 2 decimales. */
 private fun argent(valeur: String): BigDecimal = BigDecimal(valeur).argent()
 
-private fun plafondsCeli(vararg paires: Pair<Int, String>): List<PlafondAnnuel> =
-    paires.map { (annee, montant) -> PlafondAnnuel(Compte.CELI, annee, argent(montant)) }
+private fun plafondsCeli(vararg paires: Pair<Int, String>): List<PlafondAnnuel> = paires.map { (annee, montant) -> PlafondAnnuel(Compte.CELI, annee, argent(montant)) }
 
-private fun depot(date: String, montant: String) =
-    Transaction(Compte.CELI, LocalDate.parse(date), TypeTx.DEPOT, argent(montant))
+private fun depot(date: String, montant: String) = Transaction(Compte.CELI, LocalDate.parse(date), TypeTx.DEPOT, argent(montant))
 
-private fun retrait(date: String, montant: String) =
-    Transaction(Compte.CELI, LocalDate.parse(date), TypeTx.RETRAIT, argent(montant))
+private fun retrait(date: String, montant: String) = Transaction(Compte.CELI, LocalDate.parse(date), TypeTx.RETRAIT, argent(montant))
 
 class CeliMoteurTest {
 
@@ -101,7 +98,10 @@ class CeliMoteurTest {
         )
 
         val droits = CeliMoteur.droitsParAnnee(
-            profil, plafondsCeli(2019 to "6000.00"), transactions, jusqua = 2019,
+            profil,
+            plafondsCeli(2019 to "6000.00"),
+            transactions,
+            jusqua = 2019,
         )
 
         assertEquals(argent("0.00"), droits.single().depots)
@@ -131,7 +131,9 @@ class CeliMoteurTest {
     fun `un retrait redonne des droits le 1er janvier suivant`() {
         val profil = Profil(2019, 2001, null)
         val plafonds = plafondsCeli(
-            2019 to "6000.00", 2020 to "6000.00", 2021 to "6000.00",
+            2019 to "6000.00",
+            2020 to "6000.00",
+            2021 to "6000.00",
         )
         val transactions = listOf(
             depot("2020-03-01", "6000.00"),

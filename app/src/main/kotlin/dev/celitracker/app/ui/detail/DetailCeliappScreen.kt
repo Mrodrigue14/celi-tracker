@@ -113,8 +113,8 @@ private fun DetailCeliappContenuApercu() {
                     retraits = BigDecimal.ZERO,
                     reportSortant = BigDecimal("5000.00"),
                     plafondVieRestant = BigDecimal("37000.00"),
-                )
-            )
+                ),
+            ),
         ),
     )
 }

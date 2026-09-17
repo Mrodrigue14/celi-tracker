@@ -8,6 +8,7 @@ import dev.celitracker.engine.Reglages
 import dev.celitracker.engine.SnapshotArc
 import dev.celitracker.engine.Transaction
 import dev.celitracker.engine.TypeTx
+import kotlinx.coroutines.test.runTest
 import java.io.File
 import java.math.BigDecimal
 import java.time.Instant
@@ -17,7 +18,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-import kotlinx.coroutines.test.runTest
 
 class ExportJsonTest {
 

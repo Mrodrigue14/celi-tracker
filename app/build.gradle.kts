@@ -39,7 +39,7 @@ android {
         compilerOptions {
             // Strict en CI (-PwarningsAsErrors=true), souple en local.
             allWarningsAsErrors.set(
-                providers.gradleProperty("warningsAsErrors").map { it.toBoolean() }.orElse(false)
+                providers.gradleProperty("warningsAsErrors").map { it.toBoolean() }.orElse(false),
             )
         }
     }

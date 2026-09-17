@@ -8,11 +8,9 @@ import kotlin.test.assertTrue
 
 private fun argent(valeur: String): BigDecimal = BigDecimal(valeur).argent()
 
-private fun depotFhsa(date: String, montant: String) =
-    Transaction(Compte.CELIAPP, LocalDate.parse(date), TypeTx.DEPOT, argent(montant))
+private fun depotFhsa(date: String, montant: String) = Transaction(Compte.CELIAPP, LocalDate.parse(date), TypeTx.DEPOT, argent(montant))
 
-private fun retraitFhsa(date: String, montant: String) =
-    Transaction(Compte.CELIAPP, LocalDate.parse(date), TypeTx.RETRAIT, argent(montant))
+private fun retraitFhsa(date: String, montant: String) = Transaction(Compte.CELIAPP, LocalDate.parse(date), TypeTx.RETRAIT, argent(montant))
 
 class CeliappMoteurTest {
 

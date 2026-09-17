@@ -76,8 +76,7 @@ object CeliMoteur {
         return resultat
     }
 
-    private fun somme(transactions: List<Transaction>, annee: Int, type: TypeTx): BigDecimal =
-        transactions
-            .filter { it.date.year == annee && it.type == type }
-            .fold(BigDecimal.ZERO) { total, tx -> total + tx.montant }
+    private fun somme(transactions: List<Transaction>, annee: Int, type: TypeTx): BigDecimal = transactions
+        .filter { it.date.year == annee && it.type == type }
+        .fold(BigDecimal.ZERO) { total, tx -> total + tx.montant }
 }

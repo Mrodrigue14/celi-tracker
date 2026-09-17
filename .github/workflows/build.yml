@@ -40,6 +40,11 @@ jobs:
         with:
           cache-read-only: "false"
 
+      # Le style passe avant les tests: il prend quelques secondes et echoue sur
+      # des points mecaniques, alors que la suite de tests prend des minutes.
+      - name: Style Kotlin
+        run: ./gradlew ktlintCheck
+
       # Le moteur de calcul est un module Kotlin pur : ses tests tournent sans
       # SDK Android ni émulateur. C'est le coeur de correction de l'app, donc
       # la barrière CI porte d'abord là-dessus.

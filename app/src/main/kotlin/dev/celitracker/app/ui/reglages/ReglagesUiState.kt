@@ -23,8 +23,11 @@ data class ReglagesUiState(
     val anneeNaissanceValide: Int? get() = anneeNaissance.toIntOrNull()
 
     val dateOuvertureValide: LocalDate? get() =
-        if (dateOuvertureCeliapp.isBlank()) null
-        else runCatching { LocalDate.parse(dateOuvertureCeliapp) }.getOrNull()
+        if (dateOuvertureCeliapp.isBlank()) {
+            null
+        } else {
+            runCatching { LocalDate.parse(dateOuvertureCeliapp) }.getOrNull()
+        }
 
     /** Vide = pas de CELIAPP, valide. Non vide et non parsable = erreur de saisie. */
     val dateOuvertureInvalide: Boolean get() =

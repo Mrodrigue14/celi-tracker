@@ -81,9 +81,7 @@ class JournalViewModel(private val depot: Depot, val compte: Compte) : ViewModel
     }
 
     // Toute saisie efface l'erreur precedente: elle portait sur l'ancienne valeur.
-    private fun modifierFormulaire(modification: FormulaireTransaction.() -> FormulaireTransaction) =
-        _uiState.update { etat -> etat.copy(formulaire = etat.formulaire?.modification()?.copy(erreur = null)) }
+    private fun modifierFormulaire(modification: FormulaireTransaction.() -> FormulaireTransaction) = _uiState.update { etat -> etat.copy(formulaire = etat.formulaire?.modification()?.copy(erreur = null)) }
 
-    private suspend fun transactionsDuCompte(): List<Transaction> =
-        depot.transactions().filter { it.compte == compte }.sortedByDescending { it.date }
+    private suspend fun transactionsDuCompte(): List<Transaction> = depot.transactions().filter { it.compte == compte }.sortedByDescending { it.date }
 }

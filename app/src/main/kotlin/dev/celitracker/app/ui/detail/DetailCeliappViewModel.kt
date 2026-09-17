@@ -28,7 +28,7 @@ class DetailCeliappViewModel(private val depot: Depot) : ViewModel() {
             }
             val transactions = depot.transactions()
             _uiState.value = DetailCeliappUiState(
-                lignes = CeliappMoteur.droitsParAnnee(profil, transactions, LocalDate.now().year)
+                lignes = CeliappMoteur.droitsParAnnee(profil, transactions, LocalDate.now().year),
             )
         }
     }

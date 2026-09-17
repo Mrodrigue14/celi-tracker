@@ -17,15 +17,17 @@ class SurCotisationTest {
         PlafondAnnuel(Compte.CELI, 2020, argent("6000.00")),
     )
 
-    private fun tx(date: String, type: TypeTx, montant: String) =
-        Transaction(Compte.CELI, LocalDate.parse(date), type, argent(montant))
+    private fun tx(date: String, type: TypeTx, montant: String) = Transaction(Compte.CELI, LocalDate.parse(date), type, argent(montant))
 
     @Test
     fun `aucun excedent quand les cotisations respectent les droits`() {
         val transactions = listOf(tx("2019-03-15", TypeTx.DEPOT, "6000.00"))
 
         val excedents = SurCotisation.excedentsCeli(
-            profil, plafonds, transactions, jusqua = YearMonth.of(2019, 12),
+            profil,
+            plafonds,
+            transactions,
+            jusqua = YearMonth.of(2019, 12),
         )
 
         assertTrue(excedents.isEmpty())
@@ -37,7 +39,10 @@ class SurCotisationTest {
         val transactions = listOf(tx("2019-03-15", TypeTx.DEPOT, "10000.00"))
 
         val excedents = SurCotisation.excedentsCeli(
-            profil, plafonds, transactions, jusqua = YearMonth.of(2019, 12),
+            profil,
+            plafonds,
+            transactions,
+            jusqua = YearMonth.of(2019, 12),
         )
 
         // Mars a decembre inclus = 10 mois.
@@ -55,13 +60,16 @@ class SurCotisationTest {
         // redonne AUCUN droit avant le 1er janvier suivant. Re-cotiser le meme
         // montant la meme annee cree donc un excedent plein.
         val transactions = listOf(
-            tx("2019-02-01", TypeTx.DEPOT, "6000.00"),   // droits epuises, 0 excedent
+            tx("2019-02-01", TypeTx.DEPOT, "6000.00"), // droits epuises, 0 excedent
             tx("2019-04-01", TypeTx.RETRAIT, "6000.00"), // aucun droit restitue
-            tx("2019-06-01", TypeTx.DEPOT, "6000.00"),   // re-cotisation -> excedent
+            tx("2019-06-01", TypeTx.DEPOT, "6000.00"), // re-cotisation -> excedent
         )
 
         val excedents = SurCotisation.excedentsCeli(
-            profil, plafonds, transactions, jusqua = YearMonth.of(2019, 12),
+            profil,
+            plafonds,
+            transactions,
+            jusqua = YearMonth.of(2019, 12),
         ).associateBy { it.mois }
 
         // Fevrier a mai: les droits couvrent les cotisations, aucun excedent.
@@ -79,12 +87,15 @@ class SurCotisationTest {
     fun `un retrait annule l'excedent mais le mois reste facture`() {
         val transactions = listOf(
             tx("2019-02-01", TypeTx.DEPOT, "6000.00"),
-            tx("2019-03-01", TypeTx.DEPOT, "1000.00"),   // depassement de 1000
+            tx("2019-03-01", TypeTx.DEPOT, "1000.00"), // depassement de 1000
             tx("2019-04-15", TypeTx.RETRAIT, "1000.00"), // corrige en avril
         )
 
         val excedents = SurCotisation.excedentsCeli(
-            profil, plafonds, transactions, jusqua = YearMonth.of(2019, 12),
+            profil,
+            plafonds,
+            transactions,
+            jusqua = YearMonth.of(2019, 12),
         ).associateBy { it.mois }
 
         assertEquals(argent("1000.00"), excedents.getValue(3).excedentMax)
@@ -104,7 +115,10 @@ class SurCotisationTest {
         val transactions = listOf(tx("2019-03-15", TypeTx.DEPOT, "10000.00"))
 
         val excedents = SurCotisation.excedentsCeli(
-            profil, plafonds, transactions, jusqua = YearMonth.of(2020, 12),
+            profil,
+            plafonds,
+            transactions,
+            jusqua = YearMonth.of(2020, 12),
         )
 
         assertEquals(2019, excedents.last().annee)
@@ -115,7 +129,10 @@ class SurCotisationTest {
     @Test
     fun `aucun excedent sans transaction`() {
         val excedents = SurCotisation.excedentsCeli(
-            profil, plafonds, emptyList(), jusqua = YearMonth.of(2019, 12),
+            profil,
+            plafonds,
+            emptyList(),
+            jusqua = YearMonth.of(2019, 12),
         )
 
         assertTrue(excedents.isEmpty())
@@ -129,7 +146,10 @@ class SurCotisationTest {
         val transactions = listOf(tx("2018-05-01", TypeTx.DEPOT, "9000.00"))
 
         val excedents = SurCotisation.excedentsCeli(
-            profil, plafonds, transactions, jusqua = YearMonth.of(2019, 12),
+            profil,
+            plafonds,
+            transactions,
+            jusqua = YearMonth.of(2019, 12),
         )
 
         assertTrue(excedents.isEmpty())

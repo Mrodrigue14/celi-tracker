@@ -6,12 +6,6 @@ import dev.celitracker.app.DepotDeTest
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.PlafondAnnuel
 import dev.celitracker.engine.Profil
-import java.math.BigDecimal
-import java.time.LocalDate
-import kotlin.test.AfterTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -20,6 +14,12 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import java.math.BigDecimal
+import java.time.LocalDate
+import kotlin.test.AfterTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class DetailCeliViewModelTest {
 

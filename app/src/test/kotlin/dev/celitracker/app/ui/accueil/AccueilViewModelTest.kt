@@ -9,12 +9,6 @@ import dev.celitracker.engine.PlafondAnnuel
 import dev.celitracker.engine.Profil
 import dev.celitracker.engine.Transaction
 import dev.celitracker.engine.TypeTx
-import java.math.BigDecimal
-import java.time.LocalDate
-import kotlin.test.AfterTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -23,6 +17,12 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import java.math.BigDecimal
+import java.time.LocalDate
+import kotlin.test.AfterTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 class AccueilViewModelTest {
 
@@ -66,7 +66,7 @@ class AccueilViewModelTest {
         val plafond = PlafondAnnuel(Compte.CELI, anneeCourante, BigDecimal("7000.00"), confirme = true)
         depot.enregistrerPlafond(plafond)
         depot.ajouterTransaction(
-            Transaction(Compte.CELI, LocalDate.of(anneeCourante, 1, 15), TypeTx.DEPOT, BigDecimal("1000.00"))
+            Transaction(Compte.CELI, LocalDate.of(anneeCourante, 1, 15), TypeTx.DEPOT, BigDecimal("1000.00")),
         )
 
         val viewModel = AccueilViewModel(depot)

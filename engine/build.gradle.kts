@@ -17,7 +17,7 @@ kotlin {
         // avertissement ne doit pas bloquer l'iteration, mais ne doit pas non
         // plus s'accumuler dans la branche stable.
         allWarningsAsErrors.set(
-            providers.gradleProperty("warningsAsErrors").map { it.toBoolean() }.orElse(false)
+            providers.gradleProperty("warningsAsErrors").map { it.toBoolean() }.orElse(false),
         )
     }
 }

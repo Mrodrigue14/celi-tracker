@@ -53,7 +53,7 @@ class ReglagesViewModel(private val depot: Depot) : ViewModel() {
                     anneeAdmissibiliteCeli = annee,
                     anneeNaissance = naissance,
                     dateOuvertureCeliapp = etat.dateOuvertureValide,
-                )
+                ),
             )
             _uiState.update { it.copy(message = "Profil enregistré.") }
         }
@@ -79,6 +79,5 @@ class ReglagesViewModel(private val depot: Depot) : ViewModel() {
         }
     }
 
-    private suspend fun plafondsCeli(): List<PlafondAnnuel> =
-        depot.plafonds().filter { it.compte == Compte.CELI }.sortedBy { it.annee }
+    private suspend fun plafondsCeli(): List<PlafondAnnuel> = depot.plafonds().filter { it.compte == Compte.CELI }.sortedBy { it.annee }
 }
