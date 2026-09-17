@@ -15,7 +15,9 @@ import dev.celitracker.app.ui.reglages.ReglagesViewModel
 import dev.celitracker.data.CeliTrackerBase
 import dev.celitracker.data.Depot
 import dev.celitracker.data.configurerBase
+import dev.celitracker.data.garnirPlafondsPublies
 import dev.celitracker.engine.Compte
+import kotlinx.coroutines.runBlocking
 import java.io.File
 
 /**
@@ -32,6 +34,10 @@ class CeliTrackerApplication : Application() {
         super.onCreate()
         val builder = Room.databaseBuilder(this, CeliTrackerBase::class.java, File(filesDir, "celi-tracker.db").absolutePath)
         val depot = Depot(configurerBase(builder))
+        // Une poignee d'insertions au premier demarrage, puis une seule
+        // lecture ensuite. Bloquer ici evite un premier ecran a zero le temps
+        // qu'une coroutine de fond finisse.
+        runBlocking { depot.garnirPlafondsPublies() }
         viewModelFactory = viewModelFactory {
             initializer { AccueilViewModel(depot) }
             initializer { DetailCeliViewModel(depot) }
