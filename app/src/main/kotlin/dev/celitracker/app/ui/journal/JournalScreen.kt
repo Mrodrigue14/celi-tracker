@@ -56,6 +56,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
@@ -73,6 +74,8 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
+
+private const val LARGEUR_MINIMALE_CALENDRIER = 360
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -312,23 +315,11 @@ private fun FeuilleTransaction(
                 textStyle = MaterialTheme.typography.headlineSmall.copy(fontFamily = FontFamily.Monospace),
                 modifier = Modifier.fillMaxWidth(),
             )
-            // Champ en lecture seule qui ouvre le calendrier: une date se
-            // choisit, elle ne se tape pas caractere par caractere.
-            Box {
-                OutlinedTextField(
-                    value = formulaire.date,
-                    onValueChange = {},
-                    label = { Text("Date") },
-                    readOnly = true,
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .clickable { calendrierOuvert = true },
-                )
-            }
+            ChampDate(
+                date = formulaire.date,
+                onDate = onDate,
+                onOuvrirCalendrier = { calendrierOuvert = true },
+            )
             Button(
                 onClick = onEnregistrer,
                 enabled = formulaire.valide,
@@ -355,6 +346,40 @@ private fun FeuilleTransaction(
                 calendrierOuvert = false
             },
             onFermer = { calendrierOuvert = false },
+        )
+    }
+}
+
+@Composable
+private fun ChampDate(date: String, onDate: (String) -> Unit, onOuvrirCalendrier: () -> Unit) {
+    // Le calendrier de Material occupe une largeur fixe de 360 dp et rogne ses
+    // propres boutons en dessous. Dans une fenetre plus etroite (ecran ancien,
+    // mode ecran partage), la date se tape donc au clavier.
+    if (LocalConfiguration.current.screenWidthDp < LARGEUR_MINIMALE_CALENDRIER) {
+        OutlinedTextField(
+            value = date,
+            onValueChange = onDate,
+            label = { Text("Date (AAAA-MM-JJ)") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        return
+    }
+    // Ailleurs, le champ est en lecture seule et ouvre le calendrier: une date
+    // se choisit, elle ne se tape pas caractere par caractere.
+    Box {
+        OutlinedTextField(
+            value = date,
+            onValueChange = {},
+            label = { Text("Date") },
+            readOnly = true,
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clickable(onClick = onOuvrirCalendrier),
         )
     }
 }
