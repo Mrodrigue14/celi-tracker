@@ -45,6 +45,8 @@ class JournalViewModel(private val depot: Depot, val compte: Compte) : ViewModel
         )
     }
 
+    fun messageAffiche() = _uiState.update { it.copy(message = null) }
+
     fun fermerFormulaire() = _uiState.update { it.copy(formulaire = null) }
 
     fun modifierDate(valeur: String) = modifierFormulaire { copy(date = valeur) }
