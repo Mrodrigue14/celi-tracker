@@ -6,6 +6,7 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.room.Room
+import dev.celitracker.app.arc.telechargerPageArc
 import dev.celitracker.app.ui.accueil.AccueilViewModel
 import dev.celitracker.app.ui.detail.DetailCeliViewModel
 import dev.celitracker.app.ui.detail.DetailCeliappViewModel
@@ -42,7 +43,7 @@ class CeliTrackerApplication : Application() {
             initializer { AccueilViewModel(depot) }
             initializer { DetailCeliViewModel(depot) }
             initializer { DetailCeliappViewModel(depot) }
-            initializer { ReglagesViewModel(depot) }
+            initializer { ReglagesViewModel(depot, ::telechargerPageArc) }
             initializer {
                 val compte = checkNotNull(createSavedStateHandle().get<String>(ARG_COMPTE))
                 JournalViewModel(depot, Compte.valueOf(compte))

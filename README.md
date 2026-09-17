@@ -30,13 +30,16 @@ Déjà livré :
 0. Installation du SDK Android en ligne de commande et wrapper Gradle
 1. Moteur de calcul (module Kotlin pur) et ses tests
 2. Persistance Room, export et import JSON
-3. Interface Compose : accueil, détail d'un compte, réglages de base
+3. Interface Compose : accueil, détail d'un compte, réglages
+4. Journal des transactions : ajout, modification, suppression
+5. Plafonds du CELI déjà inscrits, et lecture du plafond de l'année sur le
+   site de l'ARC, proposé puis confirmé à la main
 
 À venir :
 
-4. Journal des transactions et réglages complets
-5. Lecture des plafonds sur le site de l'ARC et sauvegarde automatique Android
-6. APK
+6. Export et import JSON dans l'interface, instantané des droits déclarés
+   par l'ARC
+7. APK
 
 ## Avertissement
 

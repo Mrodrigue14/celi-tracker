@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import dev.celitracker.engine.Compte
 
 @Dao
 interface CeliTrackerDao {
@@ -20,6 +21,9 @@ interface CeliTrackerDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun enregistrerPlafond(plafond: PlafondEntity)
+
+    @Query("DELETE FROM plafonds WHERE compte = :compte AND annee = :annee")
+    suspend fun supprimerPlafond(compte: Compte, annee: Int)
 
     @Query("SELECT * FROM transactions")
     suspend fun transactions(): List<TransactionEntity>

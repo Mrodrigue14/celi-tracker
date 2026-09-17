@@ -33,6 +33,8 @@ sealed interface ResultatVerificationArc {
 suspend fun Depot.verifierPlafondsArc(
     telecharger: suspend (String) -> String,
     aujourdhui: LocalDate,
+    /** Une demande explicite de l'utilisateur ignore la limite d'une par mois. */
+    ignorerFrequence: Boolean = false,
 ): ResultatVerificationArc {
     val plafondsCeli = plafonds().filter { it.compte == Compte.CELI }
     val anneesUtiles = listOf(aujourdhui.year, aujourdhui.year + 1)
@@ -40,7 +42,9 @@ suspend fun Depot.verifierPlafondsArc(
 
     val reglages = reglages()
     val maintenant = aujourdhui.atStartOfDay(ZoneOffset.UTC).toInstant()
-    if (verificationTropRecente(reglages.dateDerniereVerification, maintenant)) return ResultatVerificationArc.Inutile
+    if (!ignorerFrequence && verificationTropRecente(reglages.dateDerniereVerification, maintenant)) {
+        return ResultatVerificationArc.Inutile
+    }
     if (reglages.urlPageArc.isBlank()) return ResultatVerificationArc.Echec("Aucune adresse de page de l'ARC enregistrée.")
 
     // La date est notee meme quand la lecture echoue: sans ca, une page en
