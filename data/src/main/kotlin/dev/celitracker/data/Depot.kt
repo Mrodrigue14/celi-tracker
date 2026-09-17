@@ -10,6 +10,15 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 /**
+ * Page de l'ARC qui enonce le plafond CELI de l'annee en cours. Une donnee,
+ * pas une constante figee dans le code appelant: une reorganisation du site se
+ * corrige dans les reglages, sans nouvelle version de l'application.
+ */
+const val URL_PAGE_ARC_PAR_DEFAUT =
+    "https://www.canada.ca/fr/agence-revenu/services/impot/particuliers/sujets/" +
+        "compte-epargne-libre-impot/cotiser/calculer-droits.html"
+
+/**
  * Expose uniquement les types de `:engine`, jamais les entites Room. Aucune
  * valeur calculee n'est persistee: les droits sont recalcules a la lecture
  * par `:engine`.
@@ -93,7 +102,7 @@ class Depot(private val base: CeliTrackerBase) {
     }
 
     suspend fun reglages(): Reglages = dao.reglages()?.let { Reglages(it.urlPageArc, it.dateDerniereVerification) }
-        ?: Reglages(urlPageArc = "", dateDerniereVerification = null)
+        ?: Reglages(urlPageArc = URL_PAGE_ARC_PAR_DEFAUT, dateDerniereVerification = null)
 
     suspend fun enregistrerReglages(reglages: Reglages) {
         dao.enregistrerReglages(ReglagesEntity(urlPageArc = reglages.urlPageArc, dateDerniereVerification = reglages.dateDerniereVerification))
