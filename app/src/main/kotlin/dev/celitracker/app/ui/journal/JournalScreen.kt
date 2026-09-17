@@ -25,8 +25,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -44,19 +42,15 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
@@ -66,16 +60,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.celitracker.app.CeliTrackerApplication
+import dev.celitracker.app.ui.composants.ChampDate
 import dev.celitracker.app.ui.format.formatMontant
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.Transaction
 import dev.celitracker.engine.TypeTx
 import java.math.BigDecimal
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneOffset
-
-private const val LARGEUR_MINIMALE_CALENDRIER = 360
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -273,8 +264,6 @@ private fun FeuilleTransaction(
     onSupprimer: () -> Unit,
     onFermer: () -> Unit,
 ) {
-    var calendrierOuvert by remember { mutableStateOf(false) }
-
     // Ouverte a pleine hauteur: a moitie deployee, le bouton d'enregistrement
     // tombait sous le bord de l'ecran.
     ModalBottomSheet(
@@ -315,11 +304,7 @@ private fun FeuilleTransaction(
                 textStyle = MaterialTheme.typography.headlineSmall.copy(fontFamily = FontFamily.Monospace),
                 modifier = Modifier.fillMaxWidth(),
             )
-            ChampDate(
-                date = formulaire.date,
-                onDate = onDate,
-                onOuvrirCalendrier = { calendrierOuvert = true },
-            )
+            ChampDate(date = formulaire.date, onDate = onDate, etiquette = "Date")
             Button(
                 onClick = onEnregistrer,
                 enabled = formulaire.valide,
@@ -336,78 +321,6 @@ private fun FeuilleTransaction(
                 }
             }
         }
-    }
-
-    if (calendrierOuvert) {
-        Calendrier(
-            dateInitiale = formulaire.dateValide,
-            onChoisie = { date ->
-                onDate(date.toString())
-                calendrierOuvert = false
-            },
-            onFermer = { calendrierOuvert = false },
-        )
-    }
-}
-
-@Composable
-private fun ChampDate(date: String, onDate: (String) -> Unit, onOuvrirCalendrier: () -> Unit) {
-    // Le calendrier de Material occupe une largeur fixe de 360 dp et rogne ses
-    // propres boutons en dessous. Dans une fenetre plus etroite (ecran ancien,
-    // mode ecran partage), la date se tape donc au clavier.
-    if (LocalConfiguration.current.screenWidthDp < LARGEUR_MINIMALE_CALENDRIER) {
-        OutlinedTextField(
-            value = date,
-            onValueChange = onDate,
-            label = { Text("Date (AAAA-MM-JJ)") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        return
-    }
-    // Ailleurs, le champ est en lecture seule et ouvre le calendrier: une date
-    // se choisit, elle ne se tape pas caractere par caractere.
-    Box {
-        OutlinedTextField(
-            value = date,
-            onValueChange = {},
-            label = { Text("Date") },
-            readOnly = true,
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .clickable(onClick = onOuvrirCalendrier),
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun Calendrier(dateInitiale: LocalDate?, onChoisie: (LocalDate) -> Unit, onFermer: () -> Unit) {
-    val etat = rememberDatePickerState(
-        initialSelectedDateMillis = dateInitiale?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli(),
-    )
-    DatePickerDialog(
-        onDismissRequest = onFermer,
-        confirmButton = {
-            // Le selecteur rend un instant UTC: le relire en UTC evite de
-            // reculer d'un jour selon le fuseau de l'appareil.
-            TextButton(
-                onClick = {
-                    val millis = etat.selectedDateMillis ?: return@TextButton
-                    onChoisie(Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate())
-                },
-                enabled = etat.selectedDateMillis != null,
-            ) {
-                Text("Choisir")
-            }
-        },
-        dismissButton = { TextButton(onClick = onFermer) { Text("Annuler") } },
-    ) {
-        DatePicker(state = etat)
     }
 }
 

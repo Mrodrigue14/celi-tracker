@@ -12,6 +12,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import java.math.BigDecimal
+import java.time.LocalDate
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -42,7 +43,6 @@ class ReglagesViewModelTest {
     @Test
     fun `enregistrerProfil persiste le profil valide`() = runTest {
         val viewModel = ReglagesViewModel(depot)
-        viewModel.modifierAnneeAdmissibiliteCeli("2010")
         viewModel.modifierAnneeNaissance("1995")
         viewModel.modifierDateOuvertureCeliapp("2023-04-01")
 
@@ -51,19 +51,37 @@ class ReglagesViewModelTest {
 
         assertEquals("Profil enregistré.", etat.message)
         val profil = depot.profil()
-        assertEquals(2010, profil?.anneeAdmissibiliteCeli)
         assertEquals(1995, profil?.anneeNaissance)
+        // Derivee de la naissance, jamais saisie.
+        assertEquals(2013, profil?.anneeAdmissibiliteCeli)
     }
 
     @Test
     fun `enregistrerProfil ignore une saisie invalide`() = runTest {
         val viewModel = ReglagesViewModel(depot)
-        viewModel.modifierAnneeAdmissibiliteCeli("pas-un-nombre")
-        viewModel.modifierAnneeNaissance("1995")
+        viewModel.modifierAnneeNaissance("pas-un-nombre")
 
         viewModel.enregistrerProfil()
 
         assertNull(depot.profil())
+    }
+
+    @Test
+    fun `l'annee d'admissibilite affichee suit l'annee de naissance`() = runTest {
+        val viewModel = ReglagesViewModel(depot)
+
+        viewModel.modifierAnneeNaissance("1995")
+
+        assertEquals(2013, viewModel.uiState.value.anneeAdmissibiliteCeli)
+    }
+
+    @Test
+    fun `une naissance dans le futur n'est pas une saisie valide`() = runTest {
+        val viewModel = ReglagesViewModel(depot)
+
+        viewModel.modifierAnneeNaissance((LocalDate.now().year + 1).toString())
+
+        assertNull(viewModel.uiState.value.anneeNaissanceValide)
     }
 
     @Test

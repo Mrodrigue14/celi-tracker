@@ -37,14 +37,26 @@ data class PlafondAnnuel(
     val confirme: Boolean = true,
 )
 
+/** Le CELI n'existe pas avant 2009: personne n'accumule de droits plus tot. */
+const val PREMIERE_ANNEE_CELI = 2009
+
+const val AGE_ADMISSIBILITE_CELI = 18
+
 data class Profil(
-    /** Annee des 18 ans ET de la residence canadienne. */
-    val anneeAdmissibiliteCeli: Int,
-    /** Pour la branche des 71 ans de la periode de participation CELIAPP. */
+    /** Aussi la branche des 71 ans de la periode de participation CELIAPP. */
     val anneeNaissance: Int,
     /** Demarre l'accumulation des droits CELIAPP ET l'horloge des 15 ans. */
     val dateOuvertureCeliapp: LocalDate?,
-)
+) {
+    /**
+     * Derivee, jamais saisie: l'annee des 18 ans, au plus tot 2009. Suppose la
+     * residence canadienne depuis cet age, ce qui est le cas de l'unique
+     * utilisateur de l'application. Une arrivee au pays plus tard reporterait
+     * cette annee et demanderait une saisie separee.
+     */
+    val anneeAdmissibiliteCeli: Int
+        get() = maxOf(anneeNaissance + AGE_ADMISSIBILITE_CELI, PREMIERE_ANNEE_CELI)
+}
 
 /** Instantane des droits declares sur le site de l'ARC, pour comparaison. */
 data class SnapshotArc(

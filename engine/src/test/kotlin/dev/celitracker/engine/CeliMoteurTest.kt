@@ -26,7 +26,6 @@ class CeliMoteurTest {
     @Test
     fun `scenario 2019 eligible three deposits`() {
         val profil = Profil(
-            anneeAdmissibiliteCeli = 2019,
             anneeNaissance = 2001,
             dateOuvertureCeliapp = null,
         )
@@ -79,7 +78,7 @@ class CeliMoteurTest {
 
     @Test
     fun `les annees vont de l'admissibilite a l'annee demandee`() {
-        val profil = Profil(2019, 2001, null)
+        val profil = Profil(2001, null)
         val droits = CeliMoteur.droitsParAnnee(
             profil,
             plafondsCeli(2019 to "6000.00", 2020 to "6000.00"),
@@ -92,7 +91,7 @@ class CeliMoteurTest {
 
     @Test
     fun `les transactions CELIAPP sont ignorees par le moteur CELI`() {
-        val profil = Profil(2019, 2001, LocalDate.of(2023, 4, 1))
+        val profil = Profil(2001, LocalDate.of(2023, 4, 1))
         val transactions = listOf(
             Transaction(Compte.CELIAPP, LocalDate.of(2019, 5, 1), TypeTx.DEPOT, argent("5000.00")),
         )
@@ -110,7 +109,7 @@ class CeliMoteurTest {
 
     @Test
     fun `un retrait ne redonne pas de droits dans l'annee du retrait`() {
-        val profil = Profil(2019, 2001, null)
+        val profil = Profil(2001, null)
         val plafonds = plafondsCeli(2019 to "6000.00", 2020 to "6000.00")
         val transactions = listOf(
             depot("2020-03-01", "6000.00"),
@@ -129,7 +128,7 @@ class CeliMoteurTest {
 
     @Test
     fun `un retrait redonne des droits le 1er janvier suivant`() {
-        val profil = Profil(2019, 2001, null)
+        val profil = Profil(2001, null)
         val plafonds = plafondsCeli(
             2019 to "6000.00",
             2020 to "6000.00",
@@ -150,7 +149,7 @@ class CeliMoteurTest {
 
     @Test
     fun `une sur-cotisation se propage a l'annee suivante sans etre effacee`() {
-        val profil = Profil(2019, 2001, null)
+        val profil = Profil(2001, null)
         val plafonds = plafondsCeli(2019 to "6000.00", 2020 to "6000.00")
         val transactions = listOf(depot("2019-05-01", "10000.00"))
 
@@ -166,7 +165,7 @@ class CeliMoteurTest {
 
     @Test
     fun `une annee sans plafond est signalee et ne cree aucun droit`() {
-        val profil = Profil(2019, 2001, null)
+        val profil = Profil(2001, null)
         // 2020 absent de la table.
         val plafonds = plafondsCeli(2019 to "6000.00")
 
@@ -182,7 +181,7 @@ class CeliMoteurTest {
 
     @Test
     fun `un plafond non confirme est traite comme absent`() {
-        val profil = Profil(2019, 2001, null)
+        val profil = Profil(2001, null)
         val plafonds = listOf(
             PlafondAnnuel(Compte.CELI, 2019, argent("6000.00")),
             // Propose par la lecture automatique du site de l'ARC, pas encore

@@ -42,7 +42,7 @@ class DetailCeliappViewModelTest {
 
     @Test
     fun `sans CELIAPP ouvert, aucune ligne`() = runTest {
-        depot.enregistrerProfil(Profil(anneeCourante, 1990, dateOuvertureCeliapp = null))
+        depot.enregistrerProfil(Profil(1990, dateOuvertureCeliapp = null))
 
         val viewModel = DetailCeliappViewModel(depot)
 
@@ -52,7 +52,7 @@ class DetailCeliappViewModelTest {
     @Test
     fun `avec CELIAPP ouvert, les lignes proviennent du moteur`() = runTest {
         val ouverture = LocalDate.of(anneeCourante, 3, 1)
-        val profil = Profil(anneeCourante, 1990, dateOuvertureCeliapp = ouverture)
+        val profil = Profil(1990, dateOuvertureCeliapp = ouverture)
         depot.enregistrerProfil(profil)
 
         val viewModel = DetailCeliappViewModel(depot)

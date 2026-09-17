@@ -38,8 +38,7 @@ class ExportJsonTest {
     }
 
     private val profilCeli = Profil(
-        anneeAdmissibiliteCeli = 2020,
-        anneeNaissance = 2000,
+        anneeNaissance = 2002,
         dateOuvertureCeliapp = LocalDate.of(2023, 6, 1),
     )
 
@@ -83,7 +82,7 @@ class ExportJsonTest {
     @Test
     fun `une version inconnue est refusee`() = runTest {
         val exportVersionInconnue = """
-            {"version":2,"profil":null,"plafonds":[],"transactions":[],"snapshotsArc":[],
+            {"version":99,"profil":null,"plafonds":[],"transactions":[],"snapshotsArc":[],
              "reglages":{"urlPageArc":"","dateDerniereVerification":null}}
         """.trimIndent()
 
@@ -104,6 +103,21 @@ class ExportJsonTest {
         assertEquals(avant, depot.exporterJson())
         assertEquals(profilCeli, depot.profil())
         assertEquals(2, depot.transactions().size)
+    }
+
+    @Test
+    fun `un export de version 1 reste importable, son annee d'admissibilite ignoree`() = runTest {
+        val exportV1 = """
+            {"version":1,
+             "profil":{"anneeAdmissibiliteCeli":1999,"anneeNaissance":2002,"dateOuvertureCeliapp":"2023-06-01"},
+             "plafonds":[],"transactions":[],"snapshotsArc":[],
+             "reglages":{"urlPageArc":"https://arc.gc.ca","dateDerniereVerification":null}}
+        """.trimIndent()
+
+        depot.importerJson(exportV1)
+
+        // 2002 + 18, pas le 1999 ecrit dans le fichier.
+        assertEquals(2020, depot.profil()?.anneeAdmissibiliteCeli)
     }
 
     @Test

@@ -27,7 +27,6 @@ class ReglagesViewModel(private val depot: Depot) : ViewModel() {
             val plafonds = plafondsCeli()
             _uiState.update {
                 it.copy(
-                    anneeAdmissibiliteCeli = profil?.anneeAdmissibiliteCeli?.toString() ?: "",
                     anneeNaissance = profil?.anneeNaissance?.toString() ?: "",
                     dateOuvertureCeliapp = profil?.dateOuvertureCeliapp?.toString() ?: "",
                     plafonds = plafonds,
@@ -36,24 +35,20 @@ class ReglagesViewModel(private val depot: Depot) : ViewModel() {
         }
     }
 
-    fun modifierAnneeAdmissibiliteCeli(valeur: String) = _uiState.update { it.copy(anneeAdmissibiliteCeli = valeur) }
     fun modifierAnneeNaissance(valeur: String) = _uiState.update { it.copy(anneeNaissance = valeur) }
     fun modifierDateOuvertureCeliapp(valeur: String) = _uiState.update { it.copy(dateOuvertureCeliapp = valeur) }
     fun modifierNouveauPlafondAnnee(valeur: String) = _uiState.update { it.copy(nouveauPlafondAnnee = valeur) }
     fun modifierNouveauPlafondMontant(valeur: String) = _uiState.update { it.copy(nouveauPlafondMontant = valeur) }
 
+    fun messageAffiche() = _uiState.update { it.copy(message = null) }
+
     fun enregistrerProfil() {
         val etat = _uiState.value
-        val annee = etat.anneeAdmissibiliteValide ?: return
         val naissance = etat.anneeNaissanceValide ?: return
         if (etat.dateOuvertureInvalide) return
         viewModelScope.launch {
             depot.enregistrerProfil(
-                Profil(
-                    anneeAdmissibiliteCeli = annee,
-                    anneeNaissance = naissance,
-                    dateOuvertureCeliapp = etat.dateOuvertureValide,
-                ),
+                Profil(anneeNaissance = naissance, dateOuvertureCeliapp = etat.dateOuvertureValide),
             )
             _uiState.update { it.copy(message = "Profil enregistré.") }
         }

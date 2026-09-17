@@ -64,8 +64,8 @@ précisément un solde rejouable dans l'ordre chronologique.
 
 ```
 Profil (singleton)
-  anneeAdmissibiliteCeli : Int        // année des 18 ans + résidence
-  anneeNaissance         : Int        // pour la règle des 71 ans (CELIAPP)
+  anneeNaissance         : Int        // admissibilité CELI dérivée (18 ans, au plus tôt 2009)
+                                      //  et règle des 71 ans du CELIAPP
   dateOuvertureCeliapp   : LocalDate? // début de l'accumulation ET horloge 15 ans
 
 PlafondAnnuel

@@ -45,11 +45,21 @@ class ModeleTest {
     @Test
     fun `un profil accepte l'absence de compte CELIAPP`() {
         val profil = Profil(
-            anneeAdmissibiliteCeli = 2019,
             anneeNaissance = 2001,
             dateOuvertureCeliapp = null,
         )
         assertEquals(null, profil.dateOuvertureCeliapp)
+    }
+
+    @Test
+    fun `l'annee d'admissibilite est celle des 18 ans`() {
+        assertEquals(2013, Profil(anneeNaissance = 1995, dateOuvertureCeliapp = null).anneeAdmissibiliteCeli)
+    }
+
+    @Test
+    fun `l'annee d'admissibilite ne precede jamais la creation du CELI`() {
+        // 18 ans en 1978, mais le CELI n'existe qu'en 2009.
+        assertEquals(2009, Profil(anneeNaissance = 1960, dateOuvertureCeliapp = null).anneeAdmissibiliteCeli)
     }
 
     @Test

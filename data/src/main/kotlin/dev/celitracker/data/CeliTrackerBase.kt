@@ -1,8 +1,11 @@
 package dev.celitracker.data
 
+import androidx.room.AutoMigration
 import androidx.room.Database
+import androidx.room.DeleteColumn
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.AutoMigrationSpec
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import kotlinx.coroutines.Dispatchers
 
@@ -14,11 +17,16 @@ import kotlinx.coroutines.Dispatchers
         SnapshotArcEntity::class,
         ReglagesEntity::class,
     ],
-    version = 1,
+    version = 2,
+    autoMigrations = [AutoMigration(from = 1, to = 2, spec = CeliTrackerBase.RetireAnneeAdmissibilite::class)],
 )
 @TypeConverters(Convertisseurs::class)
 abstract class CeliTrackerBase : RoomDatabase() {
     abstract fun dao(): CeliTrackerDao
+
+    /** L'annee d'admissibilite se calcule desormais depuis l'annee de naissance. */
+    @DeleteColumn(tableName = "profil", columnName = "anneeAdmissibiliteCeli")
+    class RetireAnneeAdmissibilite : AutoMigrationSpec
 }
 
 /**
