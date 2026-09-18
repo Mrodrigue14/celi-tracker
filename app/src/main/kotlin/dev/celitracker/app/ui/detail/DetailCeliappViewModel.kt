@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.celitracker.data.Depot
 import dev.celitracker.engine.CeliappMoteur
+import dev.celitracker.engine.Compte
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,6 +29,7 @@ class DetailCeliappViewModel(private val depot: Depot) : ViewModel() {
             }
             val transactions = depot.transactions()
             _uiState.value = DetailCeliappUiState(
+                anneesAvecTransactions = transactions.filter { it.compte == Compte.CELIAPP }.map { it.date.year }.toSet(),
                 lignes = CeliappMoteur.droitsParAnnee(profil, transactions, LocalDate.now().year),
             )
         }

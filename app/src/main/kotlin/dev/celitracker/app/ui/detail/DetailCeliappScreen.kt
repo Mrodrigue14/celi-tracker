@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
@@ -18,6 +19,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -29,11 +31,15 @@ import dev.celitracker.app.ui.composants.CarteAnnee
 import dev.celitracker.app.ui.composants.GraphiqueAnnees
 import dev.celitracker.app.ui.format.formatMontant
 import dev.celitracker.engine.DroitsAnneeCeliapp
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
+
+/** Le graphique et le titre « Année par année » precedent la premiere carte. */
+private const val ELEMENTS_AVANT_ANNEES = 2
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailCeliappScreen(onRetour: () -> Unit, onOuvrirJournal: () -> Unit) {
+fun DetailCeliappScreen(onRetour: () -> Unit, onOuvrirJournal: () -> Unit, onVoirTransactions: (Int) -> Unit) {
     val application = LocalContext.current.applicationContext as CeliTrackerApplication
     val viewModel: DetailCeliappViewModel = viewModel(factory = application.viewModelFactory)
     LaunchedEffect(Unit) { viewModel.charger() }
@@ -56,16 +62,27 @@ fun DetailCeliappScreen(onRetour: () -> Unit, onOuvrirJournal: () -> Unit) {
             )
         },
     ) { innerPadding ->
-        DetailCeliappContenu(etat = etat, modifier = Modifier.padding(innerPadding))
+        DetailCeliappContenu(etat = etat, modifier = Modifier.padding(innerPadding), onVoirTransactions = onVoirTransactions)
     }
 }
 
 /** Meme lecture que le detail du CELI, avec les notions propres au CELIAPP. */
 @Composable
-fun DetailCeliappContenu(etat: DetailCeliappUiState, modifier: Modifier = Modifier) {
+fun DetailCeliappContenu(etat: DetailCeliappUiState, modifier: Modifier = Modifier, onVoirTransactions: (Int) -> Unit = {}) {
     val anneeEnCours = etat.lignes.lastOrNull()?.annee
+    val liste = rememberLazyListState()
+    val portee = rememberCoroutineScope()
+    val anneesAffichees = etat.lignes.reversed()
+
+    // Le graphique et le titre precedent les cartes: l'index d'une annee les compte.
+    fun allerA(annee: Int) {
+        val position = anneesAffichees.indexOfFirst { it.annee == annee }
+        if (position >= 0) portee.launch { liste.animateScrollToItem(ELEMENTS_AVANT_ANNEES + position) }
+    }
+
     LazyColumn(
         modifier = modifier,
+        state = liste,
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -76,23 +93,33 @@ fun DetailCeliappContenu(etat: DetailCeliappUiState, modifier: Modifier = Modifi
                     valeurs = etat.lignes.map { it.annee to it.plafondVieRestant },
                     couleur = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
+                    onClicAnnee = ::allerA,
                 )
             }
             item(key = "titre-annees") { TitreSection("Année par année") }
         }
-        items(etat.lignes.reversed(), key = { it.annee }) { ligne ->
-            CarteAnneeCeliapp(ligne, enCours = ligne.annee == anneeEnCours)
+        items(anneesAffichees, key = { it.annee }) { ligne ->
+            CarteAnneeCeliapp(
+                ligne,
+                enCours = ligne.annee == anneeEnCours,
+                onVoirTransactions = if (ligne.annee in etat.anneesAvecTransactions) {
+                    { onVoirTransactions(ligne.annee) }
+                } else {
+                    null
+                },
+            )
         }
     }
 }
 
 @Composable
-private fun CarteAnneeCeliapp(ligne: DroitsAnneeCeliapp, enCours: Boolean) {
+private fun CarteAnneeCeliapp(ligne: DroitsAnneeCeliapp, enCours: Boolean, onVoirTransactions: (() -> Unit)?) {
     CarteAnnee(
         annee = ligne.annee,
         montant = (ligne.droitsAnnee - ligne.depots).formatMontant(),
         libelleMontant = if (enCours) "Droits restants" else "Droits non utilisés",
         enCours = enCours,
+        onVoirTransactions = onVoirTransactions,
         tuiles = listOf(
             ligne.reportEntrant.formatMontant() to "Report reçu",
             ligne.droitsAnnee.formatMontant() to "Droits de l'année",

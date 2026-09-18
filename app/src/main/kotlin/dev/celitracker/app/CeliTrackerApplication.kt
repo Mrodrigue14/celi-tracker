@@ -13,7 +13,9 @@ import dev.celitracker.app.ui.detail.DetailCeliViewModel
 import dev.celitracker.app.ui.detail.DetailCeliappViewModel
 import dev.celitracker.app.ui.journal.JournalViewModel
 import dev.celitracker.app.ui.navigation.ARG_AJOUTER
+import dev.celitracker.app.ui.navigation.ARG_ANNEE
 import dev.celitracker.app.ui.navigation.ARG_COMPTE
+import dev.celitracker.app.ui.navigation.AUCUNE_ANNEE
 import dev.celitracker.app.ui.reglages.ReglagesViewModel
 import dev.celitracker.data.CeliTrackerBase
 import dev.celitracker.data.Depot
@@ -58,7 +60,9 @@ class CeliTrackerApplication : Application() {
                 // Consomme: une recreation apres la mort du processus ne doit pas
                 // rouvrir la feuille d'ajout que l'utilisateur a deja fermee.
                 arguments[ARG_AJOUTER] = false
-                JournalViewModel(depot, compte, ouvrirAjout)
+                val annee = arguments.get<Int>(ARG_ANNEE)?.takeIf { it != AUCUNE_ANNEE }
+                arguments[ARG_ANNEE] = AUCUNE_ANNEE
+                JournalViewModel(depot, compte, ouvrirAjout, annee)
             }
         }
     }

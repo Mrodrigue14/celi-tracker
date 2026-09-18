@@ -26,9 +26,10 @@ class JournalViewModel(
     private val depot: Depot,
     compteInitial: Compte,
     ouvrirAjout: Boolean = false,
+    anneeCiblee: Int? = null,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(JournalUiState(compte = compteInitial))
+    private val _uiState = MutableStateFlow(JournalUiState(compte = compteInitial, anneeCiblee = anneeCiblee))
 
     private val compte: Compte get() = _uiState.value.compte
     val uiState: StateFlow<JournalUiState> = _uiState.asStateFlow()
@@ -67,6 +68,9 @@ class JournalViewModel(
             message = null,
         )
     }
+
+    /** L'ecran a defile jusqu'a l'annee demandee: ne pas y revenir a chaque rechargement. */
+    fun anneeCibleeAtteinte() = _uiState.update { it.copy(anneeCiblee = null) }
 
     fun messageAffiche() = _uiState.update { it.copy(message = null) }
 
