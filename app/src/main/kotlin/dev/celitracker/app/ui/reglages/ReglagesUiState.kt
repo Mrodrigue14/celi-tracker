@@ -31,6 +31,16 @@ data class ReglagesUiState(
 
     val plafondsConfirmes: List<PlafondAnnuel> get() = plafonds.filter { it.confirme }
 
+    /**
+     * Les plafonds d'avant l'admissibilite n'entrent pas dans les droits: ils
+     * restent en base, mais replies a l'ecran. Sans annee de naissance, tout
+     * est pertinent.
+     */
+    val plafondsPertinents: List<PlafondAnnuel> get() =
+        plafondsConfirmes.filter { plafond -> anneeAdmissibiliteCeli?.let { plafond.annee >= it } ?: true }
+
+    val plafondsAnterieurs: List<PlafondAnnuel> get() = plafondsConfirmes - plafondsPertinents.toSet()
+
     val anneeNaissanceValide: Int? get() =
         anneeNaissance.toIntOrNull()?.takeIf { it in ANNEE_NAISSANCE_MIN..LocalDate.now().year }
 
