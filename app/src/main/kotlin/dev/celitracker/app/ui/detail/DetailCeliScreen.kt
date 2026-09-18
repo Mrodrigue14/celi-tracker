@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,7 +40,7 @@ private const val ELEMENTS_AVANT_ANNEES = 2
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailCeliScreen(onRetour: () -> Unit, onOuvrirJournal: () -> Unit, onVoirTransactions: (Int) -> Unit) {
+fun DetailCeliScreen(onRetour: () -> Unit, onVoirTransactions: (Int) -> Unit) {
     val application = LocalContext.current.applicationContext as CeliTrackerApplication
     val viewModel: DetailCeliViewModel = viewModel(factory = application.viewModelFactory)
     LaunchedEffect(Unit) { viewModel.charger() }
@@ -54,11 +53,6 @@ fun DetailCeliScreen(onRetour: () -> Unit, onOuvrirJournal: () -> Unit, onVoirTr
                 navigationIcon = {
                     IconButton(onClick = onRetour) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_retour))
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onOuvrirJournal) {
-                        Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = stringResource(R.string.detail_journal_celi))
                     }
                 },
             )

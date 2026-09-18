@@ -139,14 +139,12 @@ fun CeliTrackerNavHost(navController: NavHostController = rememberNavController(
             composable(ROUTE_DETAIL_CELI) {
                 DetailCeliScreen(
                     onRetour = navController::popBackStack,
-                    onOuvrirJournal = { ouvrirJournal(Compte.CELI) },
                     onVoirTransactions = { annee -> ouvrirJournal(Compte.CELI, annee = annee) },
                 )
             }
             composable(ROUTE_DETAIL_CELIAPP) {
                 DetailCeliappScreen(
                     onRetour = navController::popBackStack,
-                    onOuvrirJournal = { ouvrirJournal(Compte.CELIAPP) },
                     onVoirTransactions = { annee -> ouvrirJournal(Compte.CELIAPP, annee = annee) },
                 )
             }

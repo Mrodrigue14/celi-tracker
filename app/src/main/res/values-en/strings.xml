@@ -54,8 +54,6 @@
     <!-- Account details -->
     <string name="detail_titre_celi">TFSA details</string>
     <string name="detail_titre_celiapp">FHSA details</string>
-    <string name="detail_journal_celi">TFSA journal</string>
-    <string name="detail_journal_celiapp">FHSA journal</string>
     <string name="detail_droits_fin_annee">Room at year end</string>
     <string name="detail_plafond_vie_restant">Lifetime limit left</string>
     <string name="detail_annee_par_annee">Year by year</string>
@@ -162,4 +160,8 @@
     <string name="import_version_inconnue">the file comes from an unknown version of the app.</string>
     <string name="import_json_malforme">the file isn\'t a valid export.</string>
     <string name="import_fichier_illisible">the file can\'t be read.</string>
+    <string name="reglages_apparence">Appearance</string>
+    <string name="theme_systeme">System</string>
+    <string name="theme_clair">Light</string>
+    <string name="theme_sombre">Dark</string>
 </resources>
