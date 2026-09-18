@@ -32,10 +32,10 @@ class AccueilViewModelTest {
     }
 
     @Test
-    fun `sans profil, l'etat reste vide`() = runTest {
+    fun `sans profil, l'etat reste vide une fois la base lue`() = runTest {
         val viewModel = AccueilViewModel(depot)
 
-        val etat = viewModel.uiState.value
+        val etat = viewModel.uiState.first { it.chargementTermine }
 
         assertFalse(etat.profilEnregistre)
     }
