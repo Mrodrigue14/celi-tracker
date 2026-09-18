@@ -1,5 +1,6 @@
 package dev.celitracker.app.ui.detail
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -23,6 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.celitracker.app.CeliTrackerApplication
 import dev.celitracker.app.R
 import dev.celitracker.app.ui.composants.CarteAnnee
+import dev.celitracker.app.ui.composants.ContenuLargeurLimitee
 import dev.celitracker.app.ui.composants.ListeDetailAnnees
 import dev.celitracker.app.ui.format.formatMontant
 import dev.celitracker.engine.DroitsAnneeCeliapp
@@ -48,7 +50,9 @@ fun DetailCeliappScreen(onRetour: () -> Unit, onVoirTransactions: (Int) -> Unit)
             )
         },
     ) { innerPadding ->
-        DetailCeliappContenu(etat = etat, onVoirTransactions = onVoirTransactions, modifier = Modifier.padding(innerPadding))
+        ContenuLargeurLimitee(modifier = Modifier.padding(innerPadding)) {
+            DetailCeliappContenu(etat = etat, onVoirTransactions = onVoirTransactions, modifier = Modifier.fillMaxSize())
+        }
     }
 }
 
