@@ -7,6 +7,8 @@ import dev.celitracker.app.MainDeTest
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.PlafondAnnuel
 import dev.celitracker.engine.Profil
+import dev.celitracker.engine.Transaction
+import dev.celitracker.engine.TypeTx
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeAll
@@ -56,5 +58,17 @@ class DetailCeliViewModelTest {
         val etat = viewModel.uiState.first { it.lignes.isNotEmpty() }
 
         assertEquals(listOf(false), etat.lignes.map { it.plafondManquant })
+    }
+
+    @Test
+    fun `seules les annees avec des transactions CELI offrent un lien vers le journal`() = runTest {
+        depot.enregistrerProfil(Profil(anneeCourante - 20, LocalDate.of(anneeCourante - 1, 1, 1)))
+        depot.ajouterTransaction(Transaction(Compte.CELI, LocalDate.of(anneeCourante, 1, 5), TypeTx.DEPOT, BigDecimal("100.00")))
+        depot.ajouterTransaction(Transaction(Compte.CELIAPP, LocalDate.of(anneeCourante - 1, 6, 1), TypeTx.DEPOT, BigDecimal("100.00")))
+
+        val viewModel = DetailCeliViewModel(depot)
+        val etat = viewModel.uiState.first { it.lignes.isNotEmpty() }
+
+        assertEquals(setOf(anneeCourante), etat.anneesAvecTransactions)
     }
 }

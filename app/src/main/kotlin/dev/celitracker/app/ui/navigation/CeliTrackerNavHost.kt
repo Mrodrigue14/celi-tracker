@@ -41,8 +41,12 @@ private const val ROUTE_JOURNAL = "journal"
 /** Lus par la fabrique de JournalViewModel via SavedStateHandle. */
 const val ARG_COMPTE = "compte"
 const val ARG_AJOUTER = "ajouter"
+const val ARG_ANNEE = "annee"
 
-private fun routeJournal(compte: Compte, ajouter: Boolean = false) = "$ROUTE_JOURNAL?$ARG_COMPTE=$compte&$ARG_AJOUTER=$ajouter"
+/** Valeur d'ARG_ANNEE quand aucune annee n'est demandee: un argument entier ne peut pas etre nul. */
+const val AUCUNE_ANNEE = -1
+
+private fun routeJournal(compte: Compte, ajouter: Boolean = false, annee: Int = AUCUNE_ANNEE) = "$ROUTE_JOURNAL?$ARG_COMPTE=$compte&$ARG_AJOUTER=$ajouter&$ARG_ANNEE=$annee"
 
 /**
  * Les trois destinations de premier niveau. Le detail d'un compte n'en est
@@ -80,7 +84,7 @@ fun CeliTrackerNavHost(navController: NavHostController = rememberNavController(
 
     // Une intention precise (ce compte, feuille d'ajout ouverte) ne doit pas
     // etre remplacee par l'etat restaure d'une visite precedente du journal.
-    fun ouvrirJournal(compte: Compte, ajouter: Boolean = false) = navController.navigate(routeJournal(compte, ajouter)) {
+    fun ouvrirJournal(compte: Compte, ajouter: Boolean = false, annee: Int = AUCUNE_ANNEE) = navController.navigate(routeJournal(compte, ajouter, annee)) {
         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true
     }
@@ -133,19 +137,21 @@ fun CeliTrackerNavHost(navController: NavHostController = rememberNavController(
                 DetailCeliScreen(
                     onRetour = navController::popBackStack,
                     onOuvrirJournal = { ouvrirJournal(Compte.CELI) },
+                    onVoirTransactions = { annee -> ouvrirJournal(Compte.CELI, annee = annee) },
                 )
             }
             composable(ROUTE_DETAIL_CELIAPP) {
                 DetailCeliappScreen(
                     onRetour = navController::popBackStack,
                     onOuvrirJournal = { ouvrirJournal(Compte.CELIAPP) },
+                    onVoirTransactions = { annee -> ouvrirJournal(Compte.CELIAPP, annee = annee) },
                 )
             }
             composable(ROUTE_REGLAGES) {
                 ReglagesScreen()
             }
             composable(
-                route = "$ROUTE_JOURNAL?$ARG_COMPTE={$ARG_COMPTE}&$ARG_AJOUTER={$ARG_AJOUTER}",
+                route = "$ROUTE_JOURNAL?$ARG_COMPTE={$ARG_COMPTE}&$ARG_AJOUTER={$ARG_AJOUTER}&$ARG_ANNEE={$ARG_ANNEE}",
                 arguments = listOf(
                     navArgument(ARG_COMPTE) {
                         type = NavType.StringType
@@ -154,6 +160,10 @@ fun CeliTrackerNavHost(navController: NavHostController = rememberNavController(
                     navArgument(ARG_AJOUTER) {
                         type = NavType.BoolType
                         defaultValue = false
+                    },
+                    navArgument(ARG_ANNEE) {
+                        type = NavType.IntType
+                        defaultValue = AUCUNE_ANNEE
                     },
                 ),
             ) {

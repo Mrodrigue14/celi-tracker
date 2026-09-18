@@ -229,4 +229,14 @@ class JournalViewModelTest {
 
         assertEquals(listOf(Compte.CELIAPP), etat.transactions.map { it.compte })
     }
+
+    @Test
+    fun `l'annee demandee depuis le detail n'est visee qu'une fois`() = runTest {
+        val viewModel = JournalViewModel(depot, Compte.CELI, anneeCiblee = 2024)
+        assertEquals(2024, viewModel.uiState.value.anneeCiblee)
+
+        viewModel.anneeCibleeAtteinte()
+
+        assertNull(viewModel.uiState.value.anneeCiblee)
+    }
 }

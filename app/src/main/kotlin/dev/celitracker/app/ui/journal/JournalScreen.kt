@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -77,6 +79,7 @@ fun JournalScreen() {
     val viewModel: JournalViewModel = viewModel(factory = application.viewModelFactory)
     val etat by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
+    val liste = rememberLazyListState()
 
     // Le message est un imperatif joue une fois, pas un etat durable: il part
     // dans un snackbar et le ViewModel l'oublie ensuite.
@@ -115,7 +118,18 @@ fun JournalScreen() {
             onOuvrirTransaction = viewModel::ouvrirModification,
             onAjouter = viewModel::ouvrirNouvelle,
             modifier = Modifier.padding(innerPadding),
+            liste = liste,
         )
+    }
+
+    // Arrivee depuis le detail: on amene l'annee demandee en haut de la liste,
+    // une seule fois, des que ses transactions sont chargees.
+    LaunchedEffect(etat.anneeCiblee, etat.transactions) {
+        val annee = etat.anneeCiblee ?: return@LaunchedEffect
+        if (etat.transactions.isEmpty()) return@LaunchedEffect
+        val position = positionEnTete(etat.transactions, annee)
+        if (position >= 0) liste.scrollToItem(position)
+        viewModel.anneeCibleeAtteinte()
     }
 
     etat.formulaire?.let { formulaire ->
@@ -161,12 +175,13 @@ fun JournalContenu(
     onOuvrirTransaction: (Transaction) -> Unit,
     onAjouter: () -> Unit,
     modifier: Modifier = Modifier,
+    liste: LazyListState = rememberLazyListState(),
 ) {
     if (etat.transactions.isEmpty()) {
         JournalVide(onAjouter = onAjouter, modifier = modifier)
         return
     }
-    LazyColumn(modifier = modifier.fillMaxSize()) {
+    LazyColumn(modifier = modifier.fillMaxSize(), state = liste) {
         etat.transactions.groupBy { it.date.year }.forEach { (annee, transactions) ->
             item(key = "annee-$annee") { EnTeteAnnee(annee) }
             items(transactions, key = { it.id }) { transaction ->
@@ -174,6 +189,19 @@ fun JournalContenu(
             }
         }
     }
+}
+
+/**
+ * Position de l'en-tete de [annee] dans la liste: chaque annee occupe une ligne
+ * d'en-tete puis une ligne par transaction, dans l'ordre d'affichage.
+ */
+internal fun positionEnTete(transactions: List<Transaction>, annee: Int): Int {
+    var position = 0
+    transactions.groupBy { it.date.year }.forEach { (groupe, lignes) ->
+        if (groupe == annee) return position
+        position += 1 + lignes.size
+    }
+    return -1
 }
 
 @Composable
