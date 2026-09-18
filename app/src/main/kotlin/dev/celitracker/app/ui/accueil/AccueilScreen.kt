@@ -58,6 +58,7 @@ import dev.celitracker.app.ui.composants.BandeauAlerte
 import dev.celitracker.app.ui.composants.FORME_CARTE
 import dev.celitracker.app.ui.composants.GrilleTuiles
 import dev.celitracker.app.ui.composants.PastilleCompte
+import dev.celitracker.app.ui.format.formatDate
 import dev.celitracker.app.ui.format.formatMontant
 import dev.celitracker.app.ui.theme.chiffres
 import dev.celitracker.engine.Compte
@@ -133,9 +134,9 @@ fun AccueilContenu(
             surConteneur = MaterialTheme.colorScheme.onPrimaryContainer,
             droitsRestants = etat.celiAnneeCourante?.droitsFin,
             fraction = etat.fractionUtiliseeCeli,
-            tuiles = listOf(
-                (etat.celiAnneeCourante?.depots?.formatMontant() ?: "-") to "Cotisé en ${etat.anneeCourante}",
-                (etat.celiAnneeCourante?.plafond?.formatMontant() ?: "-") to "Plafond ${etat.anneeCourante}",
+            tuiles = listOfNotNull(
+                etat.celiAnneeCourante?.let { it.depots.formatMontant() to "Cotisé en ${etat.anneeCourante}" },
+                etat.celiAnneeCourante?.let { it.plafond.formatMontant() to "Plafond ${etat.anneeCourante}" },
             ),
             onClick = { onOuvrirDetail(Compte.CELI) },
             onAjouter = { onAjouter(Compte.CELI) },
@@ -165,11 +166,11 @@ fun AccueilContenu(
             surConteneur = MaterialTheme.colorScheme.onSecondaryContainer,
             droitsRestants = etat.droitsRestantsCeliapp,
             fraction = etat.fractionUtiliseeCeliapp,
-            tuiles = listOf(
-                (etat.celiappAnneeCourante?.depots?.formatMontant() ?: "-") to "Cotisé en ${etat.anneeCourante}",
-                (etat.celiappAnneeCourante?.plafondVieRestant?.formatMontant() ?: "-") to "Plafond à vie restant",
-                (etat.celiappAnneeCourante?.reportEntrant?.formatMontant() ?: "-") to "Report reçu",
-                (etat.echeanceParticipationCeliapp?.toString() ?: "-") to "Échéance",
+            tuiles = listOfNotNull(
+                etat.celiappAnneeCourante?.let { it.depots.formatMontant() to "Cotisé en ${etat.anneeCourante}" },
+                etat.celiappAnneeCourante?.let { it.plafondVieRestant.formatMontant() to "Plafond à vie restant" },
+                etat.celiappAnneeCourante?.let { it.reportEntrant.formatMontant() to "Report reçu" },
+                etat.echeanceParticipationCeliapp?.let { it.formatDate() to "Échéance" },
             ),
             onClick = { onOuvrirDetail(Compte.CELIAPP) },
             onAjouter = { onAjouter(Compte.CELIAPP) },
@@ -310,13 +311,13 @@ private fun CarteCompte(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        droitsRestants?.formatMontant() ?: "-",
+                        (droitsRestants ?: BigDecimal.ZERO).formatMontant(),
                         style = MaterialTheme.typography.headlineMedium.chiffres(),
                         fontWeight = FontWeight.SemiBold,
                     )
                     Text("Droits restants", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                AnneauDroits(fraction = fraction, couleur = couleur)
+                if (fraction != null) AnneauDroits(fraction = fraction, couleur = couleur)
             }
             GrilleTuiles(tuiles)
             alertes()

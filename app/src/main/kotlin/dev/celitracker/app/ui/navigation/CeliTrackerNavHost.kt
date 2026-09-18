@@ -74,6 +74,10 @@ fun CeliTrackerNavHost(navController: NavHostController = rememberNavController(
         restoreState = true
     }
 
+    fun revenirAccueil() {
+        navController.popBackStack(navController.graph.findStartDestination().id, inclusive = false)
+    }
+
     // Une intention precise (ce compte, feuille d'ajout ouverte) ne doit pas
     // etre remplacee par l'etat restaure d'une visite precedente du journal.
     fun ouvrirJournal(compte: Compte, ajouter: Boolean = false) = navController.navigate(routeJournal(compte, ajouter)) {
@@ -87,7 +91,15 @@ fun CeliTrackerNavHost(navController: NavHostController = rememberNavController(
                 Onglet.entries.forEach { onglet ->
                     NavigationBarItem(
                         selected = onglet == ongletActif,
-                        onClick = { if (onglet != ongletActif) allerA(onglet.route) },
+                        onClick = {
+                            when {
+                                // Depuis un detail, « Accueil » ramene a l'accueil lui-meme,
+                                // sans restaurer le detail qu'on vient de quitter.
+                                onglet == Onglet.ACCUEIL -> revenirAccueil()
+
+                                onglet != ongletActif -> allerA(onglet.route)
+                            }
+                        },
                         icon = { Icon(onglet.icone, contentDescription = null) },
                         label = { Text(onglet.libelle) },
                         colors = NavigationBarItemDefaults.colors(

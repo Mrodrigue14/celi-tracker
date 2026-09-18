@@ -1,18 +1,13 @@
 package dev.celitracker.app.ui.detail
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,19 +20,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.celitracker.app.CeliTrackerApplication
+import dev.celitracker.app.ui.composants.CarteAnnee
+import dev.celitracker.app.ui.composants.GraphiqueAnnees
 import dev.celitracker.app.ui.format.formatMontant
 import dev.celitracker.engine.DroitsAnnee
 import java.math.BigDecimal
-
-private val LARGEUR_COLONNE = 110.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,7 +42,7 @@ fun DetailCeliScreen(onRetour: () -> Unit, onOuvrirJournal: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("CELI — détail") },
+                title = { Text("Détail du CELI") },
                 navigationIcon = {
                     IconButton(onClick = onRetour) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
@@ -58,7 +50,7 @@ fun DetailCeliScreen(onRetour: () -> Unit, onOuvrirJournal: () -> Unit) {
                 },
                 actions = {
                     IconButton(onClick = onOuvrirJournal) {
-                        Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Journal des transactions")
+                        Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = "Journal du CELI")
                     }
                 },
             )
@@ -68,93 +60,81 @@ fun DetailCeliScreen(onRetour: () -> Unit, onOuvrirJournal: () -> Unit) {
     }
 }
 
+/**
+ * Du plus general au plus detaille: l'annee en cours, l'evolution des droits,
+ * puis chaque annee, la plus recente d'abord.
+ */
 @Composable
 fun DetailCeliContenu(etat: DetailCeliUiState, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+    val anneeEnCours = etat.lignes.lastOrNull()?.annee
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Column(modifier = Modifier.horizontalScroll(rememberScrollState())) {
-            LigneEnTete("Année", "Plafond", "Droits début", "Dépôts", "Retraits", "Droits fin")
-            etat.lignes.forEach { ligne -> LigneCeli(ligne) }
+        if (etat.lignes.isNotEmpty()) {
+            item(key = "evolution") {
+                TitreSection("Droits en fin d'année")
+                GraphiqueAnnees(
+                    valeurs = etat.lignes.map { it.annee to it.droitsFin },
+                    couleur = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
+                )
+            }
+            item(key = "titre-annees") { TitreSection("Année par année") }
         }
-        if (etat.lignes.any { it.plafondManquant }) {
-            Text(
-                "* Plafond de l'année non confirmé — droits sous-estimés, pas inventés.",
-                modifier = Modifier.padding(16.dp),
-                color = MaterialTheme.colorScheme.error,
-            )
-        }
-    }
-}
-
-@Composable
-private fun LigneEnTete(vararg colonnes: String) {
-    Row {
-        colonnes.forEach { texte ->
-            Text(texte, modifier = Modifier.width(LARGEUR_COLONNE).padding(8.dp), fontWeight = FontWeight.Bold)
+        items(etat.lignes.reversed(), key = { it.annee }) { ligne ->
+            CarteAnneeCeli(ligne, enCours = ligne.annee == anneeEnCours)
         }
     }
 }
 
 @Composable
-private fun LigneCeli(ligne: DroitsAnnee) {
-    val fondAlerte = if (ligne.plafondManquant) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surface
-    Row(modifier = Modifier.background(fondAlerte)) {
-        Cellule(ligne.annee.toString())
-        Cellule(
-            texte = if (ligne.plafondManquant) "${ligne.plafond.formatMontant()} *" else ligne.plafond.formatMontant(),
-            // Complete le texte, ne le remplace pas: un lecteur d'ecran doit
-            // entendre le montant ET l'alerte, pas l'un ou l'autre.
-            description = if (ligne.plafondManquant) {
-                "${ligne.plafond.formatMontant()}, plafond non confirmé pour l'année ${ligne.annee}"
-            } else {
-                null
-            },
-        )
-        Cellule(ligne.droitsDebut.formatMontant())
-        Cellule(ligne.depots.formatMontant())
-        Cellule(ligne.retraits.formatMontant())
-        Cellule(ligne.droitsFin.formatMontant())
-    }
+private fun CarteAnneeCeli(ligne: DroitsAnnee, enCours: Boolean) {
+    CarteAnnee(
+        annee = ligne.annee,
+        montant = ligne.droitsFin.formatMontant(),
+        libelleMontant = if (enCours) "Droits restants" else "Droits en fin d'année",
+        enCours = enCours,
+        tuiles = listOf(
+            ligne.plafond.formatMontant() to "Plafond de l'année",
+            ligne.droitsDebut.formatMontant() to "Droits au 1er janvier",
+            ligne.depots.formatMontant() to "Dépôts",
+            ligne.retraits.formatMontant() to "Retraits",
+        ),
+        // Un plafond absent est compte a zero: les droits sont sous-estimes, pas inventes.
+        note = if (ligne.plafondManquant) "Plafond de ${ligne.annee} non confirmé : droits sous-estimés." else null,
+    )
 }
 
 @Composable
-private fun Cellule(texte: String, description: String? = null) {
+private fun TitreSection(texte: String) {
     Text(
         texte,
-        modifier = Modifier
-            .width(LARGEUR_COLONNE)
-            .padding(8.dp)
-            .let { if (description != null) it.semantics { contentDescription = description } else it },
+        modifier = Modifier.padding(top = 12.dp),
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
     )
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun DetailCeliContenuApercu() {
+    fun ligne(annee: Int, debut: String, depots: String, fin: String) = DroitsAnnee(
+        annee = annee,
+        plafond = BigDecimal("7000.00"),
+        droitsDebut = BigDecimal(debut),
+        depots = BigDecimal(depots),
+        retraits = BigDecimal.ZERO,
+        droitsFin = BigDecimal(fin),
+        plafondManquant = false,
+    )
     DetailCeliContenu(
         etat = DetailCeliUiState(
             lignes = listOf(
-                DroitsAnnee(
-                    annee = 2025,
-                    plafond = BigDecimal("7000.00"),
-                    droitsDebut = BigDecimal("10000.00"),
-                    depots = BigDecimal("2000.00"),
-                    retraits = BigDecimal.ZERO,
-                    droitsFin = BigDecimal("8000.00"),
-                    plafondManquant = false,
-                ),
-                DroitsAnnee(
-                    annee = 2026,
-                    plafond = BigDecimal.ZERO,
-                    droitsDebut = BigDecimal("8000.00"),
-                    depots = BigDecimal.ZERO,
-                    retraits = BigDecimal.ZERO,
-                    droitsFin = BigDecimal("8000.00"),
-                    plafondManquant = true,
-                ),
+                ligne(2024, "7000.00", "2000.00", "5000.00"),
+                ligne(2025, "12000.00", "0.00", "12000.00"),
+                ligne(2026, "19000.00", "3000.00", "16000.00"),
             ),
         ),
     )

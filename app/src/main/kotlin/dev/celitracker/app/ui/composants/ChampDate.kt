@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import dev.celitracker.app.ui.format.formatDate
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -64,7 +65,7 @@ fun ChampDate(
 
     Box(modifier = modifier) {
         OutlinedTextField(
-            value = date,
+            value = dateValide?.formatDate() ?: date,
             onValueChange = {},
             label = { Text(etiquette) },
             readOnly = true,
