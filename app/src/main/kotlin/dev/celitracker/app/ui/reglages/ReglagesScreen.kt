@@ -42,6 +42,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -262,7 +263,8 @@ fun ReglagesContenu(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        etat.plafondsConfirmes.forEach { plafond -> LignePlafond(plafond) }
+        etat.plafondsPertinents.forEach { plafond -> LignePlafond(plafond) }
+        PlafondsAnterieurs(etat.plafondsAnterieurs)
 
         Row(
             modifier = Modifier.padding(top = 16.dp),
@@ -396,6 +398,30 @@ private fun EchecLectureArc(raison: String) {
     }
 }
 
+/**
+ * Replies par defaut: ils ne comptent pas dans les droits et repoussaient le
+ * reste des reglages loin sous le pouce. L'etat ouvert/ferme est purement
+ * visuel, donc il vit dans l'ecran et non dans le ViewModel.
+ */
+@Composable
+private fun PlafondsAnterieurs(plafonds: List<PlafondAnnuel>) {
+    if (plafonds.isEmpty()) return
+    var ouverts by rememberSaveable { mutableStateOf(false) }
+
+    TextButton(onClick = { ouverts = !ouverts }) {
+        Text(
+            if (ouverts) {
+                "Masquer les années antérieures"
+            } else {
+                "Afficher ${plafonds.size} années antérieures (${plafonds.first().annee} à ${plafonds.last().annee})"
+            },
+        )
+    }
+    if (ouverts) {
+        plafonds.forEach { plafond -> LignePlafond(plafond, attenue = true) }
+    }
+}
+
 @Composable
 private fun TitreSection(texte: String) {
     Text(
@@ -441,17 +467,19 @@ private fun AdmissibiliteCeli(annee: Int?, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun LignePlafond(plafond: PlafondAnnuel) {
+private fun LignePlafond(plafond: PlafondAnnuel, attenue: Boolean = false) {
+    val couleur = if (attenue) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 10.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(plafond.annee.toString(), style = MaterialTheme.typography.bodyLarge)
+        Text(plafond.annee.toString(), style = MaterialTheme.typography.bodyLarge, color = couleur)
         Text(
             plafond.montant.formatMontant(),
             style = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Monospace),
+            color = couleur,
         )
     }
 }
