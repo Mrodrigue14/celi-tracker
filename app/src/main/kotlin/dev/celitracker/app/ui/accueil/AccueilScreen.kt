@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -43,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -60,6 +63,7 @@ import dev.celitracker.app.ui.composants.BandeauAlerte
 import dev.celitracker.app.ui.composants.ContenuLargeurLimitee
 import dev.celitracker.app.ui.composants.FORME_CARTE
 import dev.celitracker.app.ui.composants.GrilleTuiles
+import dev.celitracker.app.ui.composants.LARGEUR_MAX_CONTENU_DEUX_COLONNES
 import dev.celitracker.app.ui.composants.PastilleCompte
 import dev.celitracker.app.ui.format.formatDate
 import dev.celitracker.app.ui.format.formatMontant
@@ -92,10 +96,9 @@ fun AccueilScreen(
             TopAppBar(title = { Text(stringResource(R.string.app_name)) })
         },
     ) { innerPadding ->
-        ContenuLargeurLimitee(modifier = Modifier.padding(innerPadding)) {
+        ContenuLargeurLimitee(modifier = Modifier.padding(innerPadding), largeurMax = LARGEUR_MAX_CONTENU_DEUX_COLONNES) {
             AccueilContenu(
                 etat = etat,
-                modifier = Modifier.fillMaxSize(),
                 onOuvrirDetail = onOuvrirDetail,
                 onAjouter = onAjouter,
                 onOuvrirJournal = onOuvrirJournal,
@@ -124,14 +127,9 @@ fun AccueilContenu(
         return
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
+    val carteCeli: @Composable (Modifier) -> Unit = { modifierCarte ->
         CarteCompte(
+            modifier = modifierCarte,
             nom = stringResource(R.string.compte_celi),
             icone = Icons.Filled.Savings,
             couleur = MaterialTheme.colorScheme.primary,
@@ -159,32 +157,66 @@ fun AccueilContenu(
                 AlerteUtilisation(etat.utilisationCeli, etat.anneeCourante)
             }
         }
+    }
+
+    val carteCeliapp: @Composable (Modifier) -> Unit = { modifierCarte ->
         if (etat.profil?.dateOuvertureCeliapp == null) {
-            SansCeliapp(onOuvrirReglages)
-            return@Column
+            SansCeliapp(onOuvrirReglages, modifier = modifierCarte)
+        } else {
+            CarteCompte(
+                modifier = modifierCarte,
+                nom = stringResource(R.string.compte_celiapp),
+                icone = Icons.Filled.Home,
+                couleur = MaterialTheme.colorScheme.secondary,
+                conteneur = MaterialTheme.colorScheme.secondaryContainer,
+                surConteneur = MaterialTheme.colorScheme.onSecondaryContainer,
+                droitsRestants = etat.droitsRestantsCeliapp,
+                fraction = etat.fractionUtiliseeCeliapp,
+                tuiles = listOfNotNull(
+                    etat.celiappAnneeCourante?.let { it.depots.formatMontant() to stringResource(R.string.accueil_cotise_en, etat.anneeCourante) },
+                    etat.celiappAnneeCourante?.let { it.plafondVieRestant.formatMontant() to stringResource(R.string.accueil_plafond_vie_restant) },
+                    etat.celiappAnneeCourante?.let { it.reportEntrant.formatMontant() to stringResource(R.string.accueil_report_recu) },
+                    etat.echeanceParticipationCeliapp?.let { it.formatDate() to stringResource(R.string.accueil_echeance) },
+                ),
+                onClick = { onOuvrirDetail(Compte.CELIAPP) },
+                onAjouter = { onAjouter(Compte.CELIAPP) },
+                onOuvrirJournal = { onOuvrirJournal(Compte.CELIAPP) },
+            ) {
+                AlerteUtilisation(etat.utilisationCeliapp, etat.anneeCourante)
+            }
         }
-        CarteCompte(
-            nom = stringResource(R.string.compte_celiapp),
-            icone = Icons.Filled.Home,
-            couleur = MaterialTheme.colorScheme.secondary,
-            conteneur = MaterialTheme.colorScheme.secondaryContainer,
-            surConteneur = MaterialTheme.colorScheme.onSecondaryContainer,
-            droitsRestants = etat.droitsRestantsCeliapp,
-            fraction = etat.fractionUtiliseeCeliapp,
-            tuiles = listOfNotNull(
-                etat.celiappAnneeCourante?.let { it.depots.formatMontant() to stringResource(R.string.accueil_cotise_en, etat.anneeCourante) },
-                etat.celiappAnneeCourante?.let { it.plafondVieRestant.formatMontant() to stringResource(R.string.accueil_plafond_vie_restant) },
-                etat.celiappAnneeCourante?.let { it.reportEntrant.formatMontant() to stringResource(R.string.accueil_report_recu) },
-                etat.echeanceParticipationCeliapp?.let { it.formatDate() to stringResource(R.string.accueil_echeance) },
-            ),
-            onClick = { onOuvrirDetail(Compte.CELIAPP) },
-            onAjouter = { onAjouter(Compte.CELIAPP) },
-            onOuvrirJournal = { onOuvrirJournal(Compte.CELIAPP) },
+    }
+
+    // A partir de sw600dp (le seuil tablette standard d'Android), les deux
+    // comptes cote a cote profitent de la largeur plutot que d'empiler deux
+    // cartes etroites au-dessus d'un grand vide.
+    val ecranLarge = LocalConfiguration.current.screenWidthDp >= SEUIL_LARGEUR_DEUX_COLONNES_DP
+    if (ecranLarge) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp)
+                .height(IntrinsicSize.Min),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            AlerteUtilisation(etat.utilisationCeliapp, etat.anneeCourante)
+            carteCeli(Modifier.weight(1f).fillMaxHeight())
+            carteCeliapp(Modifier.weight(1f).fillMaxHeight())
+        }
+    } else {
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            carteCeli(Modifier.fillMaxWidth())
+            carteCeliapp(Modifier.fillMaxWidth())
         }
     }
 }
+
+private const val SEUIL_LARGEUR_DEUX_COLONNES_DP = 600
 
 /** 80 % previent sur fond neutre; 95 % et plus passe a la couleur d'erreur. */
 @Composable
@@ -238,9 +270,9 @@ private fun EtatVide(onOuvrirReglages: () -> Unit, modifier: Modifier = Modifier
 
 /** Pas de compte, pas de carte pleine de tirets: une invitation a l'ajouter. */
 @Composable
-private fun SansCeliapp(onOuvrirReglages: () -> Unit) {
+private fun SansCeliapp(onOuvrirReglages: () -> Unit, modifier: Modifier = Modifier) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(FORME_CARTE)
             .background(MaterialTheme.colorScheme.surfaceContainerLow)
@@ -288,10 +320,11 @@ private fun CarteCompte(
     onClick: () -> Unit,
     onAjouter: () -> Unit,
     onOuvrirJournal: () -> Unit,
+    modifier: Modifier = Modifier,
     alertes: @Composable ColumnScope.() -> Unit = {},
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(FORME_CARTE)
             .background(MaterialTheme.colorScheme.surfaceContainerLow)

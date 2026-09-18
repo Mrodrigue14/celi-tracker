@@ -35,7 +35,7 @@ fun ChampMontant(
     val locale = LocalConfiguration.current.locales[0]
     OutlinedTextField(
         value = valeur,
-        onValueChange = onValeur,
+        onValueChange = { onValeur(it.limiterADeuxDecimales()) },
         label = { Text(etiquette) },
         suffix = { Text("$") },
         isError = estErreur,
@@ -45,6 +45,14 @@ fun ChampMontant(
         visualTransformation = remember(locale) { TransformationMontant(locale) },
         modifier = modifier,
     )
+}
+
+/** L'argent n'a que deux decimales: une troisieme frappee, ou toute frappee apres, est ignoree. */
+internal fun String.limiterADeuxDecimales(): String {
+    val indexSeparateur = indexOfFirst { it == ',' || it == '.' }
+    if (indexSeparateur < 0) return this
+    val partieDecimale = substring(indexSeparateur + 1).filter { it.isDigit() }.take(2)
+    return substring(0, indexSeparateur + 1) + partieDecimale
 }
 
 /**

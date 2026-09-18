@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.celitracker.app.R
 import dev.celitracker.app.ui.theme.chiffres
@@ -140,19 +141,22 @@ fun GrilleTuiles(tuiles: List<Pair<String, String>>, modifier: Modifier = Modifi
     }
 }
 
-/** Au-dela, une tablette etirerait les cartes et les tuiles jusqu'a nuire a leur lecture. */
-private val LARGEUR_MAX_CONTENU = 600.dp
+/** Au-dela, une tablette etirerait les listes et les formulaires jusqu'a nuire a leur lecture. */
+val LARGEUR_MAX_CONTENU = 720.dp
+
+/** Pour un ecran a deux colonnes (les deux comptes cote a cote): profiter de bien plus de largeur. */
+val LARGEUR_MAX_CONTENU_DEUX_COLONNES = 1100.dp
 
 /**
  * Plafonne la largeur du contenu principal d'un ecran et le centre. Sur un
- * telephone, la limite ne joue jamais (aucun telephone n'atteint 600 dp de
+ * telephone, la limite ne joue jamais (aucun telephone n'atteint 720 dp de
  * large). Sur une tablette, elle evite des lignes de texte interminables et
  * des tuiles etirees plutot que d'etoffer la mise en page.
  */
 @Composable
-fun ContenuLargeurLimitee(modifier: Modifier = Modifier, contenu: @Composable BoxScope.() -> Unit) {
+fun ContenuLargeurLimitee(modifier: Modifier = Modifier, largeurMax: Dp = LARGEUR_MAX_CONTENU, contenu: @Composable BoxScope.() -> Unit) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        Box(modifier = Modifier.widthIn(max = LARGEUR_MAX_CONTENU).fillMaxSize(), content = contenu)
+        Box(modifier = Modifier.widthIn(max = largeurMax).fillMaxSize(), content = contenu)
     }
 }
 

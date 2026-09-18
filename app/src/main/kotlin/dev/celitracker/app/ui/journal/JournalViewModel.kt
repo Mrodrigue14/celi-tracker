@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.math.RoundingMode
 import java.time.LocalDate
 
 /**
@@ -67,7 +68,7 @@ class JournalViewModel(
                 id = transaction.id,
                 date = transaction.date.toString(),
                 type = transaction.type,
-                montant = transaction.montant.toPlainString(),
+                montant = transaction.montant.setScale(2, RoundingMode.HALF_UP).toPlainString(),
             ),
             message = null,
         )

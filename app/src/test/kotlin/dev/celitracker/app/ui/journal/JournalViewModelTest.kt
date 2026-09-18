@@ -124,6 +124,19 @@ class JournalViewModelTest {
         assertEquals(emptyList(), etat.transactions)
     }
 
+    @Test
+    fun `ouvrir une modification affiche toujours deux decimales, meme sur un montant entier`() = runTest {
+        depot.enregistrerProfil(profil)
+        depot.ajouterTransaction(depotCeli(LocalDate.of(2024, 1, 10), "8000"))
+        val viewModel = JournalViewModel(depot, Compte.CELI)
+        val existante = viewModel.uiState.first { it.transactions.isNotEmpty() }.transactions.single()
+
+        viewModel.ouvrirModification(existante)
+        val formulaire = viewModel.uiState.first().formulaire
+
+        assertEquals("8000.00", formulaire?.montant)
+    }
+
     /** 2020 est la premiere annee d'admissibilite du profil: ses droits valent son plafond. */
     private suspend fun droits2020(plafond: String = "6000.00") {
         depot.enregistrerProfil(profil)

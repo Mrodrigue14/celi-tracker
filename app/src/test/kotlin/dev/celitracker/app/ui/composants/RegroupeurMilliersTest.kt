@@ -48,3 +48,29 @@ class RegroupeurMilliersTest {
         }
     }
 }
+
+class LimiterADeuxDecimalesTest {
+
+    @Test
+    fun `sans separateur, rien ne change`() {
+        assertEquals("1234", "1234".limiterADeuxDecimales())
+        assertEquals("", "".limiterADeuxDecimales())
+    }
+
+    @Test
+    fun `une troisieme decimale et tout ce qui suit sont ignores`() {
+        assertEquals("12.34", "12.345".limiterADeuxDecimales())
+        assertEquals("12,34", "12,3456789".limiterADeuxDecimales())
+    }
+
+    @Test
+    fun `une decimale unique est conservee telle quelle`() {
+        assertEquals("12.3", "12.3".limiterADeuxDecimales())
+        assertEquals("12.", "12.".limiterADeuxDecimales())
+    }
+
+    @Test
+    fun `un second separateur tape par erreur disparait avec ce qui suit`() {
+        assertEquals("12.34", "12.34.56".limiterADeuxDecimales())
+    }
+}
