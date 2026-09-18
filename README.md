@@ -34,12 +34,13 @@ Déjà livré :
 4. Journal des transactions : ajout, modification, suppression
 5. Plafonds du CELI déjà inscrits, et lecture du plafond de l'année sur le
    site de l'ARC, proposé puis confirmé à la main
+6. Sauvegarde : copie automatique vers le compte Google et transfert
+   d'appareil, plus export et import d'un fichier JSON depuis les réglages
 
 À venir :
 
-6. Export et import JSON dans l'interface, instantané des droits déclarés
-   par l'ARC
-7. APK
+7. Instantané des droits déclarés par l'ARC
+8. APK
 
 ## Avertissement
 

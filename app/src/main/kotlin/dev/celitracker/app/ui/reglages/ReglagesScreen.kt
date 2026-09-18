@@ -1,5 +1,10 @@
 package dev.celitracker.app.ui.reglages
 
+import android.content.Context
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -29,11 +35,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -48,6 +57,8 @@ import dev.celitracker.app.ui.composants.ChampDate
 import dev.celitracker.app.ui.format.formatMontant
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.PlafondAnnuel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import java.time.ZoneId
 
@@ -63,6 +74,16 @@ fun ReglagesScreen(onRetour: () -> Unit) {
         val message = etat.message ?: return@LaunchedEffect
         snackbar.showSnackbar(message)
         viewModel.messageAffiche()
+    }
+
+    val contexte = LocalContext.current
+    var importAConfirmer by remember { mutableStateOf<Uri?>(null) }
+
+    val lanceurExport = rememberLauncherForActivityResult(CreateDocument(TYPE_JSON)) { uri ->
+        if (uri != null) viewModel.exporter { contenu -> ecrireFichier(contexte, uri, contenu) }
+    }
+    val lanceurImport = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        importAConfirmer = uri
     }
 
     Scaffold(
@@ -92,8 +113,51 @@ fun ReglagesScreen(onRetour: () -> Unit) {
             onVerifierArc = { viewModel.verifierArc(demandeExplicite = true) },
             onConfirmerProposition = viewModel::confirmerProposition,
             onRejeterProposition = viewModel::rejeterProposition,
+            onExporter = { lanceurExport.launch(NOM_FICHIER_EXPORT) },
+            onImporter = { lanceurImport.launch(arrayOf(TYPE_JSON)) },
         )
     }
+
+    importAConfirmer?.let { uri ->
+        ConfirmationImport(
+            onConfirmer = {
+                importAConfirmer = null
+                viewModel.importer { lireFichier(contexte, uri) }
+            },
+            onAnnuler = { importAConfirmer = null },
+        )
+    }
+}
+
+private const val TYPE_JSON = "application/json"
+
+private const val NOM_FICHIER_EXPORT = "celi-tracker.json"
+
+private suspend fun ecrireFichier(contexte: Context, uri: Uri, contenu: String) = withContext(Dispatchers.IO) {
+    val flux = contexte.contentResolver.openOutputStream(uri) ?: error("fichier inaccessible")
+    flux.use { it.write(contenu.toByteArray()) }
+}
+
+private suspend fun lireFichier(contexte: Context, uri: Uri): String = withContext(Dispatchers.IO) {
+    val flux = contexte.contentResolver.openInputStream(uri) ?: error("fichier illisible")
+    flux.use { it.reader().readText() }
+}
+
+/** L'import remplace tout: il se confirme, il ne se declenche pas d'un doigt qui glisse. */
+@Composable
+private fun ConfirmationImport(onConfirmer: () -> Unit, onAnnuler: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onAnnuler,
+        title = { Text("Remplacer toutes les données ?") },
+        text = {
+            Text(
+                "L'import écrase le profil, les plafonds et le journal des transactions " +
+                    "par le contenu du fichier. Ce n'est pas une fusion.",
+            )
+        },
+        confirmButton = { TextButton(onClick = onConfirmer) { Text("Remplacer") } },
+        dismissButton = { TextButton(onClick = onAnnuler) { Text("Annuler") } },
+    )
 }
 
 @Composable
@@ -110,6 +174,8 @@ fun ReglagesContenu(
     onVerifierArc: () -> Unit,
     onConfirmerProposition: (PlafondAnnuel) -> Unit,
     onRejeterProposition: (PlafondAnnuel) -> Unit,
+    onExporter: () -> Unit,
+    onImporter: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -229,6 +295,35 @@ fun ReglagesContenu(
         ) {
             Text("Ajouter le plafond")
         }
+
+        HorizontalDivider(modifier = Modifier.padding(top = 32.dp))
+
+        SauvegardeEtRecuperation(onExporter = onExporter, onImporter = onImporter)
+    }
+}
+
+/**
+ * La sauvegarde Android copie deja la base vers le compte Google et la reprend
+ * lors d'un transfert d'appareil. Elle a deux angles morts: elle ne se declenche
+ * pas toujours quand l'application est installee par APK, et son contenu n'est
+ * pas inspectable. Le fichier JSON, lui, se verifie AVANT d'en avoir besoin.
+ */
+@Composable
+private fun SauvegardeEtRecuperation(onExporter: () -> Unit, onImporter: () -> Unit) {
+    TitreSection("Sauvegarde")
+    Text(
+        "Tes données sont copiées automatiquement vers ton compte Google et reprises " +
+            "lors d'un transfert vers un nouveau téléphone. Le fichier JSON reste la copie " +
+            "que tu peux vérifier et ranger où tu veux.",
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Row(
+        modifier = Modifier.padding(top = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Button(onClick = onExporter, modifier = Modifier.weight(1f)) { Text("Exporter") }
+        OutlinedButton(onClick = onImporter, modifier = Modifier.weight(1f)) { Text("Importer") }
     }
 }
 
@@ -386,5 +481,7 @@ private fun ReglagesContenuApercu() {
         onVerifierArc = {},
         onConfirmerProposition = {},
         onRejeterProposition = {},
+        onExporter = {},
+        onImporter = {},
     )
 }

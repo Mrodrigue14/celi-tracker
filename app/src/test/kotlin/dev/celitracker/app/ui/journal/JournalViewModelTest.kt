@@ -3,21 +3,16 @@
 package dev.celitracker.app.ui.journal
 
 import dev.celitracker.app.DepotDeTest
+import dev.celitracker.app.MainDeTest
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.Profil
 import dev.celitracker.engine.Transaction
 import dev.celitracker.engine.TypeTx
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import java.math.BigDecimal
 import java.time.LocalDate
-import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -31,18 +26,10 @@ class JournalViewModelTest {
     /** Naissance en 2002: admissible au CELI en 2020. */
     private val profil = Profil(anneeNaissance = 2002, dateOuvertureCeliapp = LocalDate.of(2023, 6, 1))
 
-    @AfterTest
-    fun apres() = fixture.fermer()
-
     companion object {
-        // Meme raison que DetailCeliViewModelTest: Main fixe pour toute la classe.
         @JvmStatic
         @BeforeAll
-        fun avant() = Dispatchers.setMain(UnconfinedTestDispatcher())
-
-        @JvmStatic
-        @AfterAll
-        fun apresTout() = Dispatchers.resetMain()
+        fun avant() = MainDeTest.installer()
     }
 
     private fun depotCeli(date: LocalDate, montant: String) = Transaction(Compte.CELI, date, TypeTx.DEPOT, BigDecimal(montant))

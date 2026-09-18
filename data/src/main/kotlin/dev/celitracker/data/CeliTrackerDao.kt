@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import dev.celitracker.engine.Compte
+import java.time.Instant
 
 @Dao
 interface CeliTrackerDao {
@@ -36,6 +37,9 @@ interface CeliTrackerDao {
 
     @Query("DELETE FROM transactions WHERE id = :id")
     suspend fun supprimerTransaction(id: Long)
+
+    @Query("UPDATE reglages SET dateDerniereVerification = :date WHERE id = 0")
+    suspend fun noterVerificationArc(date: Instant): Int
 
     @Query("SELECT * FROM snapshots_arc")
     suspend fun snapshotsArc(): List<SnapshotArcEntity>

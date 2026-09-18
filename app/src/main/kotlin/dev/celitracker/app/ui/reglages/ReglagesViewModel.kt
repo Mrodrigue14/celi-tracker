@@ -4,11 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.celitracker.data.Depot
 import dev.celitracker.data.ResultatVerificationArc
+import dev.celitracker.data.URL_PAGE_ARC_PAR_DEFAUT
+import dev.celitracker.data.exporterJson
+import dev.celitracker.data.importerJson
 import dev.celitracker.data.verifierPlafondsArc
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.PlafondAnnuel
 import dev.celitracker.engine.Profil
 import dev.celitracker.engine.Reglages
+import dev.celitracker.engine.adressePageArcValide
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,17 +37,25 @@ class ReglagesViewModel(
         verifierArc(demandeExplicite = false)
     }
 
-    fun charger() {
+    /**
+     * [remplacerSaisies] a false, le chargement ne remplit que les champs
+     * encore vides: la lecture de la base est asynchrone et ecraserait sinon ce
+     * que l'utilisateur vient de taper. Un import, lui, remplace tout le
+     * contenu, donc les champs affiches aussi.
+     */
+    fun charger(remplacerSaisies: Boolean = false) {
         viewModelScope.launch {
             val profil = depot.profil()
             val plafonds = plafondsCeli()
             val reglages = depot.reglages()
+            val naissance = profil?.anneeNaissance?.toString() ?: ""
+            val ouverture = profil?.dateOuvertureCeliapp?.toString() ?: ""
             _uiState.update {
                 it.copy(
-                    anneeNaissance = profil?.anneeNaissance?.toString() ?: "",
-                    dateOuvertureCeliapp = profil?.dateOuvertureCeliapp?.toString() ?: "",
+                    anneeNaissance = if (remplacerSaisies) naissance else it.anneeNaissance.ifBlank { naissance },
+                    dateOuvertureCeliapp = if (remplacerSaisies) ouverture else it.dateOuvertureCeliapp.ifBlank { ouverture },
                     plafonds = plafonds,
-                    urlPageArc = reglages.urlPageArc,
+                    urlPageArc = it.urlPageArc.ifBlank { reglages.urlPageArc },
                     derniereVerificationArc = reglages.dateDerniereVerification,
                 )
             }
@@ -139,11 +151,56 @@ class ReglagesViewModel(
         }
     }
 
+    /**
+     * Une adresse invalide ne remplace jamais celle qui marche: l'application
+     * revient a l'adresse d'origine plutot que de rester sans lien vers l'ARC.
+     */
     fun enregistrerUrlPageArc() {
-        val url = _uiState.value.urlPageArc
+        val saisie = _uiState.value.urlPageArc
+        val valide = adressePageArcValide(saisie)
+        val url = if (valide) saisie else URL_PAGE_ARC_PAR_DEFAUT
         viewModelScope.launch {
             depot.enregistrerReglages(Reglages(urlPageArc = url, dateDerniereVerification = depot.reglages().dateDerniereVerification))
-            _uiState.update { it.copy(message = "Adresse enregistrée.") }
+            _uiState.update {
+                it.copy(
+                    urlPageArc = url,
+                    message = if (valide) {
+                        "Adresse enregistrée."
+                    } else {
+                        "Adresse refusée : l'adresse par défaut de l'ARC a été rétablie."
+                    },
+                )
+            }
+        }
+    }
+
+    /**
+     * L'ecran fournit l'ecriture et la lecture du fichier: les API Android de
+     * stockage restent hors du ViewModel.
+     */
+    fun exporter(ecrire: suspend (String) -> Unit) {
+        viewModelScope.launch {
+            val message = try {
+                ecrire(depot.exporterJson())
+                "Données exportées."
+            } catch (e: Exception) {
+                "Export impossible : ${e.message}"
+            }
+            _uiState.update { it.copy(message = message) }
+        }
+    }
+
+    /** L'import remplace tout le contenu; l'ecran confirme avant d'appeler. */
+    fun importer(lire: suspend () -> String) {
+        viewModelScope.launch {
+            val message = try {
+                depot.importerJson(lire())
+                "Données importées."
+            } catch (e: Exception) {
+                "Import refusé : ${e.message}"
+            }
+            charger(remplacerSaisies = true)
+            _uiState.update { it.copy(message = message) }
         }
     }
 

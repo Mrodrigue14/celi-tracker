@@ -6,6 +6,7 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.room.Room
+import androidx.room.RoomDatabase.JournalMode
 import dev.celitracker.app.arc.telechargerPageArc
 import dev.celitracker.app.ui.accueil.AccueilViewModel
 import dev.celitracker.app.ui.detail.DetailCeliViewModel
@@ -34,6 +35,11 @@ class CeliTrackerApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         val builder = Room.databaseBuilder(this, CeliTrackerBase::class.java, File(filesDir, "celi-tracker.db").absolutePath)
+            // TRUNCATE plutot que le WAL par defaut: la sauvegarde Android copie
+            // le repertoire des bases, et des ecritures restees dans un `-wal`
+            // manqueraient a la copie. Le cout est sans importance ici, quelques
+            // lignes par mois.
+            .setJournalMode(JournalMode.TRUNCATE)
         val depot = Depot(configurerBase(builder))
         // Une poignee d'insertions au premier demarrage, puis une seule
         // lecture ensuite. Bloquer ici evite un premier ecran a zero le temps

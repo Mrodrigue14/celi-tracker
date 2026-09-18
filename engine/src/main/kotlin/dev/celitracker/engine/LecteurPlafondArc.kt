@@ -14,6 +14,18 @@ private val MOTIF_PLAFOND = Regex(
     RegexOption.IGNORE_CASE,
 )
 
+/**
+ * Une adresse valide est en https et pointe sur canada.ca. Laisser saisir
+ * n'importe quelle adresse ferait lire un plafond a une source inconnue, alors
+ * que le champ existe seulement pour suivre une reorganisation du site de
+ * l'ARC.
+ */
+fun adressePageArcValide(url: String): Boolean {
+    val adresse = runCatching { java.net.URI(url) }.getOrNull() ?: return false
+    val hote = adresse.host ?: return false
+    return adresse.scheme == "https" && (hote == "canada.ca" || hote.endsWith(".canada.ca"))
+}
+
 private val BALISE = Regex("<[^>]*>")
 
 private val ESPACES = Regex("\\s+")
