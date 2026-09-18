@@ -199,4 +199,34 @@ class JournalViewModelTest {
 
         assertEquals(2, depot.transactions().size)
     }
+
+    @Test
+    fun `venir du bouton Ajouter ouvre directement la feuille de saisie`() = runTest {
+        depot.enregistrerProfil(profil)
+
+        val viewModel = JournalViewModel(depot, Compte.CELI, ouvrirAjout = true)
+
+        assertNotNull(viewModel.uiState.value.formulaire)
+    }
+
+    @Test
+    fun `ouvrir le journal normalement n'ouvre pas de feuille`() = runTest {
+        val viewModel = JournalViewModel(depot, Compte.CELI)
+
+        assertNull(viewModel.uiState.value.formulaire)
+    }
+
+    @Test
+    fun `changer de compte affiche le journal de l'autre compte sans quitter l'ecran`() = runTest {
+        depot.enregistrerProfil(profil)
+        depot.ajouterTransaction(depotCeli(LocalDate.of(2024, 1, 10), "100.00"))
+        depot.ajouterTransaction(Transaction(Compte.CELIAPP, LocalDate.of(2024, 5, 1), TypeTx.DEPOT, BigDecimal("300.00")))
+        val viewModel = JournalViewModel(depot, Compte.CELI)
+        viewModel.uiState.first { it.transactions.isNotEmpty() }
+
+        viewModel.changerCompte(Compte.CELIAPP)
+        val etat = viewModel.uiState.first { it.compte == Compte.CELIAPP && it.transactions.isNotEmpty() }
+
+        assertEquals(listOf(Compte.CELIAPP), etat.transactions.map { it.compte })
+    }
 }

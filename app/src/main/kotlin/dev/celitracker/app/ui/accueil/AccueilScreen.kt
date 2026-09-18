@@ -11,23 +11,27 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -70,6 +74,8 @@ import java.time.LocalDate
 @Composable
 fun AccueilScreen(
     onOuvrirDetail: (Compte) -> Unit,
+    onAjouter: (Compte) -> Unit,
+    onOuvrirJournal: (Compte) -> Unit,
     onOuvrirReglages: () -> Unit,
 ) {
     val application = LocalContext.current.applicationContext as CeliTrackerApplication
@@ -79,20 +85,15 @@ fun AccueilScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("CELI Tracker") },
-                actions = {
-                    IconButton(onClick = onOuvrirReglages) {
-                        Icon(Icons.Filled.Settings, contentDescription = "Réglages")
-                    }
-                },
-            )
+            TopAppBar(title = { Text("CELI Tracker") })
         },
     ) { innerPadding ->
         AccueilContenu(
             etat = etat,
             modifier = Modifier.padding(innerPadding),
             onOuvrirDetail = onOuvrirDetail,
+            onAjouter = onAjouter,
+            onOuvrirJournal = onOuvrirJournal,
             onOuvrirReglages = onOuvrirReglages,
         )
     }
@@ -108,6 +109,8 @@ fun AccueilContenu(
     onOuvrirDetail: (Compte) -> Unit,
     onOuvrirReglages: () -> Unit,
     modifier: Modifier = Modifier,
+    onAjouter: (Compte) -> Unit = {},
+    onOuvrirJournal: (Compte) -> Unit = {},
 ) {
     if (!etat.chargementTermine) return
     if (!etat.profilEnregistre) {
@@ -124,7 +127,7 @@ fun AccueilContenu(
     ) {
         CarteCompte(
             nom = "CELI",
-            icone = Icons.Filled.Lock,
+            icone = Icons.Filled.Savings,
             couleur = MaterialTheme.colorScheme.primary,
             conteneur = MaterialTheme.colorScheme.primaryContainer,
             surConteneur = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -135,6 +138,8 @@ fun AccueilContenu(
                 (etat.celiAnneeCourante?.plafond?.formatMontant() ?: "-") to "Plafond ${etat.anneeCourante}",
             ),
             onClick = { onOuvrirDetail(Compte.CELI) },
+            onAjouter = { onAjouter(Compte.CELI) },
+            onOuvrirJournal = { onOuvrirJournal(Compte.CELI) },
         ) {
             if (etat.celiAnneeCourante?.plafondManquant == true) {
                 BandeauAlerte("Plafond de l'année non confirmé : droits sous-estimés.", Icons.Filled.Info)
@@ -167,6 +172,8 @@ fun AccueilContenu(
                 (etat.echeanceParticipationCeliapp?.toString() ?: "-") to "Échéance",
             ),
             onClick = { onOuvrirDetail(Compte.CELIAPP) },
+            onAjouter = { onAjouter(Compte.CELIAPP) },
+            onOuvrirJournal = { onOuvrirJournal(Compte.CELIAPP) },
         ) {
             AlerteUtilisation(etat.utilisationCeliapp, etat.anneeCourante)
         }
@@ -273,6 +280,8 @@ private fun CarteCompte(
     fraction: Float?,
     tuiles: List<Pair<String, String>>,
     onClick: () -> Unit,
+    onAjouter: () -> Unit,
+    onOuvrirJournal: () -> Unit,
     alertes: @Composable ColumnScope.() -> Unit = {},
 ) {
     Column(
@@ -311,6 +320,22 @@ private fun CarteCompte(
             }
             GrilleTuiles(tuiles)
             alertes()
+            // Les deux gestes les plus frequents, visibles sur la carte plutot
+            // que caches derriere l'ecran de detail.
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                FilledTonalButton(
+                    onClick = onAjouter,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.filledTonalButtonColors(containerColor = conteneur, contentColor = surConteneur),
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Text("Ajouter", modifier = Modifier.padding(start = 8.dp))
+                }
+                OutlinedButton(onClick = onOuvrirJournal, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Text("Journal", modifier = Modifier.padding(start = 8.dp))
+                }
+            }
         }
     }
 }

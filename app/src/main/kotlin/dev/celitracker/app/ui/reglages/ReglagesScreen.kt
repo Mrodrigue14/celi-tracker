@@ -65,7 +65,7 @@ import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReglagesScreen(onRetour: () -> Unit) {
+fun ReglagesScreen() {
     val application = LocalContext.current.applicationContext as CeliTrackerApplication
     val viewModel: ReglagesViewModel = viewModel(factory = application.viewModelFactory)
     val etat by viewModel.uiState.collectAsStateWithLifecycle()
@@ -89,14 +89,7 @@ fun ReglagesScreen(onRetour: () -> Unit) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Réglages") },
-                navigationIcon = {
-                    IconButton(onClick = onRetour) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
-                    }
-                },
-            )
+            TopAppBar(title = { Text("Réglages") })
         },
         snackbarHost = { SnackbarHost(snackbar) },
     ) { innerPadding ->
