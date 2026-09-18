@@ -89,6 +89,14 @@ class AccueilUiStateTest {
         assertNull(etat.fractionUtiliseeCeli)
     }
 
+    @Test
+    fun `un plafond manquant rend l'utilisation inconnue plutot qu'alarmante`() {
+        val ligne = ligneCeli(2026).copy(droitsDebut = BigDecimal.ZERO, depots = BigDecimal("100.00"), plafondManquant = true)
+        val etat = AccueilUiState(profil = profil, anneeCourante = 2026, moisCourant = 9, droitsCeli = listOf(ligne))
+
+        assertNull(etat.utilisationCeli)
+    }
+
     private fun ligneCeli(annee: Int) = DroitsAnnee(
         annee = annee,
         plafond = BigDecimal("7000.00"),

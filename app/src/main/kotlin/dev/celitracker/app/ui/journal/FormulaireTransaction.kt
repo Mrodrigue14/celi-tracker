@@ -11,6 +11,12 @@ data class FormulaireTransaction(
     val type: TypeTx = TypeTx.DEPOT,
     val montant: String = "",
     val erreur: String? = null,
+    /**
+     * Pose quand le depot porterait l'utilisation des droits a 95 % ou plus.
+     * Le premier appui sur Enregistrer l'affiche, le second enregistre quand
+     * meme: la sur-cotisation est permise, mais jamais par inadvertance.
+     */
+    val avertissement: String? = null,
 ) {
     val estNouvelle: Boolean get() = id == 0L
 

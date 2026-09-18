@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -59,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.celitracker.app.CeliTrackerApplication
+import dev.celitracker.app.ui.composants.BandeauAlerte
 import dev.celitracker.app.ui.composants.ChampDate
 import dev.celitracker.app.ui.format.formatMontant
 import dev.celitracker.app.ui.theme.chiffres
@@ -305,12 +307,13 @@ private fun FeuilleTransaction(
                 modifier = Modifier.fillMaxWidth(),
             )
             ChampDate(date = formulaire.date, onDate = onDate, etiquette = "Date")
+            formulaire.avertissement?.let { BandeauAlerte(it, Icons.Filled.Warning) }
             Button(
                 onClick = onEnregistrer,
                 enabled = formulaire.valide,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Enregistrer")
+                Text(if (formulaire.avertissement == null) "Enregistrer" else "Enregistrer quand même")
             }
             formulaire.erreur?.let {
                 Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
