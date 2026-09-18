@@ -60,6 +60,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.celitracker.app.CeliTrackerApplication
 import dev.celitracker.app.R
 import dev.celitracker.app.ui.composants.ChampDate
+import dev.celitracker.app.ui.composants.TitreSection
 import dev.celitracker.app.ui.format.formatDate
 import dev.celitracker.app.ui.format.formatMontant
 import dev.celitracker.app.ui.texte.resoudre
@@ -192,7 +193,7 @@ fun ReglagesContenu(
             .padding(horizontal = 16.dp)
             .padding(bottom = 32.dp),
     ) {
-        TitreSection(stringResource(R.string.reglages_profil))
+        TitreSection(stringResource(R.string.reglages_profil), Modifier.padding(top = 24.dp, bottom = 12.dp))
         OutlinedTextField(
             value = etat.anneeNaissance,
             onValueChange = onAnneeNaissanceChange,
@@ -235,7 +236,7 @@ fun ReglagesContenu(
         )
         etat.erreurArc?.let { EchecLectureArc(it.resoudre()) }
 
-        TitreSection(stringResource(R.string.reglages_source_plafonds))
+        TitreSection(stringResource(R.string.reglages_source_plafonds), Modifier.padding(top = 24.dp, bottom = 12.dp))
         OutlinedTextField(
             value = etat.urlPageArc,
             onValueChange = onUrlPageArcChange,
@@ -279,7 +280,7 @@ fun ReglagesContenu(
             Text(stringResource(R.string.reglages_retablir_adresse))
         }
 
-        TitreSection(stringResource(R.string.reglages_plafonds_celi))
+        TitreSection(stringResource(R.string.reglages_plafonds_celi), Modifier.padding(top = 24.dp, bottom = 12.dp))
         if (etat.plafondsConfirmes.isEmpty()) {
             Text(
                 stringResource(R.string.reglages_aucun_plafond),
@@ -331,7 +332,7 @@ fun ReglagesContenu(
 /** Le choix est garde sur l'appareil: pas besoin de le refaire a chaque ouverture. */
 @Composable
 private fun Apparence(mode: ModeTheme, onChoisir: (ModeTheme) -> Unit) {
-    TitreSection(stringResource(R.string.reglages_apparence))
+    TitreSection(stringResource(R.string.reglages_apparence), Modifier.padding(top = 24.dp, bottom = 12.dp))
     SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
         ModeTheme.entries.forEachIndexed { index, choix ->
             SegmentedButton(
@@ -362,7 +363,7 @@ private fun Apparence(mode: ModeTheme, onChoisir: (ModeTheme) -> Unit) {
  */
 @Composable
 private fun SauvegardeEtRecuperation(onExporter: () -> Unit, onImporter: () -> Unit) {
-    TitreSection(stringResource(R.string.reglages_sauvegarde))
+    TitreSection(stringResource(R.string.reglages_sauvegarde), Modifier.padding(top = 24.dp, bottom = 12.dp))
     Text(
         stringResource(R.string.reglages_sauvegarde_texte),
         style = MaterialTheme.typography.bodyMedium,
@@ -389,7 +390,7 @@ private fun PropositionsArc(
 ) {
     if (propositions.isEmpty()) return
 
-    TitreSection(stringResource(R.string.reglages_propose_arc))
+    TitreSection(stringResource(R.string.reglages_propose_arc), Modifier.padding(top = 24.dp, bottom = 12.dp))
     propositions.forEach { plafond ->
         Column(modifier = Modifier.padding(bottom = 12.dp)) {
             Text(
@@ -468,16 +469,6 @@ private fun PlafondsAnterieurs(plafonds: List<PlafondAnnuel>) {
     if (ouverts) {
         plafonds.forEach { plafond -> LignePlafond(plafond, attenue = true) }
     }
-}
-
-@Composable
-private fun TitreSection(texte: String) {
-    Text(
-        texte,
-        modifier = Modifier.padding(top = 24.dp, bottom = 12.dp),
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.primary,
-    )
 }
 
 /** Resultat d'un calcul, donc affiche et non saisi. */

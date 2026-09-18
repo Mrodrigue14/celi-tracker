@@ -16,10 +16,6 @@ class DetailCeliappViewModel(private val depot: Depot) : ViewModel() {
     private val _uiState = MutableStateFlow(DetailCeliappUiState())
     val uiState: StateFlow<DetailCeliappUiState> = _uiState.asStateFlow()
 
-    init {
-        charger()
-    }
-
     fun charger() {
         viewModelScope.launch {
             val profil = depot.profil()

@@ -15,9 +15,9 @@ import dev.celitracker.engine.PlafondAnnuel
  */
 suspend fun Depot.garnirPlafondsPublies() {
     val anneesConnues = plafonds().filter { it.compte == Compte.CELI }.map { it.annee }.toSet()
-    PLAFONDS_CELI_PUBLIES
-        .filterKeys { it !in anneesConnues }
-        .forEach { (annee, montant) ->
-            enregistrerPlafond(PlafondAnnuel(compte = Compte.CELI, annee = annee, montant = montant, confirme = true))
-        }
+    enregistrerPlafonds(
+        PLAFONDS_CELI_PUBLIES
+            .filterKeys { it !in anneesConnues }
+            .map { (annee, montant) -> PlafondAnnuel(compte = Compte.CELI, annee = annee, montant = montant, confirme = true) },
+    )
 }

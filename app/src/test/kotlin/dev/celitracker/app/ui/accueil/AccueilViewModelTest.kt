@@ -33,7 +33,7 @@ class AccueilViewModelTest {
 
     @Test
     fun `sans profil, l'etat reste vide une fois la base lue`() = runTest {
-        val viewModel = AccueilViewModel(depot)
+        val viewModel = AccueilViewModel(depot).also { it.charger() }
 
         val etat = viewModel.uiState.first { it.chargementTermine }
 
@@ -53,7 +53,7 @@ class AccueilViewModelTest {
             Transaction(Compte.CELI, LocalDate.of(anneeCourante, 1, 15), TypeTx.DEPOT, BigDecimal("1000.00")),
         )
 
-        val viewModel = AccueilViewModel(depot)
+        val viewModel = AccueilViewModel(depot).also { it.charger() }
         val etat = viewModel.uiState.first { it.profilEnregistre }
 
         val attendu = CeliMoteur.droitsParAnnee(

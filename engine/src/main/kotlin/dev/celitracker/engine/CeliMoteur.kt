@@ -48,8 +48,8 @@ object CeliMoteur {
         for (annee in profil.anneeAdmissibiliteCeli..jusqua) {
             val plafondAnnee = parAnnee[annee]
             val plafond = plafondAnnee?.montant ?: BigDecimal.ZERO
-            val depots = somme(txCeli, annee, TypeTx.DEPOT)
-            val retraits = somme(txCeli, annee, TypeTx.RETRAIT)
+            val depots = sommeTransactions(txCeli, annee, TypeTx.DEPOT)
+            val retraits = sommeTransactions(txCeli, annee, TypeTx.RETRAIT)
 
             // Les retraits de l'annee PRECEDENTE reviennent le 1er janvier;
             // ceux de l'annee courante ne comptent pas encore.
@@ -75,8 +75,4 @@ object CeliMoteur {
         }
         return resultat
     }
-
-    private fun somme(transactions: List<Transaction>, annee: Int, type: TypeTx): BigDecimal = transactions
-        .filter { it.date.year == annee && it.type == type }
-        .fold(BigDecimal.ZERO) { total, tx -> total + tx.montant }
 }

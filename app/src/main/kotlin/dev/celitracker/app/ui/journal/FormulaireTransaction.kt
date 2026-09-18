@@ -1,5 +1,6 @@
 package dev.celitracker.app.ui.journal
 
+import dev.celitracker.app.ui.format.versMontantSaisi
 import dev.celitracker.app.ui.texte.TexteUi
 import dev.celitracker.engine.TypeTx
 import java.math.BigDecimal
@@ -23,9 +24,7 @@ data class FormulaireTransaction(
 
     val dateValide: LocalDate? get() = runCatching { LocalDate.parse(date) }.getOrNull()
 
-    // Un clavier en francais propose la virgule comme separateur decimal.
-    val montantValide: BigDecimal? get() =
-        montant.replace(',', '.').toBigDecimalOrNull()?.takeIf { it > BigDecimal.ZERO }
+    val montantValide: BigDecimal? get() = montant.versMontantSaisi()
 
     val valide: Boolean get() = dateValide != null && montantValide != null
 }

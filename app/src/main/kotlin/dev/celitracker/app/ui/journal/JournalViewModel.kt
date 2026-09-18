@@ -90,8 +90,9 @@ class JournalViewModel(
         val montant = formulaire.montantValide ?: return
         val transaction = Transaction(compte, date, formulaire.type, montant, formulaire.id)
         viewModelScope.launch {
+            val apres = utilisationApres(transaction)
             if (formulaire.avertissement == null) {
-                avertissementAvant(transaction)?.let { texte ->
+                avertissement(transaction, apres)?.let { texte ->
                     _uiState.update { it.copy(formulaire = it.formulaire?.copy(avertissement = texte)) }
                     return@launch
                 }
@@ -102,18 +103,31 @@ class JournalViewModel(
                 _uiState.update { it.copy(formulaire = it.formulaire?.copy(erreur = texte(e.raison.texteRes()))) }
                 return@launch
             }
-            recharger(message = messageApres(date.year))
+            recharger(message = messageApres(apres, date.year))
         }
     }
 
     /**
-     * Texte a confirmer si ce depot porterait l'utilisation de l'annee a 95 % ou
+     * Utilisation de l'annee de [transaction], celle-ci comprise (a la place de
+     * son ancienne version si c'est une modification). Sert a la fois a
+     * l'avertissement avant l'enregistrement et au message apres.
+     */
+    private suspend fun utilisationApres(transaction: Transaction): Utilisation? {
+        val profil = depot.profil() ?: return null
+        val transactions = depot.transactions().filter { it.id != transaction.id } + transaction
+        val annee = transaction.date.year
+        return when (compte) {
+            Compte.CELI -> utilisationCeli(profil, depot.plafonds(), transactions, annee)
+            Compte.CELIAPP -> utilisationCeliapp(profil, transactions, annee)
+        }
+    }
+
+    /**
+     * Texte a confirmer si ce depot porte l'utilisation de l'annee a 95 % ou
      * au-dela. Un retrait n'en demande jamais: il ne consomme pas de droits.
      */
-    private suspend fun avertissementAvant(transaction: Transaction): TexteUi? {
-        if (transaction.type != TypeTx.DEPOT) return null
-        val autres = depot.transactions().filter { it.id != transaction.id }
-        val apres = utilisation(autres, transaction.date.year)?.avecDepot(transaction.montant) ?: return null
+    private fun avertissement(transaction: Transaction, apres: Utilisation?): TexteUi? {
+        if (transaction.type != TypeTx.DEPOT || apres == null) return null
         val annee = transaction.date.year
         return when (apres.niveau) {
             NiveauUtilisation.DEPASSE -> texte(R.string.journal_avertissement_depassement, compte, annee, apres.excedent)
@@ -125,18 +139,9 @@ class JournalViewModel(
         }
     }
 
-    private suspend fun messageApres(annee: Int): TexteUi {
-        val courante = utilisation(depot.transactions(), annee)
-        if (courante == null || courante.niveau == NiveauUtilisation.NORMAL) return texte(R.string.journal_enregistree)
-        return texte(R.string.journal_enregistree_utilisation, courante.pourcentage ?: 0, compte, annee)
-    }
-
-    private suspend fun utilisation(transactions: List<Transaction>, annee: Int): Utilisation? {
-        val profil = depot.profil() ?: return null
-        return when (compte) {
-            Compte.CELI -> utilisationCeli(profil, depot.plafonds(), transactions, annee)
-            Compte.CELIAPP -> utilisationCeliapp(profil, transactions, annee)
-        }
+    private fun messageApres(apres: Utilisation?, annee: Int): TexteUi {
+        if (apres == null || apres.niveau == NiveauUtilisation.NORMAL) return texte(R.string.journal_enregistree)
+        return texte(R.string.journal_enregistree_utilisation, apres.pourcentage ?: 0, compte, annee)
     }
 
     fun supprimer() {

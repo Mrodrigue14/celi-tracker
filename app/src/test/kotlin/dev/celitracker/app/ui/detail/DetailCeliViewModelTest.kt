@@ -32,7 +32,7 @@ class DetailCeliViewModelTest {
 
     @Test
     fun `sans profil, aucune ligne`() = runTest {
-        val viewModel = DetailCeliViewModel(depot)
+        val viewModel = DetailCeliViewModel(depot).also { it.charger() }
 
         assertEquals(emptyList(), viewModel.uiState.value.lignes)
     }
@@ -43,7 +43,7 @@ class DetailCeliViewModelTest {
         depot.enregistrerProfil(Profil(anneeCourante - 19, null))
         // Aucun plafond enregistre pour anneeCourante - 1 ni anneeCourante.
 
-        val viewModel = DetailCeliViewModel(depot)
+        val viewModel = DetailCeliViewModel(depot).also { it.charger() }
         val etat = viewModel.uiState.first { it.lignes.isNotEmpty() }
 
         assertTrue(etat.lignes.all { it.plafondManquant })
@@ -54,7 +54,7 @@ class DetailCeliViewModelTest {
         depot.enregistrerProfil(Profil(anneeCourante - 18, null))
         depot.enregistrerPlafond(PlafondAnnuel(Compte.CELI, anneeCourante, BigDecimal("7000.00"), confirme = true))
 
-        val viewModel = DetailCeliViewModel(depot)
+        val viewModel = DetailCeliViewModel(depot).also { it.charger() }
         val etat = viewModel.uiState.first { it.lignes.isNotEmpty() }
 
         assertEquals(listOf(false), etat.lignes.map { it.plafondManquant })
@@ -66,7 +66,7 @@ class DetailCeliViewModelTest {
         depot.ajouterTransaction(Transaction(Compte.CELI, LocalDate.of(anneeCourante, 1, 5), TypeTx.DEPOT, BigDecimal("100.00")))
         depot.ajouterTransaction(Transaction(Compte.CELIAPP, LocalDate.of(anneeCourante - 1, 6, 1), TypeTx.DEPOT, BigDecimal("100.00")))
 
-        val viewModel = DetailCeliViewModel(depot)
+        val viewModel = DetailCeliViewModel(depot).also { it.charger() }
         val etat = viewModel.uiState.first { it.lignes.isNotEmpty() }
 
         assertEquals(setOf(anneeCourante), etat.anneesAvecTransactions)

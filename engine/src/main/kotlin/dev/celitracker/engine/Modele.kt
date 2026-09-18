@@ -80,3 +80,11 @@ data class Reglages(
  * echouent sur des montants pourtant identiques.
  */
 fun BigDecimal.argent(): BigDecimal = setScale(2, RoundingMode.HALF_UP)
+
+/**
+ * Total des transactions de [type] faites en [annee]. Une simple addition, pas
+ * une regle de regime: les deux moteurs la partagent sans rien fusionner.
+ */
+internal fun sommeTransactions(transactions: List<Transaction>, annee: Int, type: TypeTx): BigDecimal = transactions
+    .filter { it.date.year == annee && it.type == type }
+    .fold(BigDecimal.ZERO) { total, tx -> total + tx.montant }
