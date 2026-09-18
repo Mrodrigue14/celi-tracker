@@ -6,6 +6,7 @@ import dev.celitracker.app.DepotDeTest
 import dev.celitracker.app.MainDeTest
 import dev.celitracker.data.URL_PAGE_ARC_PAR_DEFAUT
 import dev.celitracker.engine.Profil
+import dev.celitracker.engine.Reglages
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeAll
@@ -144,11 +145,11 @@ class ReglagesViewModelTest {
     @Test
     fun `une adresse valide de l'ARC est enregistree telle quelle`() = runTest {
         val autrePage = "https://www.canada.ca/fr/agence-revenu/autre-page.html"
-        val viewModel = ReglagesViewModel(depot, horsLigne)
+        val viewModel = ReglagesViewModel(depot, pageArc)
 
         viewModel.modifierUrlPageArc(autrePage)
         viewModel.enregistrerUrlPageArc()
-        viewModel.uiState.first { it.message != null }
+        viewModel.uiState.first { it.message?.startsWith("Adresse") == true }
 
         assertEquals(autrePage, depot.reglages().urlPageArc)
     }
@@ -204,5 +205,16 @@ class ReglagesViewModelTest {
         val etat = ReglagesUiState(nouveauPlafondAnnee = "2026", nouveauPlafondMontant = "-100")
 
         assertTrue(!etat.nouveauPlafondValide)
+    }
+
+    @Test
+    fun `retablir l'adresse d'origine repare une adresse cassee enregistree autrefois`() = runTest {
+        depot.enregistrerReglages(Reglages(urlPageArc = "https://www.canada.ca/fr/agence-renu/page.html", dateDerniereVerification = null))
+        val viewModel = ReglagesViewModel(depot, pageArc)
+
+        viewModel.retablirUrlPageArc()
+        viewModel.uiState.first { it.message?.startsWith("Adresse") == true }
+
+        assertEquals(URL_PAGE_ARC_PAR_DEFAUT, depot.reglages().urlPageArc)
     }
 }

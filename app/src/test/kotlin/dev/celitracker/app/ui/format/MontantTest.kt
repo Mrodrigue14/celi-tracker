@@ -2,6 +2,7 @@ package dev.celitracker.app.ui.format
 
 import java.math.BigDecimal
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class MontantTest {
@@ -24,5 +25,10 @@ class MontantTest {
     fun `montant zero ne leve pas d'exception`() {
         val texte = BigDecimal.ZERO.setScale(2).formatMontant()
         assertTrue("0" in texte)
+    }
+
+    @Test
+    fun `une date s'ecrit en toutes lettres, sans tirets`() {
+        assertEquals("4 septembre 2026", java.time.LocalDate.of(2026, 9, 4).formatDate())
     }
 }

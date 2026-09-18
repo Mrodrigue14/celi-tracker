@@ -40,14 +40,14 @@ val FORME_TUILE = RoundedCornerShape(14.dp)
  * la couleur d'erreur: une sur-cotisation se voit avant de se lire.
  */
 @Composable
-fun AnneauDroits(fraction: Float?, couleur: Color, modifier: Modifier = Modifier) {
-    val cible = (fraction ?: 0f).coerceIn(0f, 1f)
+fun AnneauDroits(fraction: Float, couleur: Color, modifier: Modifier = Modifier) {
+    val cible = fraction.coerceIn(0f, 1f)
     // L'animation dit « voici ce qui a change » a l'ouverture de l'ecran.
     val affichee by animateFloatAsState(cible, animationSpec = tween(700), label = "anneau")
-    val depasse = (fraction ?: 0f) > 1f
+    val depasse = fraction > 1f
     val trait = if (depasse) MaterialTheme.colorScheme.error else couleur
     val piste = MaterialTheme.colorScheme.surfaceVariant
-    val pourcentage = ((fraction ?: 0f) * 100).roundToInt()
+    val pourcentage = (fraction * 100).roundToInt()
 
     Box(
         modifier = modifier
@@ -62,7 +62,7 @@ fun AnneauDroits(fraction: Float?, couleur: Color, modifier: Modifier = Modifier
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                if (fraction == null) "-" else "$pourcentage %",
+                "$pourcentage %",
                 style = MaterialTheme.typography.titleSmall.chiffres(),
                 color = if (depasse) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
             )

@@ -2,6 +2,7 @@ package dev.celitracker.data
 
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.PlafondAnnuel
+import dev.celitracker.engine.adressePageArcValide
 import dev.celitracker.engine.lirePlafondCeliArc
 import java.time.Duration
 import java.time.Instant
@@ -66,3 +67,30 @@ suspend fun Depot.verifierPlafondsArc(
 }
 
 private fun verificationTropRecente(derniere: Instant?, maintenant: Instant): Boolean = derniere != null && Duration.between(derniere, maintenant).toDays() < JOURS_ENTRE_VERIFICATIONS
+
+sealed interface ResultatAdresseArc {
+    data object Enregistree : ResultatAdresseArc
+
+    data class Refusee(val raison: String) : ResultatAdresseArc
+}
+
+/**
+ * N'enregistre une nouvelle adresse qu'apres l'avoir essayee: sa page doit
+ * donner le plafond du CELI. Sinon l'adresse en place, la derniere qui a
+ * fonctionne, reste la, et le lien vers l'ARC ne se perd jamais.
+ */
+suspend fun Depot.changerAdressePageArc(url: String, telecharger: suspend (String) -> String): ResultatAdresseArc {
+    if (!adressePageArcValide(url)) {
+        return ResultatAdresseArc.Refusee("L'adresse doit être une page https de canada.ca.")
+    }
+    val page = try {
+        telecharger(url)
+    } catch (e: Exception) {
+        return ResultatAdresseArc.Refusee("Page injoignable (${e.message ?: "erreur réseau"}).")
+    }
+    if (lirePlafondCeliArc(page) == null) {
+        return ResultatAdresseArc.Refusee("Cette page ne donne pas le plafond du CELI.")
+    }
+    enregistrerReglages(reglages().copy(urlPageArc = url))
+    return ResultatAdresseArc.Enregistree
+}

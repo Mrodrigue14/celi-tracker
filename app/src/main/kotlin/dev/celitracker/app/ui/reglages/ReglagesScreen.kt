@@ -54,6 +54,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.celitracker.app.CeliTrackerApplication
 import dev.celitracker.app.ui.composants.ChampDate
+import dev.celitracker.app.ui.format.formatDate
 import dev.celitracker.app.ui.format.formatMontant
 import dev.celitracker.app.ui.theme.chiffres
 import dev.celitracker.engine.Compte
@@ -104,6 +105,7 @@ fun ReglagesScreen() {
             onAjouterPlafond = viewModel::ajouterPlafond,
             onUrlPageArcChange = viewModel::modifierUrlPageArc,
             onEnregistrerUrlPageArc = viewModel::enregistrerUrlPageArc,
+            onRetablirUrlPageArc = viewModel::retablirUrlPageArc,
             onVerifierArc = { viewModel.verifierArc(demandeExplicite = true) },
             onConfirmerProposition = viewModel::confirmerProposition,
             onRejeterProposition = viewModel::rejeterProposition,
@@ -166,6 +168,7 @@ fun ReglagesContenu(
     onUrlPageArcChange: (String) -> Unit,
     onEnregistrerUrlPageArc: () -> Unit,
     onVerifierArc: () -> Unit,
+    onRetablirUrlPageArc: () -> Unit,
     onConfirmerProposition: (PlafondAnnuel) -> Unit,
     onRejeterProposition: (PlafondAnnuel) -> Unit,
     onExporter: () -> Unit,
@@ -226,7 +229,7 @@ fun ReglagesContenu(
             supportingText = {
                 Text(
                     etat.derniereVerificationArc
-                        ?.let { "Dernière lecture : ${it.atZone(ZoneId.systemDefault()).toLocalDate()}" }
+                        ?.let { "Dernière lecture : ${it.atZone(ZoneId.systemDefault()).toLocalDate().formatDate()}" }
                         ?: "Jamais lue. L'application vérifie une fois par mois, et seulement s'il manque un plafond.",
                 )
             },
@@ -237,16 +240,29 @@ fun ReglagesContenu(
             modifier = Modifier.padding(top = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            OutlinedButton(onClick = onEnregistrerUrlPageArc, modifier = Modifier.weight(1f)) {
-                Text("Enregistrer l'adresse")
+            OutlinedButton(
+                onClick = onEnregistrerUrlPageArc,
+                enabled = !etat.verificationEnCours,
+                modifier = Modifier.weight(1f),
+            ) {
+                Text("Tester et enregistrer")
             }
             Button(
                 onClick = onVerifierArc,
                 enabled = !etat.verificationEnCours,
                 modifier = Modifier.weight(1f),
             ) {
-                Text(if (etat.verificationEnCours) "Lecture..." else "Vérifier")
+                Text(if (etat.verificationEnCours) "Lecture en cours" else "Vérifier")
             }
+        }
+        // Porte de sortie quand l'adresse en place ne marche plus, par exemple
+        // apres une reorganisation du site ou une adresse mal saisie autrefois.
+        TextButton(
+            onClick = onRetablirUrlPageArc,
+            enabled = !etat.verificationEnCours,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Rétablir l'adresse d'origine")
         }
 
         TitreSection("Plafonds CELI")
@@ -500,6 +516,7 @@ private fun ReglagesContenuApercu() {
         onAjouterPlafond = {},
         onUrlPageArcChange = {},
         onEnregistrerUrlPageArc = {},
+        onRetablirUrlPageArc = {},
         onVerifierArc = {},
         onConfirmerProposition = {},
         onRejeterProposition = {},

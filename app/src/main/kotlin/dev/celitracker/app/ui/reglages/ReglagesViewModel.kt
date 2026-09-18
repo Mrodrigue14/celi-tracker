@@ -3,16 +3,16 @@ package dev.celitracker.app.ui.reglages
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.celitracker.data.Depot
+import dev.celitracker.data.ResultatAdresseArc
 import dev.celitracker.data.ResultatVerificationArc
 import dev.celitracker.data.URL_PAGE_ARC_PAR_DEFAUT
+import dev.celitracker.data.changerAdressePageArc
 import dev.celitracker.data.exporterJson
 import dev.celitracker.data.importerJson
 import dev.celitracker.data.verifierPlafondsArc
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.PlafondAnnuel
 import dev.celitracker.engine.Profil
-import dev.celitracker.engine.Reglages
-import dev.celitracker.engine.adressePageArcValide
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -152,22 +152,26 @@ class ReglagesViewModel(
     }
 
     /**
-     * Une adresse invalide ne remplace jamais celle qui marche: l'application
-     * revient a l'adresse d'origine plutot que de rester sans lien vers l'ARC.
+     * L'adresse est essayee avant d'etre enregistree. Refusee, le champ revient
+     * a l'adresse en place, la derniere qui a fonctionne.
      */
-    fun enregistrerUrlPageArc() {
-        val saisie = _uiState.value.urlPageArc
-        val valide = adressePageArcValide(saisie)
-        val url = if (valide) saisie else URL_PAGE_ARC_PAR_DEFAUT
+    fun enregistrerUrlPageArc() = changerAdresse(_uiState.value.urlPageArc.trim())
+
+    /** L'adresse d'origine passe par le meme essai: elle aussi peut avoir change. */
+    fun retablirUrlPageArc() = changerAdresse(URL_PAGE_ARC_PAR_DEFAUT)
+
+    private fun changerAdresse(saisie: String) {
         viewModelScope.launch {
-            depot.enregistrerReglages(Reglages(urlPageArc = url, dateDerniereVerification = depot.reglages().dateDerniereVerification))
+            _uiState.update { it.copy(verificationEnCours = true) }
+            val resultat = depot.changerAdressePageArc(saisie, telechargerPage)
+            val enPlace = depot.reglages().urlPageArc
             _uiState.update {
                 it.copy(
-                    urlPageArc = url,
-                    message = if (valide) {
-                        "Adresse enregistrée."
-                    } else {
-                        "Adresse refusée : l'adresse par défaut de l'ARC a été rétablie."
+                    urlPageArc = enPlace,
+                    verificationEnCours = false,
+                    message = when (resultat) {
+                        ResultatAdresseArc.Enregistree -> "Adresse vérifiée et enregistrée."
+                        is ResultatAdresseArc.Refusee -> "${resultat.raison} L'adresse précédente est conservée."
                     },
                 )
             }

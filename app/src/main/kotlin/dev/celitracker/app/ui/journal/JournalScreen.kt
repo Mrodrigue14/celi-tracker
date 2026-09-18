@@ -61,6 +61,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.celitracker.app.CeliTrackerApplication
 import dev.celitracker.app.ui.composants.BandeauAlerte
 import dev.celitracker.app.ui.composants.ChampDate
+import dev.celitracker.app.ui.format.formatDate
 import dev.celitracker.app.ui.format.formatMontant
 import dev.celitracker.app.ui.theme.chiffres
 import dev.celitracker.engine.Compte
@@ -98,13 +99,15 @@ fun JournalScreen() {
         },
         snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
-            // Etendu plutot qu'un simple rond: l'action principale de l'ecran
-            // merite d'etre nommee, et elle reste dans la zone du pouce.
-            ExtendedFloatingActionButton(
-                text = { Text("Ajouter") },
-                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                onClick = viewModel::ouvrirNouvelle,
-            )
+            // Journal vide: l'etat vide porte deja son propre bouton, un second
+            // ferait doublon. Le bouton flottant revient des la premiere transaction.
+            if (etat.transactions.isNotEmpty()) {
+                ExtendedFloatingActionButton(
+                    text = { Text("Ajouter") },
+                    icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                    onClick = viewModel::ouvrirNouvelle,
+                )
+            }
         },
     ) { innerPadding ->
         JournalContenu(
@@ -257,7 +260,7 @@ private fun LigneTransaction(transaction: Transaction, onClick: () -> Unit) {
                 )
             }
             Text(
-                transaction.date.toString(),
+                transaction.date.formatDate(),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

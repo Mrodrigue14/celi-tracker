@@ -1,19 +1,17 @@
 package dev.celitracker.app.ui.detail
 
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -22,17 +20,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.celitracker.app.CeliTrackerApplication
+import dev.celitracker.app.ui.composants.CarteAnnee
+import dev.celitracker.app.ui.composants.GraphiqueAnnees
 import dev.celitracker.app.ui.format.formatMontant
 import dev.celitracker.engine.DroitsAnneeCeliapp
 import java.math.BigDecimal
-
-private val LARGEUR_COLONNE = 130.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,7 +42,7 @@ fun DetailCeliappScreen(onRetour: () -> Unit, onOuvrirJournal: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("CELIAPP — détail") },
+                title = { Text("Détail du CELIAPP") },
                 navigationIcon = {
                     IconButton(onClick = onRetour) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
@@ -53,7 +50,7 @@ fun DetailCeliappScreen(onRetour: () -> Unit, onOuvrirJournal: () -> Unit) {
                 },
                 actions = {
                     IconButton(onClick = onOuvrirJournal) {
-                        Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Journal des transactions")
+                        Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = "Journal du CELIAPP")
                     }
                 },
             )
@@ -63,40 +60,57 @@ fun DetailCeliappScreen(onRetour: () -> Unit, onOuvrirJournal: () -> Unit) {
     }
 }
 
+/** Meme lecture que le detail du CELI, avec les notions propres au CELIAPP. */
 @Composable
 fun DetailCeliappContenu(etat: DetailCeliappUiState, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+    val anneeEnCours = etat.lignes.lastOrNull()?.annee
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Column(modifier = Modifier.horizontalScroll(rememberScrollState())) {
-            LigneEnTeteCeliapp()
-            etat.lignes.forEach { ligne -> LigneCeliapp(ligne) }
+        if (etat.lignes.isNotEmpty()) {
+            item(key = "evolution") {
+                TitreSection("Plafond à vie restant")
+                GraphiqueAnnees(
+                    valeurs = etat.lignes.map { it.annee to it.plafondVieRestant },
+                    couleur = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
+                )
+            }
+            item(key = "titre-annees") { TitreSection("Année par année") }
+        }
+        items(etat.lignes.reversed(), key = { it.annee }) { ligne ->
+            CarteAnneeCeliapp(ligne, enCours = ligne.annee == anneeEnCours)
         }
     }
 }
 
 @Composable
-private fun LigneEnTeteCeliapp() {
-    Row {
-        listOf("Année", "Report entrant", "Droits de l'année", "Dépôts", "Report sortant", "Plafond à vie restant")
-            .forEach { texte ->
-                Text(texte, modifier = Modifier.width(LARGEUR_COLONNE).padding(8.dp), fontWeight = FontWeight.Bold)
-            }
-    }
+private fun CarteAnneeCeliapp(ligne: DroitsAnneeCeliapp, enCours: Boolean) {
+    CarteAnnee(
+        annee = ligne.annee,
+        montant = (ligne.droitsAnnee - ligne.depots).formatMontant(),
+        libelleMontant = if (enCours) "Droits restants" else "Droits non utilisés",
+        enCours = enCours,
+        tuiles = listOf(
+            ligne.reportEntrant.formatMontant() to "Report reçu",
+            ligne.droitsAnnee.formatMontant() to "Droits de l'année",
+            ligne.depots.formatMontant() to "Dépôts",
+            ligne.reportSortant.formatMontant() to "Report transmis",
+            ligne.plafondVieRestant.formatMontant() to "Plafond à vie restant",
+        ),
+    )
 }
 
 @Composable
-private fun LigneCeliapp(ligne: DroitsAnneeCeliapp) {
-    Row {
-        Text(ligne.annee.toString(), modifier = Modifier.width(LARGEUR_COLONNE).padding(8.dp))
-        Text(ligne.reportEntrant.formatMontant(), modifier = Modifier.width(LARGEUR_COLONNE).padding(8.dp))
-        Text(ligne.droitsAnnee.formatMontant(), modifier = Modifier.width(LARGEUR_COLONNE).padding(8.dp))
-        Text(ligne.depots.formatMontant(), modifier = Modifier.width(LARGEUR_COLONNE).padding(8.dp))
-        Text(ligne.reportSortant.formatMontant(), modifier = Modifier.width(LARGEUR_COLONNE).padding(8.dp))
-        Text(ligne.plafondVieRestant.formatMontant(), modifier = Modifier.width(LARGEUR_COLONNE).padding(8.dp))
-    }
+private fun TitreSection(texte: String) {
+    Text(
+        texte,
+        modifier = Modifier.padding(top = 12.dp),
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.secondary,
+    )
 }
 
 @Preview(showBackground = true)

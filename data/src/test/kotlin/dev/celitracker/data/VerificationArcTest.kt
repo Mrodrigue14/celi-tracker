@@ -97,4 +97,38 @@ class VerificationArcTest {
         assertEquals(ResultatVerificationArc.Inutile, resultat)
         assertEquals(BigDecimal("7000.00"), depot.plafonds().single { it.annee == 2027 }.montant)
     }
+
+    @Test
+    fun `une adresse dont la page donne le plafond est enregistree`() = runTest {
+        val autre = "https://www.canada.ca/fr/agence-revenu/autre-page.html"
+
+        val resultat = depot.changerAdressePageArc(autre) { pageArc }
+
+        assertEquals(ResultatAdresseArc.Enregistree, resultat)
+        assertEquals(autre, depot.reglages().urlPageArc)
+    }
+
+    @Test
+    fun `une page de canada point ca sans le plafond garde l'adresse precedente`() = runTest {
+        val resultat = depot.changerAdressePageArc("https://www.canada.ca/fr/autre.html") { "<h1>Page non trouvée</h1>" }
+
+        assertIs<ResultatAdresseArc.Refusee>(resultat)
+        assertEquals(URL_PAGE_ARC_PAR_DEFAUT, depot.reglages().urlPageArc)
+    }
+
+    @Test
+    fun `une page injoignable garde l'adresse precedente`() = runTest {
+        val resultat = depot.changerAdressePageArc("https://www.canada.ca/fr/autre.html") { throw java.io.IOException("hors ligne") }
+
+        assertIs<ResultatAdresseArc.Refusee>(resultat)
+        assertEquals(URL_PAGE_ARC_PAR_DEFAUT, depot.reglages().urlPageArc)
+    }
+
+    @Test
+    fun `une adresse hors canada point ca n'est meme pas telechargee`() = runTest {
+        val resultat = depot.changerAdressePageArc("https://exemple.com/plafonds") { error("ne doit pas etre telechargee") }
+
+        assertIs<ResultatAdresseArc.Refusee>(resultat)
+        assertEquals(URL_PAGE_ARC_PAR_DEFAUT, depot.reglages().urlPageArc)
+    }
 }
