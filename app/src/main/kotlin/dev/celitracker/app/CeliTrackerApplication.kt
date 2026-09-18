@@ -12,6 +12,7 @@ import dev.celitracker.app.ui.accueil.AccueilViewModel
 import dev.celitracker.app.ui.detail.DetailCeliViewModel
 import dev.celitracker.app.ui.detail.DetailCeliappViewModel
 import dev.celitracker.app.ui.journal.JournalViewModel
+import dev.celitracker.app.ui.navigation.ARG_AJOUTER
 import dev.celitracker.app.ui.navigation.ARG_COMPTE
 import dev.celitracker.app.ui.reglages.ReglagesViewModel
 import dev.celitracker.data.CeliTrackerBase
@@ -51,8 +52,13 @@ class CeliTrackerApplication : Application() {
             initializer { DetailCeliappViewModel(depot) }
             initializer { ReglagesViewModel(depot, ::telechargerPageArc) }
             initializer {
-                val compte = checkNotNull(createSavedStateHandle().get<String>(ARG_COMPTE))
-                JournalViewModel(depot, Compte.valueOf(compte))
+                val arguments = createSavedStateHandle()
+                val compte = arguments.get<String>(ARG_COMPTE)?.let(Compte::valueOf) ?: Compte.CELI
+                val ouvrirAjout = arguments.get<Boolean>(ARG_AJOUTER) == true
+                // Consomme: une recreation apres la mort du processus ne doit pas
+                // rouvrir la feuille d'ajout que l'utilisateur a deja fermee.
+                arguments[ARG_AJOUTER] = false
+                JournalViewModel(depot, compte, ouvrirAjout)
             }
         }
     }

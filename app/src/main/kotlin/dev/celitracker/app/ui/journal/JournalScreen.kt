@@ -19,11 +19,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.North
+import androidx.compose.material.icons.filled.South
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -72,7 +71,7 @@ import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun JournalScreen(onRetour: () -> Unit) {
+fun JournalScreen() {
     val application = LocalContext.current.applicationContext as CeliTrackerApplication
     val viewModel: JournalViewModel = viewModel(factory = application.viewModelFactory)
     val etat by viewModel.uiState.collectAsStateWithLifecycle()
@@ -88,14 +87,14 @@ fun JournalScreen(onRetour: () -> Unit) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Journal ${viewModel.compte}") },
-                navigationIcon = {
-                    IconButton(onClick = onRetour) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
-                    }
-                },
-            )
+            Column {
+                TopAppBar(title = { Text("Journal") })
+                ChoixCompte(
+                    compte = etat.compte,
+                    onChanger = viewModel::changerCompte,
+                    modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp),
+                )
+            }
         },
         snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
@@ -126,6 +125,30 @@ fun JournalScreen(onRetour: () -> Unit) {
             onSupprimer = viewModel::supprimer,
             onFermer = viewModel::fermerFormulaire,
         )
+    }
+}
+
+/** Les deux comptes a portee de pouce, au lieu d'un journal par ecran de detail. */
+@Composable
+private fun ChoixCompte(compte: Compte, onChanger: (Compte) -> Unit, modifier: Modifier = Modifier) {
+    SingleChoiceSegmentedButtonRow(modifier = modifier.fillMaxWidth()) {
+        Compte.entries.forEachIndexed { index, choix ->
+            SegmentedButton(
+                selected = compte == choix,
+                onClick = { if (choix != compte) onChanger(choix) },
+                shape = SegmentedButtonDefaults.itemShape(index, Compte.entries.size),
+                // Chaque compte garde sa couleur, ici comme sur l'accueil.
+                colors = SegmentedButtonDefaults.colors(
+                    activeContainerColor = if (choix == Compte.CELI) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.secondaryContainer
+                    },
+                ),
+            ) {
+                Text(choix.name)
+            }
+        }
     }
 }
 
@@ -207,7 +230,7 @@ private fun LigneTransaction(transaction: Transaction, onClick: () -> Unit) {
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Pastille(
-                icone = if (depot) Icons.Filled.KeyboardArrowDown else Icons.Filled.KeyboardArrowUp,
+                icone = if (depot) Icons.Filled.South else Icons.Filled.North,
                 fond = if (depot) {
                     MaterialTheme.colorScheme.primaryContainer
                 } else {

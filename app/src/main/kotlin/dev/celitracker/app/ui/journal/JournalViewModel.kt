@@ -18,13 +18,24 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
-class JournalViewModel(private val depot: Depot, val compte: Compte) : ViewModel() {
+/**
+ * [ouvrirAjout] vient du bouton « Ajouter » de l'accueil: l'ecran s'ouvre
+ * directement sur la feuille de saisie au lieu de demander un second geste.
+ */
+class JournalViewModel(
+    private val depot: Depot,
+    compteInitial: Compte,
+    ouvrirAjout: Boolean = false,
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(JournalUiState())
+    private val _uiState = MutableStateFlow(JournalUiState(compte = compteInitial))
+
+    private val compte: Compte get() = _uiState.value.compte
     val uiState: StateFlow<JournalUiState> = _uiState.asStateFlow()
 
     init {
         charger()
+        if (ouvrirAjout) ouvrirNouvelle()
     }
 
     fun charger() {
@@ -32,6 +43,13 @@ class JournalViewModel(private val depot: Depot, val compte: Compte) : ViewModel
             val transactions = transactionsDuCompte()
             _uiState.update { it.copy(transactions = transactions) }
         }
+    }
+
+    /** Passer du CELI au CELIAPP reste sur le meme ecran: c'est un filtre, pas une destination. */
+    fun changerCompte(nouveau: Compte) {
+        if (nouveau == compte) return
+        _uiState.update { it.copy(compte = nouveau, transactions = emptyList(), formulaire = null) }
+        charger()
     }
 
     fun ouvrirNouvelle() = _uiState.update {
