@@ -44,6 +44,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -53,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.celitracker.app.CeliTrackerApplication
+import dev.celitracker.app.R
 import dev.celitracker.app.ui.composants.AnneauDroits
 import dev.celitracker.app.ui.composants.BandeauAlerte
 import dev.celitracker.app.ui.composants.FORME_CARTE
@@ -86,7 +88,7 @@ fun AccueilScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("CELI Tracker") })
+            TopAppBar(title = { Text(stringResource(R.string.app_name)) })
         },
     ) { innerPadding ->
         AccueilContenu(
@@ -127,7 +129,7 @@ fun AccueilContenu(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         CarteCompte(
-            nom = "CELI",
+            nom = stringResource(R.string.compte_celi),
             icone = Icons.Filled.Savings,
             couleur = MaterialTheme.colorScheme.primary,
             conteneur = MaterialTheme.colorScheme.primaryContainer,
@@ -135,21 +137,21 @@ fun AccueilContenu(
             droitsRestants = etat.celiAnneeCourante?.droitsFin,
             fraction = etat.fractionUtiliseeCeli,
             tuiles = listOfNotNull(
-                etat.celiAnneeCourante?.let { it.depots.formatMontant() to "Cotisé en ${etat.anneeCourante}" },
-                etat.celiAnneeCourante?.let { it.plafond.formatMontant() to "Plafond ${etat.anneeCourante}" },
+                etat.celiAnneeCourante?.let { it.depots.formatMontant() to stringResource(R.string.accueil_cotise_en, etat.anneeCourante) },
+                etat.celiAnneeCourante?.let { it.plafond.formatMontant() to stringResource(R.string.accueil_plafond_annee, etat.anneeCourante) },
             ),
             onClick = { onOuvrirDetail(Compte.CELI) },
             onAjouter = { onAjouter(Compte.CELI) },
             onOuvrirJournal = { onOuvrirJournal(Compte.CELI) },
         ) {
             if (etat.celiAnneeCourante?.plafondManquant == true) {
-                BandeauAlerte("Plafond de l'année non confirmé : droits sous-estimés.", Icons.Filled.Info)
+                BandeauAlerte(stringResource(R.string.alerte_plafond_non_confirme), Icons.Filled.Info)
             }
             // La penalite calculee au mois pres dit deja tout d'une sur-cotisation:
             // le bandeau d'utilisation ne s'ajoute que s'il n'y en a pas.
             val excedent = etat.excedentCeliCourant
             if (excedent != null) {
-                BandeauAlerte("Sur-cotisation : pénalité estimée ${excedent.penalite.formatMontant()}.", Icons.Filled.Warning)
+                BandeauAlerte(stringResource(R.string.alerte_sur_cotisation, excedent.penalite.formatMontant()), Icons.Filled.Warning)
             } else {
                 AlerteUtilisation(etat.utilisationCeli, etat.anneeCourante)
             }
@@ -159,7 +161,7 @@ fun AccueilContenu(
             return@Column
         }
         CarteCompte(
-            nom = "CELIAPP",
+            nom = stringResource(R.string.compte_celiapp),
             icone = Icons.Filled.Home,
             couleur = MaterialTheme.colorScheme.secondary,
             conteneur = MaterialTheme.colorScheme.secondaryContainer,
@@ -167,10 +169,10 @@ fun AccueilContenu(
             droitsRestants = etat.droitsRestantsCeliapp,
             fraction = etat.fractionUtiliseeCeliapp,
             tuiles = listOfNotNull(
-                etat.celiappAnneeCourante?.let { it.depots.formatMontant() to "Cotisé en ${etat.anneeCourante}" },
-                etat.celiappAnneeCourante?.let { it.plafondVieRestant.formatMontant() to "Plafond à vie restant" },
-                etat.celiappAnneeCourante?.let { it.reportEntrant.formatMontant() to "Report reçu" },
-                etat.echeanceParticipationCeliapp?.let { it.formatDate() to "Échéance" },
+                etat.celiappAnneeCourante?.let { it.depots.formatMontant() to stringResource(R.string.accueil_cotise_en, etat.anneeCourante) },
+                etat.celiappAnneeCourante?.let { it.plafondVieRestant.formatMontant() to stringResource(R.string.accueil_plafond_vie_restant) },
+                etat.celiappAnneeCourante?.let { it.reportEntrant.formatMontant() to stringResource(R.string.accueil_report_recu) },
+                etat.echeanceParticipationCeliapp?.let { it.formatDate() to stringResource(R.string.accueil_echeance) },
             ),
             onClick = { onOuvrirDetail(Compte.CELIAPP) },
             onAjouter = { onAjouter(Compte.CELIAPP) },
@@ -189,18 +191,18 @@ private fun AlerteUtilisation(utilisation: Utilisation?, annee: Int) {
         NiveauUtilisation.NORMAL -> Unit
 
         NiveauUtilisation.ATTENTION -> BandeauAlerte(
-            "Tu as utilisé ${u.pourcentage} % de tes droits de $annee. Il te reste ${u.restant.formatMontant()}.",
+            stringResource(R.string.alerte_utilisation_attention, u.pourcentage ?: 0, annee, u.restant.formatMontant()),
             Icons.Filled.Info,
             grave = false,
         )
 
         NiveauUtilisation.CRITIQUE -> BandeauAlerte(
-            "Tu as utilisé ${u.pourcentage} % de tes droits de $annee. Il ne te reste que ${u.restant.formatMontant()} : vérifie avant ton prochain dépôt.",
+            stringResource(R.string.alerte_utilisation_critique, u.pourcentage ?: 0, annee, u.restant.formatMontant()),
             Icons.Filled.Warning,
         )
 
         NiveauUtilisation.DEPASSE -> BandeauAlerte(
-            "Tu dépasses tes droits de $annee de ${u.excedent.formatMontant()}. L'ARC impose 1 % par mois sur l'excédent.",
+            stringResource(R.string.alerte_utilisation_depassee, annee, u.excedent.formatMontant()),
             Icons.Filled.Warning,
         )
     }
@@ -220,14 +222,14 @@ private fun EtatVide(onOuvrirReglages: () -> Unit, modifier: Modifier = Modifier
             fond = MaterialTheme.colorScheme.primaryContainer,
             teinte = MaterialTheme.colorScheme.onPrimaryContainer,
         )
-        Text("Commence par ton profil", style = MaterialTheme.typography.titleLarge)
+        Text(stringResource(R.string.accueil_sans_profil_titre), style = MaterialTheme.typography.titleLarge)
         Text(
-            "Ton année de naissance suffit pour calculer tes droits CELI. Ajoute la date d'ouverture de ton CELIAPP si tu en as un.",
+            stringResource(R.string.accueil_sans_profil_texte),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
-        Button(onClick = onOuvrirReglages, modifier = Modifier.padding(top = 12.dp)) { Text("Saisir mon profil") }
+        Button(onClick = onOuvrirReglages, modifier = Modifier.padding(top = 12.dp)) { Text(stringResource(R.string.accueil_sans_profil_action)) }
     }
 }
 
@@ -250,16 +252,16 @@ private fun SansCeliapp(onOuvrirReglages: () -> Unit) {
             teinte = MaterialTheme.colorScheme.onSecondaryContainer,
         )
         Column(modifier = Modifier.weight(1f)) {
-            Text("CELIAPP", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.compte_celiapp), style = MaterialTheme.typography.titleMedium)
             Text(
-                "Aucun compte ouvert. Ajoute sa date d'ouverture dans les réglages pour suivre tes droits.",
+                stringResource(R.string.accueil_sans_celiapp),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         Icon(
             Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = "Ouvrir les réglages",
+            contentDescription = stringResource(R.string.accueil_ouvrir_reglages),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
@@ -304,7 +306,7 @@ private fun CarteCompte(
                 Text(nom, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                 Icon(
                     Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "Voir le détail",
+                    contentDescription = stringResource(R.string.action_voir_detail),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -315,7 +317,7 @@ private fun CarteCompte(
                         style = MaterialTheme.typography.headlineMedium.chiffres(),
                         fontWeight = FontWeight.SemiBold,
                     )
-                    Text("Droits restants", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.accueil_droits_restants), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 if (fraction != null) AnneauDroits(fraction = fraction, couleur = couleur)
             }
@@ -330,11 +332,11 @@ private fun CarteCompte(
                     colors = ButtonDefaults.filledTonalButtonColors(containerColor = conteneur, contentColor = surConteneur),
                 ) {
                     Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Text("Ajouter", modifier = Modifier.padding(start = 8.dp))
+                    Text(stringResource(R.string.action_ajouter), modifier = Modifier.padding(start = 8.dp))
                 }
                 OutlinedButton(onClick = onOuvrirJournal, modifier = Modifier.weight(1f)) {
                     Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Text("Journal", modifier = Modifier.padding(start = 8.dp))
+                    Text(stringResource(R.string.action_journal), modifier = Modifier.padding(start = 8.dp))
                 }
             }
         }

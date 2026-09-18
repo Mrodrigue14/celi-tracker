@@ -47,15 +47,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.celitracker.app.CeliTrackerApplication
+import dev.celitracker.app.R
 import dev.celitracker.app.ui.composants.ChampDate
 import dev.celitracker.app.ui.format.formatDate
 import dev.celitracker.app.ui.format.formatMontant
+import dev.celitracker.app.ui.texte.resoudre
 import dev.celitracker.app.ui.theme.chiffres
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.PlafondAnnuel
@@ -71,14 +75,14 @@ fun ReglagesScreen() {
     val viewModel: ReglagesViewModel = viewModel(factory = application.viewModelFactory)
     val etat by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
+    val contexte = LocalContext.current
 
     LaunchedEffect(etat.message) {
         val message = etat.message ?: return@LaunchedEffect
-        snackbar.showSnackbar(message)
+        snackbar.showSnackbar(message.resoudre(contexte))
         viewModel.messageAffiche()
     }
 
-    val contexte = LocalContext.current
     var importAConfirmer by remember { mutableStateOf<Uri?>(null) }
 
     val lanceurExport = rememberLauncherForActivityResult(CreateDocument(TYPE_JSON)) { uri ->
@@ -90,7 +94,7 @@ fun ReglagesScreen() {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Réglages") })
+            TopAppBar(title = { Text(stringResource(R.string.reglages_titre)) })
         },
         snackbarHost = { SnackbarHost(snackbar) },
     ) { innerPadding ->
@@ -130,12 +134,12 @@ private const val TYPE_JSON = "application/json"
 private const val NOM_FICHIER_EXPORT = "celi-tracker.json"
 
 private suspend fun ecrireFichier(contexte: Context, uri: Uri, contenu: String) = withContext(Dispatchers.IO) {
-    val flux = contexte.contentResolver.openOutputStream(uri) ?: error("fichier inaccessible")
+    val flux = contexte.contentResolver.openOutputStream(uri) ?: error("output stream unavailable")
     flux.use { it.write(contenu.toByteArray()) }
 }
 
 private suspend fun lireFichier(contexte: Context, uri: Uri): String = withContext(Dispatchers.IO) {
-    val flux = contexte.contentResolver.openInputStream(uri) ?: error("fichier illisible")
+    val flux = contexte.contentResolver.openInputStream(uri) ?: error("input stream unavailable")
     flux.use { it.reader().readText() }
 }
 
@@ -144,15 +148,12 @@ private suspend fun lireFichier(contexte: Context, uri: Uri): String = withConte
 private fun ConfirmationImport(onConfirmer: () -> Unit, onAnnuler: () -> Unit) {
     AlertDialog(
         onDismissRequest = onAnnuler,
-        title = { Text("Remplacer toutes les données ?") },
+        title = { Text(stringResource(R.string.reglages_import_titre)) },
         text = {
-            Text(
-                "L'import écrase le profil, les plafonds et le journal des transactions " +
-                    "par le contenu du fichier. Ce n'est pas une fusion.",
-            )
+            Text(stringResource(R.string.reglages_import_texte))
         },
-        confirmButton = { TextButton(onClick = onConfirmer) { Text("Remplacer") } },
-        dismissButton = { TextButton(onClick = onAnnuler) { Text("Annuler") } },
+        confirmButton = { TextButton(onClick = onConfirmer) { Text(stringResource(R.string.reglages_import_remplacer)) } },
+        dismissButton = { TextButton(onClick = onAnnuler) { Text(stringResource(R.string.action_annuler)) } },
     )
 }
 
@@ -182,12 +183,12 @@ fun ReglagesContenu(
             .padding(horizontal = 16.dp)
             .padding(bottom = 32.dp),
     ) {
-        TitreSection("Profil")
+        TitreSection(stringResource(R.string.reglages_profil))
         OutlinedTextField(
             value = etat.anneeNaissance,
             onValueChange = onAnneeNaissanceChange,
-            label = { Text("Année de naissance") },
-            supportingText = { Text("Elle détermine l'année où tes droits CELI commencent.") },
+            label = { Text(stringResource(R.string.reglages_annee_naissance)) },
+            supportingText = { Text(stringResource(R.string.reglages_annee_naissance_aide)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             isError = etat.anneeNaissance.isNotBlank() && etat.anneeNaissanceValide == null,
             singleLine = true,
@@ -197,7 +198,7 @@ fun ReglagesContenu(
         ChampDate(
             date = etat.dateOuvertureCeliapp,
             onDate = onDateOuvertureChange,
-            etiquette = "Ouverture du CELIAPP (facultatif)",
+            etiquette = stringResource(R.string.reglages_ouverture_celiapp),
             estErreur = etat.dateOuvertureInvalide,
             effacable = true,
             modifier = Modifier.padding(top = 16.dp),
@@ -209,7 +210,7 @@ fun ReglagesContenu(
                 .fillMaxWidth()
                 .padding(top = 16.dp),
         ) {
-            Text("Enregistrer le profil")
+            Text(stringResource(R.string.reglages_enregistrer_profil))
         }
 
         HorizontalDivider(modifier = Modifier.padding(top = 32.dp))
@@ -219,18 +220,18 @@ fun ReglagesContenu(
             onConfirmer = onConfirmerProposition,
             onRejeter = onRejeterProposition,
         )
-        etat.erreurArc?.let { EchecLectureArc(it) }
+        etat.erreurArc?.let { EchecLectureArc(it.resoudre()) }
 
-        TitreSection("Source des plafonds")
+        TitreSection(stringResource(R.string.reglages_source_plafonds))
         OutlinedTextField(
             value = etat.urlPageArc,
             onValueChange = onUrlPageArcChange,
-            label = { Text("Page de l'ARC") },
+            label = { Text(stringResource(R.string.reglages_page_arc)) },
             supportingText = {
                 Text(
                     etat.derniereVerificationArc
-                        ?.let { "Dernière lecture : ${it.atZone(ZoneId.systemDefault()).toLocalDate().formatDate()}" }
-                        ?: "Jamais lue. L'application vérifie une fois par mois, et seulement s'il manque un plafond.",
+                        ?.let { stringResource(R.string.reglages_derniere_lecture, it.atZone(ZoneId.systemDefault()).toLocalDate().formatDate()) }
+                        ?: stringResource(R.string.reglages_jamais_lue),
                 )
             },
             singleLine = true,
@@ -245,14 +246,14 @@ fun ReglagesContenu(
                 enabled = !etat.verificationEnCours,
                 modifier = Modifier.weight(1f),
             ) {
-                Text("Tester et enregistrer")
+                Text(stringResource(R.string.reglages_tester_enregistrer))
             }
             Button(
                 onClick = onVerifierArc,
                 enabled = !etat.verificationEnCours,
                 modifier = Modifier.weight(1f),
             ) {
-                Text(if (etat.verificationEnCours) "Lecture en cours" else "Vérifier")
+                Text(if (etat.verificationEnCours) stringResource(R.string.reglages_lecture_en_cours) else stringResource(R.string.reglages_verifier))
             }
         }
         // Porte de sortie quand l'adresse en place ne marche plus, par exemple
@@ -262,13 +263,13 @@ fun ReglagesContenu(
             enabled = !etat.verificationEnCours,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Rétablir l'adresse d'origine")
+            Text(stringResource(R.string.reglages_retablir_adresse))
         }
 
-        TitreSection("Plafonds CELI")
+        TitreSection(stringResource(R.string.reglages_plafonds_celi))
         if (etat.plafondsConfirmes.isEmpty()) {
             Text(
-                "Aucun plafond enregistré. Sans plafond confirmé, les droits de l'année restent à zéro plutôt que d'être devinés.",
+                stringResource(R.string.reglages_aucun_plafond),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -283,7 +284,7 @@ fun ReglagesContenu(
             OutlinedTextField(
                 value = etat.nouveauPlafondAnnee,
                 onValueChange = onNouveauPlafondAnneeChange,
-                label = { Text("Année") },
+                label = { Text(stringResource(R.string.reglages_annee)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
                 modifier = Modifier.weight(1f),
@@ -291,7 +292,7 @@ fun ReglagesContenu(
             OutlinedTextField(
                 value = etat.nouveauPlafondMontant,
                 onValueChange = onNouveauPlafondMontantChange,
-                label = { Text("Montant") },
+                label = { Text(stringResource(R.string.reglages_montant)) },
                 suffix = { Text("$") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
@@ -305,7 +306,7 @@ fun ReglagesContenu(
                 .fillMaxWidth()
                 .padding(top = 12.dp),
         ) {
-            Text("Ajouter le plafond")
+            Text(stringResource(R.string.reglages_ajouter_plafond))
         }
 
         HorizontalDivider(modifier = Modifier.padding(top = 32.dp))
@@ -322,11 +323,9 @@ fun ReglagesContenu(
  */
 @Composable
 private fun SauvegardeEtRecuperation(onExporter: () -> Unit, onImporter: () -> Unit) {
-    TitreSection("Sauvegarde")
+    TitreSection(stringResource(R.string.reglages_sauvegarde))
     Text(
-        "Tes données sont copiées automatiquement vers ton compte Google et reprises " +
-            "lors d'un transfert vers un nouveau téléphone. Le fichier JSON reste la copie " +
-            "que tu peux vérifier et ranger où tu veux.",
+        stringResource(R.string.reglages_sauvegarde_texte),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -334,8 +333,8 @@ private fun SauvegardeEtRecuperation(onExporter: () -> Unit, onImporter: () -> U
         modifier = Modifier.padding(top = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Button(onClick = onExporter, modifier = Modifier.weight(1f)) { Text("Exporter") }
-        OutlinedButton(onClick = onImporter, modifier = Modifier.weight(1f)) { Text("Importer") }
+        Button(onClick = onExporter, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.reglages_exporter)) }
+        OutlinedButton(onClick = onImporter, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.reglages_importer)) }
     }
 }
 
@@ -351,15 +350,15 @@ private fun PropositionsArc(
 ) {
     if (propositions.isEmpty()) return
 
-    TitreSection("Proposé par l'ARC")
+    TitreSection(stringResource(R.string.reglages_propose_arc))
     propositions.forEach { plafond ->
         Column(modifier = Modifier.padding(bottom = 12.dp)) {
             Text(
-                "${plafond.annee} : ${plafond.montant.formatMontant()}",
+                stringResource(R.string.reglages_plafond_propose_ligne, plafond.annee, plafond.montant.formatMontant()),
                 style = MaterialTheme.typography.bodyLarge.chiffres(),
             )
             Text(
-                "Lu sur le site de l'ARC. Il n'entre dans le calcul qu'une fois confirmé.",
+                stringResource(R.string.reglages_propose_arc_aide),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -368,10 +367,10 @@ private fun PropositionsArc(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Button(onClick = { onConfirmer(plafond) }, modifier = Modifier.weight(1f)) {
-                    Text("Confirmer")
+                    Text(stringResource(R.string.action_confirmer))
                 }
                 OutlinedButton(onClick = { onRejeter(plafond) }, modifier = Modifier.weight(1f)) {
-                    Text("Rejeter")
+                    Text(stringResource(R.string.action_rejeter))
                 }
             }
         }
@@ -389,7 +388,7 @@ private fun EchecLectureArc(raison: String) {
             .padding(16.dp),
     ) {
         Text(
-            "Lecture automatique impossible",
+            stringResource(R.string.reglages_lecture_impossible),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onErrorContainer,
         )
@@ -400,7 +399,7 @@ private fun EchecLectureArc(raison: String) {
             color = MaterialTheme.colorScheme.onErrorContainer,
         )
         Text(
-            "Saisis le plafond à la main plus bas.",
+            stringResource(R.string.reglages_saisie_manuelle),
             modifier = Modifier.padding(top = 4.dp),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onErrorContainer,
@@ -421,9 +420,9 @@ private fun PlafondsAnterieurs(plafonds: List<PlafondAnnuel>) {
     TextButton(onClick = { ouverts = !ouverts }) {
         Text(
             if (ouverts) {
-                "Masquer les années antérieures"
+                stringResource(R.string.reglages_masquer_anterieures)
             } else {
-                "Afficher ${plafonds.size} années antérieures (${plafonds.first().annee} à ${plafonds.last().annee})"
+                pluralStringResource(R.plurals.reglages_afficher_anterieures, plafonds.size, plafonds.size, plafonds.first().annee, plafonds.last().annee)
             },
         )
     }
@@ -464,11 +463,11 @@ private fun AdmissibiliteCeli(annee: Int?, modifier: Modifier = Modifier) {
         }
         Column {
             Text(
-                if (annee != null) "Droits CELI depuis $annee" else "Entre ton année de naissance",
+                if (annee != null) stringResource(R.string.reglages_droits_depuis, annee) else stringResource(R.string.reglages_entre_naissance),
                 style = MaterialTheme.typography.bodyLarge,
             )
             Text(
-                "Calculé : l'année de tes 18 ans, au plus tôt 2009.",
+                stringResource(R.string.reglages_admissibilite_regle),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

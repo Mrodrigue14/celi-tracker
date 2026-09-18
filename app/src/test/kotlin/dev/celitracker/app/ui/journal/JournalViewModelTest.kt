@@ -4,6 +4,8 @@ package dev.celitracker.app.ui.journal
 
 import dev.celitracker.app.DepotDeTest
 import dev.celitracker.app.MainDeTest
+import dev.celitracker.app.R
+import dev.celitracker.app.ui.texte.texte
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.PlafondAnnuel
 import dev.celitracker.engine.Profil
@@ -143,7 +145,7 @@ class JournalViewModelTest {
         viewModel.saisirDepot("2020-06-01", "5820")
         val avertissement = assertNotNull(viewModel.uiState.first { it.formulaire?.avertissement != null }.formulaire?.avertissement)
 
-        assertTrue(avertissement.contains("97 %"))
+        assertEquals(texte(R.string.journal_avertissement_critique, 97, Compte.CELI, 2020, BigDecimal("180.00")), avertissement)
         assertEquals(emptyList(), depot.transactions())
     }
 
@@ -168,8 +170,7 @@ class JournalViewModelTest {
         viewModel.saisirDepot("2020-06-01", "6100")
         val avertissement = assertNotNull(viewModel.uiState.first { it.formulaire?.avertissement != null }.formulaire?.avertissement)
 
-        assertTrue(avertissement.contains("dépasse"))
-        assertTrue(avertissement.contains("100,00"))
+        assertEquals(texte(R.string.journal_avertissement_depassement, Compte.CELI, 2020, BigDecimal("100.00")), avertissement)
     }
 
     @Test
@@ -181,7 +182,7 @@ class JournalViewModelTest {
         val etat = viewModel.uiState.first { it.formulaire == null && it.message != null }
 
         assertEquals(1, depot.transactions().size)
-        assertTrue(assertNotNull(etat.message).contains("85 %"))
+        assertEquals(texte(R.string.journal_enregistree_utilisation, 85, Compte.CELI, 2020), etat.message)
     }
 
     @Test

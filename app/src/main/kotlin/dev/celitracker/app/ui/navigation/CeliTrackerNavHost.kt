@@ -1,5 +1,6 @@
 package dev.celitracker.app.ui.navigation
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -17,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -25,6 +27,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import dev.celitracker.app.R
 import dev.celitracker.app.ui.accueil.AccueilScreen
 import dev.celitracker.app.ui.detail.DetailCeliScreen
 import dev.celitracker.app.ui.detail.DetailCeliappScreen
@@ -52,10 +55,10 @@ private fun routeJournal(compte: Compte, ajouter: Boolean = false, annee: Int = 
  * Les trois destinations de premier niveau. Le detail d'un compte n'en est
  * pas une: il se rattache a l'accueil, d'ou il s'ouvre.
  */
-private enum class Onglet(val route: String, val libelle: String, val icone: ImageVector) {
-    ACCUEIL(ROUTE_ACCUEIL, "Accueil", Icons.Filled.SpaceDashboard),
-    JOURNAL(ROUTE_JOURNAL, "Journal", Icons.AutoMirrored.Filled.ReceiptLong),
-    REGLAGES(ROUTE_REGLAGES, "Réglages", Icons.Filled.Settings),
+private enum class Onglet(val route: String, @StringRes val libelle: Int, val icone: ImageVector) {
+    ACCUEIL(ROUTE_ACCUEIL, R.string.onglet_accueil, Icons.Filled.SpaceDashboard),
+    JOURNAL(ROUTE_JOURNAL, R.string.onglet_journal, Icons.AutoMirrored.Filled.ReceiptLong),
+    REGLAGES(ROUTE_REGLAGES, R.string.onglet_reglages, Icons.Filled.Settings),
 }
 
 private fun ongletDe(route: String?): Onglet = when {
@@ -105,7 +108,7 @@ fun CeliTrackerNavHost(navController: NavHostController = rememberNavController(
                             }
                         },
                         icon = { Icon(onglet.icone, contentDescription = null) },
-                        label = { Text(onglet.libelle) },
+                        label = { Text(stringResource(onglet.libelle)) },
                         colors = NavigationBarItemDefaults.colors(
                             indicatorColor = MaterialTheme.colorScheme.primaryContainer,
                             selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,

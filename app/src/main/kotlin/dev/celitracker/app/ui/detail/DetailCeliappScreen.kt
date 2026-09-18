@@ -22,11 +22,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.celitracker.app.CeliTrackerApplication
+import dev.celitracker.app.R
 import dev.celitracker.app.ui.composants.CarteAnnee
 import dev.celitracker.app.ui.composants.GraphiqueAnnees
 import dev.celitracker.app.ui.format.formatMontant
@@ -48,15 +50,15 @@ fun DetailCeliappScreen(onRetour: () -> Unit, onOuvrirJournal: () -> Unit, onVoi
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Détail du CELIAPP") },
+                title = { Text(stringResource(R.string.detail_titre_celiapp)) },
                 navigationIcon = {
                     IconButton(onClick = onRetour) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_retour))
                     }
                 },
                 actions = {
                     IconButton(onClick = onOuvrirJournal) {
-                        Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = "Journal du CELIAPP")
+                        Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = stringResource(R.string.detail_journal_celiapp))
                     }
                 },
             )
@@ -88,7 +90,7 @@ fun DetailCeliappContenu(etat: DetailCeliappUiState, modifier: Modifier = Modifi
     ) {
         if (etat.lignes.isNotEmpty()) {
             item(key = "evolution") {
-                TitreSection("Plafond à vie restant")
+                TitreSection(stringResource(R.string.detail_plafond_vie_restant))
                 GraphiqueAnnees(
                     valeurs = etat.lignes.map { it.annee to it.plafondVieRestant },
                     couleur = MaterialTheme.colorScheme.secondary,
@@ -96,7 +98,7 @@ fun DetailCeliappContenu(etat: DetailCeliappUiState, modifier: Modifier = Modifi
                     onClicAnnee = ::allerA,
                 )
             }
-            item(key = "titre-annees") { TitreSection("Année par année") }
+            item(key = "titre-annees") { TitreSection(stringResource(R.string.detail_annee_par_annee)) }
         }
         items(anneesAffichees, key = { it.annee }) { ligne ->
             CarteAnneeCeliapp(
@@ -117,15 +119,15 @@ private fun CarteAnneeCeliapp(ligne: DroitsAnneeCeliapp, enCours: Boolean, onVoi
     CarteAnnee(
         annee = ligne.annee,
         montant = (ligne.droitsAnnee - ligne.depots).formatMontant(),
-        libelleMontant = if (enCours) "Droits restants" else "Droits non utilisés",
+        libelleMontant = if (enCours) stringResource(R.string.detail_droits_restants) else stringResource(R.string.detail_droits_non_utilises),
         enCours = enCours,
         onVoirTransactions = onVoirTransactions,
         tuiles = listOf(
-            ligne.reportEntrant.formatMontant() to "Report reçu",
-            ligne.droitsAnnee.formatMontant() to "Droits de l'année",
-            ligne.depots.formatMontant() to "Dépôts",
-            ligne.reportSortant.formatMontant() to "Report transmis",
-            ligne.plafondVieRestant.formatMontant() to "Plafond à vie restant",
+            ligne.reportEntrant.formatMontant() to stringResource(R.string.detail_report_recu),
+            ligne.droitsAnnee.formatMontant() to stringResource(R.string.detail_droits_annee),
+            ligne.depots.formatMontant() to stringResource(R.string.detail_depots),
+            ligne.reportSortant.formatMontant() to stringResource(R.string.detail_report_transmis),
+            ligne.plafondVieRestant.formatMontant() to stringResource(R.string.detail_plafond_vie_restant),
         ),
     )
 }

@@ -20,7 +20,7 @@ sealed interface ResultatVerificationArc {
     data object Inutile : ResultatVerificationArc
 
     /** Page injoignable ou illisible : a l'appelant d'afficher le repli manuel. */
-    data class Echec(val raison: String) : ResultatVerificationArc
+    data class Echec(val raison: RaisonEchecArc) : ResultatVerificationArc
 }
 
 /**
@@ -46,7 +46,7 @@ suspend fun Depot.verifierPlafondsArc(
     if (!ignorerFrequence && verificationTropRecente(reglages.dateDerniereVerification, maintenant)) {
         return ResultatVerificationArc.Inutile
     }
-    if (reglages.urlPageArc.isBlank()) return ResultatVerificationArc.Echec("Aucune adresse de page de l'ARC enregistrée.")
+    if (reglages.urlPageArc.isBlank()) return ResultatVerificationArc.Echec(RaisonEchecArc.ADRESSE_ABSENTE)
 
     // La date est notee meme quand la lecture echoue: sans ca, une page en
     // panne serait retelechargee a chaque ouverture de l'application.
@@ -54,12 +54,12 @@ suspend fun Depot.verifierPlafondsArc(
         telecharger(reglages.urlPageArc)
     } catch (e: Exception) {
         noterVerificationArc(maintenant)
-        return ResultatVerificationArc.Echec(e.message ?: "Page de l'ARC injoignable.")
+        return ResultatVerificationArc.Echec(RaisonEchecArc.PAGE_INJOIGNABLE)
     }
     noterVerificationArc(maintenant)
 
     val lu = lirePlafondCeliArc(page)
-        ?: return ResultatVerificationArc.Echec("La page de l'ARC ne donne plus le plafond sous la forme attendue.")
+        ?: return ResultatVerificationArc.Echec(RaisonEchecArc.FORME_INATTENDUE)
     if (plafondsCeli.any { it.annee == lu.annee }) return ResultatVerificationArc.Inutile
 
     enregistrerPlafond(lu)
@@ -71,7 +71,7 @@ private fun verificationTropRecente(derniere: Instant?, maintenant: Instant): Bo
 sealed interface ResultatAdresseArc {
     data object Enregistree : ResultatAdresseArc
 
-    data class Refusee(val raison: String) : ResultatAdresseArc
+    data class Refusee(val raison: RaisonRefusAdresse) : ResultatAdresseArc
 }
 
 /**
@@ -81,15 +81,15 @@ sealed interface ResultatAdresseArc {
  */
 suspend fun Depot.changerAdressePageArc(url: String, telecharger: suspend (String) -> String): ResultatAdresseArc {
     if (!adressePageArcValide(url)) {
-        return ResultatAdresseArc.Refusee("L'adresse doit être une page https de canada.ca.")
+        return ResultatAdresseArc.Refusee(RaisonRefusAdresse.HORS_CANADA)
     }
     val page = try {
         telecharger(url)
     } catch (e: Exception) {
-        return ResultatAdresseArc.Refusee("Page injoignable (${e.message ?: "erreur réseau"}).")
+        return ResultatAdresseArc.Refusee(RaisonRefusAdresse.PAGE_INJOIGNABLE)
     }
     if (lirePlafondCeliArc(page) == null) {
-        return ResultatAdresseArc.Refusee("Cette page ne donne pas le plafond du CELI.")
+        return ResultatAdresseArc.Refusee(RaisonRefusAdresse.SANS_PLAFOND)
     }
     enregistrerReglages(reglages().copy(urlPageArc = url))
     return ResultatAdresseArc.Enregistree

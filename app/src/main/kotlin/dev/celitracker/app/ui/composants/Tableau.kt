@@ -24,9 +24,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import dev.celitracker.app.R
 import dev.celitracker.app.ui.theme.chiffres
 import kotlin.math.roundToInt
 
@@ -48,11 +50,12 @@ fun AnneauDroits(fraction: Float, couleur: Color, modifier: Modifier = Modifier)
     val trait = if (depasse) MaterialTheme.colorScheme.error else couleur
     val piste = MaterialTheme.colorScheme.surfaceVariant
     val pourcentage = (fraction * 100).roundToInt()
+    val description = stringResource(R.string.anneau_description, pourcentage)
 
     Box(
         modifier = modifier
             .size(84.dp)
-            .semantics { contentDescription = "$pourcentage % des droits de l'année utilisés" },
+            .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.size(84.dp)) {
@@ -62,11 +65,11 @@ fun AnneauDroits(fraction: Float, couleur: Color, modifier: Modifier = Modifier)
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                "$pourcentage %",
+                stringResource(R.string.anneau_pourcentage, pourcentage),
                 style = MaterialTheme.typography.titleSmall.chiffres(),
                 color = if (depasse) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
             )
-            Text("utilisé", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.anneau_utilise), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

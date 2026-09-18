@@ -61,7 +61,7 @@ class Depot(private val base: CeliTrackerBase) {
     suspend fun modifierTransaction(transaction: Transaction) {
         valider(transaction)
         val lignesModifiees = dao.modifierTransaction(transaction.versEntite())
-        require(lignesModifiees == 1) { "Transaction introuvable." }
+        if (lignesModifiees != 1) refuserSaisie(RaisonSaisie.TRANSACTION_INTROUVABLE)
     }
 
     /**
@@ -70,20 +70,16 @@ class Depot(private val base: CeliTrackerBase) {
      * resultats differents selon le moteur consulte.
      */
     private suspend fun valider(transaction: Transaction) {
-        require(transaction.montant > BigDecimal.ZERO) { "Le montant doit etre positif." }
-        val profil = requireNotNull(profil()) { "Aucun profil enregistre." }
+        if (transaction.montant <= BigDecimal.ZERO) refuserSaisie(RaisonSaisie.MONTANT_NON_POSITIF)
+        val profil = profil() ?: refuserSaisie(RaisonSaisie.PROFIL_ABSENT)
         when (transaction.compte) {
-            Compte.CELI -> require(!transaction.date.isBefore(LocalDate.of(profil.anneeAdmissibiliteCeli, 1, 1))) {
-                "Transaction CELI anterieure a l'annee d'admissibilite."
+            Compte.CELI -> if (transaction.date.isBefore(LocalDate.of(profil.anneeAdmissibiliteCeli, 1, 1))) {
+                refuserSaisie(RaisonSaisie.CELI_AVANT_ADMISSIBILITE)
             }
 
             Compte.CELIAPP -> {
-                val ouverture = requireNotNull(profil.dateOuvertureCeliapp) {
-                    "Aucune date d'ouverture CELIAPP enregistree."
-                }
-                require(!transaction.date.isBefore(ouverture)) {
-                    "Transaction CELIAPP anterieure a l'ouverture du compte."
-                }
+                val ouverture = profil.dateOuvertureCeliapp ?: refuserSaisie(RaisonSaisie.CELIAPP_NON_OUVERT)
+                if (transaction.date.isBefore(ouverture)) refuserSaisie(RaisonSaisie.CELIAPP_AVANT_OUVERTURE)
             }
         }
     }

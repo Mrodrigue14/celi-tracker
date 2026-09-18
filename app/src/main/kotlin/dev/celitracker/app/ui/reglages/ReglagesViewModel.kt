@@ -2,7 +2,11 @@ package dev.celitracker.app.ui.reglages
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.celitracker.app.R
+import dev.celitracker.app.ui.texte.texte
+import dev.celitracker.app.ui.texte.texteRes
 import dev.celitracker.data.Depot
+import dev.celitracker.data.ImportInvalide
 import dev.celitracker.data.ResultatAdresseArc
 import dev.celitracker.data.ResultatVerificationArc
 import dev.celitracker.data.URL_PAGE_ARC_PAR_DEFAUT
@@ -79,7 +83,7 @@ class ReglagesViewModel(
             depot.enregistrerProfil(
                 Profil(anneeNaissance = naissance, dateOuvertureCeliapp = etat.dateOuvertureValide),
             )
-            _uiState.update { it.copy(message = "Profil enregistré.") }
+            _uiState.update { it.copy(message = texte(R.string.message_profil_enregistre)) }
         }
     }
 
@@ -97,7 +101,7 @@ class ReglagesViewModel(
                     plafonds = plafonds,
                     nouveauPlafondAnnee = "",
                     nouveauPlafondMontant = "",
-                    message = "Plafond enregistré.",
+                    message = texte(R.string.message_plafond_enregistre),
                 )
             }
         }
@@ -122,13 +126,13 @@ class ReglagesViewModel(
                     plafonds = plafonds,
                     derniereVerificationArc = reglages.dateDerniereVerification,
                     verificationEnCours = false,
-                    erreurArc = (resultat as? ResultatVerificationArc.Echec)?.raison,
+                    erreurArc = (resultat as? ResultatVerificationArc.Echec)?.let { echec -> texte(echec.raison.texteRes()) },
                     message = when {
                         resultat is ResultatVerificationArc.Propose ->
-                            "Plafond ${resultat.plafond.annee} proposé par l'ARC, à confirmer."
+                            texte(R.string.message_plafond_propose, resultat.plafond.annee)
 
                         demandeExplicite && resultat is ResultatVerificationArc.Inutile ->
-                            "Rien de nouveau sur le site de l'ARC."
+                            texte(R.string.message_arc_rien_de_nouveau)
 
                         else -> it.message
                     },
@@ -140,14 +144,14 @@ class ReglagesViewModel(
     fun confirmerProposition(plafond: PlafondAnnuel) {
         viewModelScope.launch {
             depot.enregistrerPlafond(plafond.copy(confirme = true))
-            _uiState.update { it.copy(plafonds = plafondsCeli(), message = "Plafond ${plafond.annee} confirmé.") }
+            _uiState.update { it.copy(plafonds = plafondsCeli(), message = texte(R.string.message_plafond_confirme, plafond.annee)) }
         }
     }
 
     fun rejeterProposition(plafond: PlafondAnnuel) {
         viewModelScope.launch {
             depot.supprimerPlafond(plafond.compte, plafond.annee)
-            _uiState.update { it.copy(plafonds = plafondsCeli(), message = "Proposition ${plafond.annee} rejetée.") }
+            _uiState.update { it.copy(plafonds = plafondsCeli(), message = texte(R.string.message_proposition_rejetee, plafond.annee)) }
         }
     }
 
@@ -170,8 +174,8 @@ class ReglagesViewModel(
                     urlPageArc = enPlace,
                     verificationEnCours = false,
                     message = when (resultat) {
-                        ResultatAdresseArc.Enregistree -> "Adresse vérifiée et enregistrée."
-                        is ResultatAdresseArc.Refusee -> "${resultat.raison} L'adresse précédente est conservée."
+                        ResultatAdresseArc.Enregistree -> texte(R.string.message_adresse_enregistree)
+                        is ResultatAdresseArc.Refusee -> texte(R.string.message_adresse_refusee, texte(resultat.raison.texteRes()))
                     },
                 )
             }
@@ -186,9 +190,9 @@ class ReglagesViewModel(
         viewModelScope.launch {
             val message = try {
                 ecrire(depot.exporterJson())
-                "Données exportées."
+                texte(R.string.message_donnees_exportees)
             } catch (e: Exception) {
-                "Export impossible : ${e.message}"
+                texte(R.string.message_export_impossible)
             }
             _uiState.update { it.copy(message = message) }
         }
@@ -199,9 +203,11 @@ class ReglagesViewModel(
         viewModelScope.launch {
             val message = try {
                 depot.importerJson(lire())
-                "Données importées."
+                texte(R.string.message_donnees_importees)
+            } catch (e: ImportInvalide) {
+                texte(R.string.message_import_refuse, texte(e.raison.texteRes()))
             } catch (e: Exception) {
-                "Import refusé : ${e.message}"
+                texte(R.string.message_import_refuse, texte(R.string.import_fichier_illisible))
             }
             charger(remplacerSaisies = true)
             _uiState.update { it.copy(message = message) }

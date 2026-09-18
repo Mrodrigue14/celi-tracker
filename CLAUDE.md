@@ -30,6 +30,14 @@ jamais avant 2009. Elle suppose la résidence canadienne depuis cet âge, ce qui
 est le cas de l'unique utilisateur. La stocker en base ou la ressaisir dans
 l'interface ferait diverger deux sources pour le même fait.
 
+**1 ter. Aucun texte visible en dur.** Tout texte affiché vit dans
+`app/src/main/res/values*/strings.xml`. `:engine` et `:data` ne renvoient jamais
+de phrase : ils renvoient des raisons typées (`RaisonSaisie`, `RaisonImport`,
+`RaisonEchecArc`, `RaisonRefusAdresse`), que `:app` traduit. Les ViewModels
+produisent des `TexteUi` (ressource et arguments), résolus dans la langue de
+l'appareil au moment de l'affichage. Un montant se formate toujours en dollars
+canadiens, quelle que soit la langue : seuls les séparateurs changent.
+
 **2. Deux moteurs séparés, CELI et CELIAPP.** Ne pas les fusionner en un moteur
 paramétré par un drapeau de type de compte. Les règles divergent partout :
 

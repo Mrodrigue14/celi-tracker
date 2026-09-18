@@ -1,5 +1,6 @@
 package dev.celitracker.app.ui.reglages
 
+import dev.celitracker.app.ui.texte.TexteUi
 import dev.celitracker.engine.PlafondAnnuel
 import dev.celitracker.engine.Profil
 import java.math.BigDecimal
@@ -23,8 +24,8 @@ data class ReglagesUiState(
     val urlPageArc: String = "",
     val derniereVerificationArc: Instant? = null,
     val verificationEnCours: Boolean = false,
-    val erreurArc: String? = null,
-    val message: String? = null,
+    val erreurArc: TexteUi? = null,
+    val message: TexteUi? = null,
 ) {
     /** Lues sur le site de l'ARC, en attente de confirmation. */
     val propositions: List<PlafondAnnuel> get() = plafonds.filter { !it.confirme }
