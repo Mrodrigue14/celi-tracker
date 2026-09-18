@@ -5,6 +5,7 @@ package dev.celitracker.app.ui.journal
 import dev.celitracker.app.DepotDeTest
 import dev.celitracker.app.MainDeTest
 import dev.celitracker.engine.Compte
+import dev.celitracker.engine.PlafondAnnuel
 import dev.celitracker.engine.Profil
 import dev.celitracker.engine.Transaction
 import dev.celitracker.engine.TypeTx
@@ -17,6 +18,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class JournalViewModelTest {
 
@@ -118,5 +120,83 @@ class JournalViewModelTest {
         val etat = viewModel.uiState.first { it.formulaire == null }
 
         assertEquals(emptyList(), etat.transactions)
+    }
+
+    /** 2020 est la premiere annee d'admissibilite du profil: ses droits valent son plafond. */
+    private suspend fun droits2020(plafond: String = "6000.00") {
+        depot.enregistrerProfil(profil)
+        depot.enregistrerPlafond(PlafondAnnuel(Compte.CELI, 2020, BigDecimal(plafond)))
+    }
+
+    private fun JournalViewModel.saisirDepot(date: String, montant: String) {
+        ouvrirNouvelle()
+        modifierDate(date)
+        modifierMontant(montant)
+        enregistrer()
+    }
+
+    @Test
+    fun `un depot qui porte l'utilisation a 95 pour cent ou plus demande une confirmation`() = runTest {
+        droits2020()
+        val viewModel = JournalViewModel(depot, Compte.CELI)
+
+        viewModel.saisirDepot("2020-06-01", "5820")
+        val avertissement = assertNotNull(viewModel.uiState.first { it.formulaire?.avertissement != null }.formulaire?.avertissement)
+
+        assertTrue(avertissement.contains("97 %"))
+        assertEquals(emptyList(), depot.transactions())
+    }
+
+    @Test
+    fun `confirmer l'avertissement enregistre le depot`() = runTest {
+        droits2020()
+        val viewModel = JournalViewModel(depot, Compte.CELI)
+        viewModel.saisirDepot("2020-06-01", "5820")
+        viewModel.uiState.first { it.formulaire?.avertissement != null }
+
+        viewModel.enregistrer()
+        viewModel.uiState.first { it.formulaire == null }
+
+        assertEquals(1, depot.transactions().size)
+    }
+
+    @Test
+    fun `un depot au-dela des droits annonce l'excedent`() = runTest {
+        droits2020()
+        val viewModel = JournalViewModel(depot, Compte.CELI)
+
+        viewModel.saisirDepot("2020-06-01", "6100")
+        val avertissement = assertNotNull(viewModel.uiState.first { it.formulaire?.avertissement != null }.formulaire?.avertissement)
+
+        assertTrue(avertissement.contains("dépasse"))
+        assertTrue(avertissement.contains("100,00"))
+    }
+
+    @Test
+    fun `entre 80 et 95 pour cent, le depot passe et le message donne l'utilisation`() = runTest {
+        droits2020()
+        val viewModel = JournalViewModel(depot, Compte.CELI)
+
+        viewModel.saisirDepot("2020-06-01", "5100")
+        val etat = viewModel.uiState.first { it.formulaire == null && it.message != null }
+
+        assertEquals(1, depot.transactions().size)
+        assertTrue(assertNotNull(etat.message).contains("85 %"))
+    }
+
+    @Test
+    fun `un retrait ne demande jamais de confirmation`() = runTest {
+        droits2020()
+        depot.ajouterTransaction(Transaction(Compte.CELI, LocalDate.of(2020, 3, 1), TypeTx.DEPOT, BigDecimal("5900.00")))
+        val viewModel = JournalViewModel(depot, Compte.CELI)
+
+        viewModel.ouvrirNouvelle()
+        viewModel.modifierDate("2020-06-01")
+        viewModel.modifierType(TypeTx.RETRAIT)
+        viewModel.modifierMontant("100")
+        viewModel.enregistrer()
+        viewModel.uiState.first { it.formulaire == null }
+
+        assertEquals(2, depot.transactions().size)
     }
 }

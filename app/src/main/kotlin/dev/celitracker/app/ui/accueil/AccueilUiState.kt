@@ -5,6 +5,7 @@ import dev.celitracker.engine.DroitsAnnee
 import dev.celitracker.engine.DroitsAnneeCeliapp
 import dev.celitracker.engine.ExcedentMensuel
 import dev.celitracker.engine.Profil
+import dev.celitracker.engine.Utilisation
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -48,6 +49,16 @@ data class AccueilUiState(
      * `SurCotisation.excedentsCeli` ne couvre que le CELI.
      */
     val echeanceParticipationCeliapp: LocalDate? get() = profil?.let(CeliappMoteur::finPeriodeParticipation)
+
+    /** Inconnue si un plafond manque: les droits sont alors sous-estimes, l'alerte serait fausse. */
+    val utilisationCeli: Utilisation? get() =
+        if (droitsCeli.any { it.plafondManquant }) {
+            null
+        } else {
+            celiAnneeCourante?.let { Utilisation(droits = it.droitsDebut, cotise = it.depots) }
+        }
+
+    val utilisationCeliapp: Utilisation? get() = celiappAnneeCourante?.let { Utilisation(droits = it.droitsAnnee, cotise = it.depots) }
 
     val droitsRestantsCeliapp: BigDecimal? get() = celiappAnneeCourante?.let { it.droitsAnnee - it.depots }
 

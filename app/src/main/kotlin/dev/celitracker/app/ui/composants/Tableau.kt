@@ -113,18 +113,23 @@ fun GrilleTuiles(tuiles: List<Pair<String, String>>, modifier: Modifier = Modifi
     }
 }
 
-/** Bandeau d'alerte: la couleur d'erreur n'apparait que la. */
+/**
+ * Bandeau d'alerte. [grave] a vrai prend la couleur d'erreur, reservee a ce qui
+ * coute de l'argent; a faux, un simple avertissement sur fond neutre.
+ */
 @Composable
-fun BandeauAlerte(texte: String, icone: ImageVector, modifier: Modifier = Modifier) {
+fun BandeauAlerte(texte: String, icone: ImageVector, modifier: Modifier = Modifier, grave: Boolean = true) {
+    val fond = if (grave) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.tertiaryContainer
+    val encre = if (grave) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onTertiaryContainer
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.errorContainer, FORME_TUILE)
+            .background(fond, FORME_TUILE)
             .padding(12.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(icone, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
-        Text(texte, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onErrorContainer)
+        Icon(icone, contentDescription = null, tint = encre)
+        Text(texte, style = MaterialTheme.typography.bodyMedium, color = encre)
     }
 }

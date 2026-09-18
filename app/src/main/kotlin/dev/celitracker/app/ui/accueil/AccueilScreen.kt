@@ -60,7 +60,9 @@ import dev.celitracker.engine.Compte
 import dev.celitracker.engine.DroitsAnnee
 import dev.celitracker.engine.DroitsAnneeCeliapp
 import dev.celitracker.engine.ExcedentMensuel
+import dev.celitracker.engine.NiveauUtilisation
 import dev.celitracker.engine.Profil
+import dev.celitracker.engine.Utilisation
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -137,8 +139,13 @@ fun AccueilContenu(
             if (etat.celiAnneeCourante?.plafondManquant == true) {
                 BandeauAlerte("Plafond de l'année non confirmé : droits sous-estimés.", Icons.Filled.Info)
             }
-            etat.excedentCeliCourant?.let {
-                BandeauAlerte("Sur-cotisation : pénalité estimée ${it.penalite.formatMontant()}.", Icons.Filled.Warning)
+            // La penalite calculee au mois pres dit deja tout d'une sur-cotisation:
+            // le bandeau d'utilisation ne s'ajoute que s'il n'y en a pas.
+            val excedent = etat.excedentCeliCourant
+            if (excedent != null) {
+                BandeauAlerte("Sur-cotisation : pénalité estimée ${excedent.penalite.formatMontant()}.", Icons.Filled.Warning)
+            } else {
+                AlerteUtilisation(etat.utilisationCeli, etat.anneeCourante)
             }
         }
         if (etat.profil?.dateOuvertureCeliapp == null) {
@@ -160,6 +167,33 @@ fun AccueilContenu(
                 (etat.echeanceParticipationCeliapp?.toString() ?: "-") to "Échéance",
             ),
             onClick = { onOuvrirDetail(Compte.CELIAPP) },
+        ) {
+            AlerteUtilisation(etat.utilisationCeliapp, etat.anneeCourante)
+        }
+    }
+}
+
+/** 80 % previent sur fond neutre; 95 % et plus passe a la couleur d'erreur. */
+@Composable
+private fun AlerteUtilisation(utilisation: Utilisation?, annee: Int) {
+    val u = utilisation ?: return
+    when (u.niveau) {
+        NiveauUtilisation.NORMAL -> Unit
+
+        NiveauUtilisation.ATTENTION -> BandeauAlerte(
+            "Tu as utilisé ${u.pourcentage} % de tes droits de $annee. Il te reste ${u.restant.formatMontant()}.",
+            Icons.Filled.Info,
+            grave = false,
+        )
+
+        NiveauUtilisation.CRITIQUE -> BandeauAlerte(
+            "Tu as utilisé ${u.pourcentage} % de tes droits de $annee. Il ne te reste que ${u.restant.formatMontant()} : vérifie avant ton prochain dépôt.",
+            Icons.Filled.Warning,
+        )
+
+        NiveauUtilisation.DEPASSE -> BandeauAlerte(
+            "Tu dépasses tes droits de $annee de ${u.excedent.formatMontant()}. L'ARC impose 1 % par mois sur l'excédent.",
+            Icons.Filled.Warning,
         )
     }
 }
