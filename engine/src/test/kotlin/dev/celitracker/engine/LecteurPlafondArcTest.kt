@@ -3,7 +3,9 @@ package dev.celitracker.engine
 import java.math.BigDecimal
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class LecteurPlafondArcTest {
 
@@ -47,5 +49,18 @@ class LecteurPlafondArcTest {
     @Test
     fun `un montant nul est refuse`() {
         assertNull(lirePlafondCeliArc("<p>Le plafond de cotisation pour 2027 est de 0 $.</p>"))
+    }
+
+    @Test
+    fun `une adresse https de canada point ca est valide`() {
+        assertTrue(adressePageArcValide("https://www.canada.ca/fr/agence-revenu/services.html"))
+    }
+
+    @Test
+    fun `une adresse hors canada point ca ou sans https est refusee`() {
+        assertFalse(adressePageArcValide("http://www.canada.ca/fr.html"))
+        assertFalse(adressePageArcValide("https://exemple.com/plafonds"))
+        assertFalse(adressePageArcValide("pas une adresse"))
+        assertFalse(adressePageArcValide(""))
     }
 }

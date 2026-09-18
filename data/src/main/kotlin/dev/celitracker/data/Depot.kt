@@ -7,6 +7,7 @@ import dev.celitracker.engine.Reglages
 import dev.celitracker.engine.SnapshotArc
 import dev.celitracker.engine.Transaction
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDate
 
 /**
@@ -108,6 +109,17 @@ class Depot(private val base: CeliTrackerBase) {
 
     suspend fun enregistrerReglages(reglages: Reglages) {
         dao.enregistrerReglages(ReglagesEntity(urlPageArc = reglages.urlPageArc, dateDerniereVerification = reglages.dateDerniereVerification))
+    }
+
+    /**
+     * Ecrit la seule date de verification, sans relire ni reecrire l'adresse:
+     * une lecture ARC en cours ne doit pas ecraser une adresse que
+     * l'utilisateur vient de changer.
+     */
+    suspend fun noterVerificationArc(date: Instant) {
+        if (dao.noterVerificationArc(date) == 0) {
+            dao.enregistrerReglages(ReglagesEntity(urlPageArc = reglages().urlPageArc, dateDerniereVerification = date))
+        }
     }
 
     /** Reserve a `importerJson` : remplace tout le contenu en une transaction. */

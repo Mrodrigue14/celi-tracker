@@ -52,10 +52,10 @@ suspend fun Depot.verifierPlafondsArc(
     val page = try {
         telecharger(reglages.urlPageArc)
     } catch (e: Exception) {
-        enregistrerReglages(reglages.copy(dateDerniereVerification = maintenant))
+        noterVerificationArc(maintenant)
         return ResultatVerificationArc.Echec(e.message ?: "Page de l'ARC injoignable.")
     }
-    enregistrerReglages(reglages.copy(dateDerniereVerification = maintenant))
+    noterVerificationArc(maintenant)
 
     val lu = lirePlafondCeliArc(page)
         ?: return ResultatVerificationArc.Echec("La page de l'ARC ne donne plus le plafond sous la forme attendue.")

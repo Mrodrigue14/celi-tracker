@@ -3,23 +3,18 @@
 package dev.celitracker.app.ui.accueil
 
 import dev.celitracker.app.DepotDeTest
+import dev.celitracker.app.MainDeTest
 import dev.celitracker.engine.CeliMoteur
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.PlafondAnnuel
 import dev.celitracker.engine.Profil
 import dev.celitracker.engine.Transaction
 import dev.celitracker.engine.TypeTx
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import java.math.BigDecimal
 import java.time.LocalDate
-import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -30,20 +25,10 @@ class AccueilViewModelTest {
     private val depot = fixture.depot
     private val anneeCourante = LocalDate.now().year
 
-    @AfterTest
-    fun apres() = fixture.fermer()
-
     companion object {
-        // Cf. DetailCeliViewModelTest: Main reste dispo sur toute la classe,
-        // pas seulement par test, pour ne pas planter sur une coroutine encore
-        // en vol sur le vrai dispatcher IO de Room.
         @JvmStatic
         @BeforeAll
-        fun avant() = Dispatchers.setMain(UnconfinedTestDispatcher())
-
-        @JvmStatic
-        @AfterAll
-        fun apresTout() = Dispatchers.resetMain()
+        fun avant() = MainDeTest.installer()
     }
 
     @Test
