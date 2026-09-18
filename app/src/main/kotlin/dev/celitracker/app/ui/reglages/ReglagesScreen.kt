@@ -47,7 +47,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -56,6 +55,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.celitracker.app.CeliTrackerApplication
 import dev.celitracker.app.ui.composants.ChampDate
 import dev.celitracker.app.ui.format.formatMontant
+import dev.celitracker.app.ui.theme.chiffres
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.PlafondAnnuel
 import kotlinx.coroutines.Dispatchers
@@ -203,6 +203,7 @@ fun ReglagesContenu(
             onDate = onDateOuvertureChange,
             etiquette = "Ouverture du CELIAPP (facultatif)",
             estErreur = etat.dateOuvertureInvalide,
+            effacable = true,
             modifier = Modifier.padding(top = 16.dp),
         )
         Button(
@@ -346,7 +347,7 @@ private fun PropositionsArc(
         Column(modifier = Modifier.padding(bottom = 12.dp)) {
             Text(
                 "${plafond.annee} : ${plafond.montant.formatMontant()}",
-                style = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Monospace),
+                style = MaterialTheme.typography.bodyLarge.chiffres(),
             )
             Text(
                 "Lu sur le site de l'ARC. Il n'entre dans le calcul qu'une fois confirmé.",
@@ -478,7 +479,7 @@ private fun LignePlafond(plafond: PlafondAnnuel, attenue: Boolean = false) {
         Text(plafond.annee.toString(), style = MaterialTheme.typography.bodyLarge, color = couleur)
         Text(
             plafond.montant.formatMontant(),
-            style = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Monospace),
+            style = MaterialTheme.typography.bodyLarge.chiffres(),
             color = couleur,
         )
     }

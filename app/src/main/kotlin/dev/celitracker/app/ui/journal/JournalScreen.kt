@@ -52,7 +52,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -62,6 +61,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.celitracker.app.CeliTrackerApplication
 import dev.celitracker.app.ui.composants.ChampDate
 import dev.celitracker.app.ui.format.formatMontant
+import dev.celitracker.app.ui.theme.chiffres
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.Transaction
 import dev.celitracker.engine.TypeTx
@@ -223,7 +223,7 @@ private fun LigneTransaction(transaction: Transaction, onClick: () -> Unit) {
                 // l'autre, ce qui rend la colonne lisible d'un coup d'oeil.
                 Text(
                     transaction.montant.formatMontant(),
-                    style = MaterialTheme.typography.titleMedium.copy(fontFamily = FontFamily.Monospace),
+                    style = MaterialTheme.typography.titleMedium.chiffres(),
                 )
                 Text(
                     if (depot) "Dépôt" else "Retrait",
@@ -301,7 +301,7 @@ private fun FeuilleTransaction(
                 isError = formulaire.montant.isNotEmpty() && formulaire.montantValide == null,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
-                textStyle = MaterialTheme.typography.headlineSmall.copy(fontFamily = FontFamily.Monospace),
+                textStyle = MaterialTheme.typography.headlineSmall.chiffres(),
                 modifier = Modifier.fillMaxWidth(),
             )
             ChampDate(date = formulaire.date, onDate = onDate, etiquette = "Date")

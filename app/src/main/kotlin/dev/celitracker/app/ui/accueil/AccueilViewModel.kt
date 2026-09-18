@@ -15,7 +15,7 @@ import java.time.YearMonth
 
 class AccueilViewModel(private val depot: Depot) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(etatVide())
+    private val _uiState = MutableStateFlow(etatVide().copy(chargementTermine = false))
     val uiState: StateFlow<AccueilUiState> = _uiState.asStateFlow()
 
     init {

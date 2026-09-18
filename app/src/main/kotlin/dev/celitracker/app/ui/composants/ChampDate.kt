@@ -3,9 +3,14 @@ package dev.celitracker.app.ui.composants
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -17,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.dp
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -34,8 +40,11 @@ fun ChampDate(
     etiquette: String,
     modifier: Modifier = Modifier,
     estErreur: Boolean = false,
+    /** Pour une date facultative: une croix permet de la retirer une fois choisie. */
+    effacable: Boolean = false,
 ) {
     var calendrierOuvert by remember { mutableStateOf(false) }
+    val croix = effacable && date.isNotEmpty()
     val dateValide = remember(date) { runCatching { LocalDate.parse(date) }.getOrNull() }
 
     // Le calendrier de Material occupe une largeur fixe de 360 dp et rogne ses
@@ -61,11 +70,22 @@ fun ChampDate(
             readOnly = true,
             isError = estErreur,
             singleLine = true,
+            trailingIcon = if (croix) {
+                {
+                    IconButton(onClick = { onDate("") }) {
+                        Icon(Icons.Filled.Clear, contentDescription = "Retirer la date")
+                    }
+                }
+            } else {
+                null
+            },
             modifier = Modifier.fillMaxWidth(),
         )
+        // La zone qui ouvre le calendrier laisse la croix cliquable.
         Box(
             modifier = Modifier
                 .matchParentSize()
+                .padding(end = if (croix) 56.dp else 0.dp)
                 .clickable { calendrierOuvert = true },
         )
     }

@@ -5,6 +5,8 @@ import dev.celitracker.engine.DroitsAnnee
 import dev.celitracker.engine.DroitsAnneeCeliapp
 import dev.celitracker.engine.ExcedentMensuel
 import dev.celitracker.engine.Profil
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDate
 
 /**
@@ -24,6 +26,12 @@ data class AccueilUiState(
     val droitsCeli: List<DroitsAnnee> = emptyList(),
     val droitsCeliapp: List<DroitsAnneeCeliapp> = emptyList(),
     val excedentsCeli: List<ExcedentMensuel> = emptyList(),
+    /**
+     * Faux tant que la base n'a pas repondu. Sans lui, « aucun profil » et
+     * « pas encore lu » se confondaient, et l'ecran d'accueil vide clignotait
+     * a chaque ouverture.
+     */
+    val chargementTermine: Boolean = true,
 ) {
     val profilEnregistre: Boolean get() = profil != null
 
@@ -40,4 +48,17 @@ data class AccueilUiState(
      * `SurCotisation.excedentsCeli` ne couvre que le CELI.
      */
     val echeanceParticipationCeliapp: LocalDate? get() = profil?.let(CeliappMoteur::finPeriodeParticipation)
+
+    val droitsRestantsCeliapp: BigDecimal? get() = celiappAnneeCourante?.let { it.droitsAnnee - it.depots }
+
+    /** Part des droits de l'annee deja cotisee, pour l'anneau de l'accueil. */
+    val fractionUtiliseeCeli: Float? get() = celiAnneeCourante?.let { fraction(it.depots, it.droitsDebut) }
+
+    val fractionUtiliseeCeliapp: Float? get() = celiappAnneeCourante?.let { fraction(it.depots, it.droitsAnnee) }
 }
+
+/**
+ * Seul endroit ou un montant devient un Float: pour dessiner un arc, jamais
+ * pour un calcul de droits. Superieure a 1 en cas de sur-cotisation.
+ */
+private fun fraction(partie: BigDecimal, tout: BigDecimal): Float? = if (tout.signum() <= 0) null else partie.divide(tout, 4, RoundingMode.HALF_UP).toFloat()

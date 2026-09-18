@@ -65,6 +65,30 @@ class AccueilUiStateTest {
         assertEquals(LocalDate.of(2038, 12, 31), etat.echeanceParticipationCeliapp)
     }
 
+    @Test
+    fun `l'anneau montre la part des droits de l'annee deja cotisee`() {
+        val ligne = ligneCeli(2026).copy(droitsDebut = BigDecimal("8000.00"), depots = BigDecimal("2000.00"))
+        val etat = AccueilUiState(profil = profil, anneeCourante = 2026, moisCourant = 9, droitsCeli = listOf(ligne))
+
+        assertEquals(0.25f, etat.fractionUtiliseeCeli)
+    }
+
+    @Test
+    fun `une sur-cotisation depasse 100 pour cent au lieu d'etre ecretee`() {
+        val ligne = ligneCeli(2026).copy(droitsDebut = BigDecimal("1000.00"), depots = BigDecimal("1500.00"))
+        val etat = AccueilUiState(profil = profil, anneeCourante = 2026, moisCourant = 9, droitsCeli = listOf(ligne))
+
+        assertEquals(1.5f, etat.fractionUtiliseeCeli)
+    }
+
+    @Test
+    fun `sans droits cette annee, pas d'anneau plutot qu'une division par zero`() {
+        val ligne = ligneCeli(2026).copy(droitsDebut = BigDecimal.ZERO)
+        val etat = AccueilUiState(profil = profil, anneeCourante = 2026, moisCourant = 9, droitsCeli = listOf(ligne))
+
+        assertNull(etat.fractionUtiliseeCeli)
+    }
+
     private fun ligneCeli(annee: Int) = DroitsAnnee(
         annee = annee,
         plafond = BigDecimal("7000.00"),
