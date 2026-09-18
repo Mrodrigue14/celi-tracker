@@ -83,8 +83,8 @@ dependencies {
     // Pas de plugin org.jetbrains.kotlin.* applique sur ce module (support
     // Kotlin natif d'AGP 9): le raccourci kotlin("test") n'est pas garanti, on
     // pointe la coordonnee explicitement.
-    testImplementation("org.jetbrains.kotlin:kotlin-test:2.4.10")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:2.4.10")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:2.4.20")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:2.4.20")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
     // DepotDeTest construit une vraie base Room dans un test JVM (pas de
     // Context Android disponible hors instrumentation) : il appelle donc
