@@ -6,11 +6,17 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -93,11 +99,17 @@ fun TitreSection(texte: String, modifier: Modifier = Modifier, couleur: Color = 
     Text(texte, modifier = modifier, style = MaterialTheme.typography.labelLarge, color = couleur)
 }
 
-/** Une valeur secondaire de la carte: le chiffre d'abord, son etiquette dessous. */
+/**
+ * Une valeur secondaire de la carte: le chiffre d'abord, son etiquette dessous.
+ * `fillMaxHeight` sur la Column: un appelant qui l'etire (GrilleTuiles, pour
+ * qu'une etiquette sur deux lignes n'ecrase pas sa voisine) doit voir le fond
+ * suivre, pas seulement le texte.
+ */
 @Composable
 fun Tuile(valeur: String, etiquette: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
+            .fillMaxHeight()
             .background(MaterialTheme.colorScheme.surfaceContainer, FORME_TUILE)
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
@@ -107,18 +119,40 @@ fun Tuile(valeur: String, etiquette: String, modifier: Modifier = Modifier) {
     }
 }
 
-/** Grille de tuiles sur deux colonnes; une tuile seule sur sa ligne garde sa demi-largeur. */
+/**
+ * Grille de tuiles sur deux colonnes; une tuile seule sur sa ligne garde sa
+ * demi-largeur. `IntrinsicSize.Min` sur chaque ligne: une etiquette qui
+ * deborde sur deux lignes (une date longue en anglais, par exemple) agrandit
+ * les DEUX tuiles de la ligne a la meme hauteur plutot que de rendre l'une
+ * plus haute que l'autre.
+ */
 @Composable
 fun GrilleTuiles(tuiles: List<Pair<String, String>>, modifier: Modifier = Modifier) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
         tuiles.chunked(2).forEach { ligne ->
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(modifier = Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 ligne.forEach { (valeur, etiquette) ->
                     Tuile(valeur, etiquette, modifier = Modifier.weight(1f))
                 }
                 if (ligne.size == 1) Box(modifier = Modifier.weight(1f))
             }
         }
+    }
+}
+
+/** Au-dela, une tablette etirerait les cartes et les tuiles jusqu'a nuire a leur lecture. */
+private val LARGEUR_MAX_CONTENU = 600.dp
+
+/**
+ * Plafonne la largeur du contenu principal d'un ecran et le centre. Sur un
+ * telephone, la limite ne joue jamais (aucun telephone n'atteint 600 dp de
+ * large). Sur une tablette, elle evite des lignes de texte interminables et
+ * des tuiles etirees plutot que d'etoffer la mise en page.
+ */
+@Composable
+fun ContenuLargeurLimitee(modifier: Modifier = Modifier, contenu: @Composable BoxScope.() -> Unit) {
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        Box(modifier = Modifier.widthIn(max = LARGEUR_MAX_CONTENU).fillMaxSize(), content = contenu)
     }
 }
 

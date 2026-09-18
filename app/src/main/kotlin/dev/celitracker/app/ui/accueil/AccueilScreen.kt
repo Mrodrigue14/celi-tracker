@@ -57,6 +57,7 @@ import dev.celitracker.app.CeliTrackerApplication
 import dev.celitracker.app.R
 import dev.celitracker.app.ui.composants.AnneauDroits
 import dev.celitracker.app.ui.composants.BandeauAlerte
+import dev.celitracker.app.ui.composants.ContenuLargeurLimitee
 import dev.celitracker.app.ui.composants.FORME_CARTE
 import dev.celitracker.app.ui.composants.GrilleTuiles
 import dev.celitracker.app.ui.composants.PastilleCompte
@@ -91,14 +92,16 @@ fun AccueilScreen(
             TopAppBar(title = { Text(stringResource(R.string.app_name)) })
         },
     ) { innerPadding ->
-        AccueilContenu(
-            etat = etat,
-            modifier = Modifier.padding(innerPadding),
-            onOuvrirDetail = onOuvrirDetail,
-            onAjouter = onAjouter,
-            onOuvrirJournal = onOuvrirJournal,
-            onOuvrirReglages = onOuvrirReglages,
-        )
+        ContenuLargeurLimitee(modifier = Modifier.padding(innerPadding)) {
+            AccueilContenu(
+                etat = etat,
+                modifier = Modifier.fillMaxSize(),
+                onOuvrirDetail = onOuvrirDetail,
+                onAjouter = onAjouter,
+                onOuvrirJournal = onOuvrirJournal,
+                onOuvrirReglages = onOuvrirReglages,
+            )
+        }
     }
 }
 

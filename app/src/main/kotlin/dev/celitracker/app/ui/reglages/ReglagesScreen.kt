@@ -60,6 +60,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.celitracker.app.CeliTrackerApplication
 import dev.celitracker.app.R
 import dev.celitracker.app.ui.composants.ChampDate
+import dev.celitracker.app.ui.composants.ChampMontant
+import dev.celitracker.app.ui.composants.ContenuLargeurLimitee
 import dev.celitracker.app.ui.composants.TitreSection
 import dev.celitracker.app.ui.format.formatDate
 import dev.celitracker.app.ui.format.formatMontant
@@ -104,26 +106,28 @@ fun ReglagesScreen() {
         },
         snackbarHost = { SnackbarHost(snackbar) },
     ) { innerPadding ->
-        ReglagesContenu(
-            etat = etat,
-            modifier = Modifier.padding(innerPadding),
-            onAnneeNaissanceChange = viewModel::modifierAnneeNaissance,
-            onDateOuvertureChange = viewModel::modifierDateOuvertureCeliapp,
-            onEnregistrerProfil = viewModel::enregistrerProfil,
-            onNouveauPlafondAnneeChange = viewModel::modifierNouveauPlafondAnnee,
-            onNouveauPlafondMontantChange = viewModel::modifierNouveauPlafondMontant,
-            onAjouterPlafond = viewModel::ajouterPlafond,
-            onUrlPageArcChange = viewModel::modifierUrlPageArc,
-            onEnregistrerUrlPageArc = viewModel::enregistrerUrlPageArc,
-            onRetablirUrlPageArc = viewModel::retablirUrlPageArc,
-            onVerifierArc = { viewModel.verifierArc(demandeExplicite = true) },
-            onConfirmerProposition = viewModel::confirmerProposition,
-            onRejeterProposition = viewModel::rejeterProposition,
-            onExporter = { lanceurExport.launch(NOM_FICHIER_EXPORT) },
-            modeTheme = modeTheme,
-            onModeTheme = application.preferenceTheme::choisir,
-            onImporter = { lanceurImport.launch(arrayOf(TYPE_JSON)) },
-        )
+        ContenuLargeurLimitee(modifier = Modifier.padding(innerPadding)) {
+            ReglagesContenu(
+                etat = etat,
+                modifier = Modifier.fillMaxSize(),
+                onAnneeNaissanceChange = viewModel::modifierAnneeNaissance,
+                onDateOuvertureChange = viewModel::modifierDateOuvertureCeliapp,
+                onEnregistrerProfil = viewModel::enregistrerProfil,
+                onNouveauPlafondAnneeChange = viewModel::modifierNouveauPlafondAnnee,
+                onNouveauPlafondMontantChange = viewModel::modifierNouveauPlafondMontant,
+                onAjouterPlafond = viewModel::ajouterPlafond,
+                onUrlPageArcChange = viewModel::modifierUrlPageArc,
+                onEnregistrerUrlPageArc = viewModel::enregistrerUrlPageArc,
+                onRetablirUrlPageArc = viewModel::retablirUrlPageArc,
+                onVerifierArc = { viewModel.verifierArc(demandeExplicite = true) },
+                onConfirmerProposition = viewModel::confirmerProposition,
+                onRejeterProposition = viewModel::rejeterProposition,
+                onExporter = { lanceurExport.launch(NOM_FICHIER_EXPORT) },
+                modeTheme = modeTheme,
+                onModeTheme = application.preferenceTheme::choisir,
+                onImporter = { lanceurImport.launch(arrayOf(TYPE_JSON)) },
+            )
+        }
     }
 
     importAConfirmer?.let { uri ->
@@ -303,13 +307,10 @@ fun ReglagesContenu(
                 singleLine = true,
                 modifier = Modifier.weight(1f),
             )
-            OutlinedTextField(
-                value = etat.nouveauPlafondMontant,
-                onValueChange = onNouveauPlafondMontantChange,
-                label = { Text(stringResource(R.string.reglages_montant)) },
-                suffix = { Text("$") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                singleLine = true,
+            ChampMontant(
+                valeur = etat.nouveauPlafondMontant,
+                onValeur = onNouveauPlafondMontantChange,
+                etiquette = stringResource(R.string.reglages_montant),
                 modifier = Modifier.weight(1f),
             )
         }

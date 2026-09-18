@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -34,7 +33,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -55,7 +53,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -65,6 +62,8 @@ import dev.celitracker.app.CeliTrackerApplication
 import dev.celitracker.app.R
 import dev.celitracker.app.ui.composants.BandeauAlerte
 import dev.celitracker.app.ui.composants.ChampDate
+import dev.celitracker.app.ui.composants.ChampMontant
+import dev.celitracker.app.ui.composants.ContenuLargeurLimitee
 import dev.celitracker.app.ui.composants.PastilleCompte
 import dev.celitracker.app.ui.format.formatDate
 import dev.celitracker.app.ui.format.formatMontant
@@ -119,13 +118,15 @@ fun JournalScreen() {
             }
         },
     ) { innerPadding ->
-        JournalContenu(
-            etat = etat,
-            onOuvrirTransaction = viewModel::ouvrirModification,
-            onAjouter = viewModel::ouvrirNouvelle,
-            modifier = Modifier.padding(innerPadding),
-            liste = liste,
-        )
+        ContenuLargeurLimitee(modifier = Modifier.padding(innerPadding)) {
+            JournalContenu(
+                etat = etat,
+                onOuvrirTransaction = viewModel::ouvrirModification,
+                onAjouter = viewModel::ouvrirNouvelle,
+                modifier = Modifier.fillMaxSize(),
+                liste = liste,
+            )
+        }
     }
 
     // Arrivee depuis le detail: on amene l'annee demandee en haut de la liste,
@@ -344,15 +345,12 @@ private fun FeuilleTransaction(
                     }
                 }
             }
-            OutlinedTextField(
-                value = formulaire.montant,
-                onValueChange = onMontant,
-                label = { Text(stringResource(R.string.journal_montant)) },
-                suffix = { Text("$") },
-                isError = formulaire.montant.isNotEmpty() && formulaire.montantValide == null,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                singleLine = true,
-                textStyle = MaterialTheme.typography.headlineSmall.chiffres(),
+            ChampMontant(
+                valeur = formulaire.montant,
+                onValeur = onMontant,
+                etiquette = stringResource(R.string.journal_montant),
+                estErreur = formulaire.montant.isNotEmpty() && formulaire.montantValide == null,
+                style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.fillMaxWidth(),
             )
             ChampDate(date = formulaire.date, onDate = onDate, etiquette = stringResource(R.string.journal_date))
