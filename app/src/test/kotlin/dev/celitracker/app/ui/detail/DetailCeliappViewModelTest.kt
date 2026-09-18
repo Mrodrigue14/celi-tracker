@@ -29,7 +29,7 @@ class DetailCeliappViewModelTest {
     fun `sans CELIAPP ouvert, aucune ligne`() = runTest {
         depot.enregistrerProfil(Profil(1990, dateOuvertureCeliapp = null))
 
-        val viewModel = DetailCeliappViewModel(depot)
+        val viewModel = DetailCeliappViewModel(depot).also { it.charger() }
 
         assertEquals(emptyList(), viewModel.uiState.value.lignes)
     }
@@ -40,7 +40,7 @@ class DetailCeliappViewModelTest {
         val profil = Profil(1990, dateOuvertureCeliapp = ouverture)
         depot.enregistrerProfil(profil)
 
-        val viewModel = DetailCeliappViewModel(depot)
+        val viewModel = DetailCeliappViewModel(depot).also { it.charger() }
         val etat = viewModel.uiState.first { it.lignes.isNotEmpty() }
 
         val attendu = CeliappMoteur.droitsParAnnee(profil, depot.transactions(), anneeCourante)

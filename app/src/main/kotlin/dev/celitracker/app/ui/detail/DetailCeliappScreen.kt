@@ -1,11 +1,6 @@
 package dev.celitracker.app.ui.detail
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -18,7 +13,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -29,14 +23,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.celitracker.app.CeliTrackerApplication
 import dev.celitracker.app.R
 import dev.celitracker.app.ui.composants.CarteAnnee
-import dev.celitracker.app.ui.composants.GraphiqueAnnees
+import dev.celitracker.app.ui.composants.ListeDetailAnnees
 import dev.celitracker.app.ui.format.formatMontant
 import dev.celitracker.engine.DroitsAnneeCeliapp
-import kotlinx.coroutines.launch
 import java.math.BigDecimal
-
-/** Le graphique et le titre « Année par année » precedent la premiere carte. */
-private const val ELEMENTS_AVANT_ANNEES = 2
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,53 +48,26 @@ fun DetailCeliappScreen(onRetour: () -> Unit, onVoirTransactions: (Int) -> Unit)
             )
         },
     ) { innerPadding ->
-        DetailCeliappContenu(etat = etat, modifier = Modifier.padding(innerPadding), onVoirTransactions = onVoirTransactions)
+        DetailCeliappContenu(etat = etat, onVoirTransactions = onVoirTransactions, modifier = Modifier.padding(innerPadding))
     }
 }
 
-/** Meme lecture que le detail du CELI, avec les notions propres au CELIAPP. */
+/** Du plus general au plus detaille: l'evolution, puis chaque annee, la plus recente d'abord. */
 @Composable
-fun DetailCeliappContenu(etat: DetailCeliappUiState, modifier: Modifier = Modifier, onVoirTransactions: (Int) -> Unit = {}) {
-    val anneeEnCours = etat.lignes.lastOrNull()?.annee
-    val liste = rememberLazyListState()
-    val portee = rememberCoroutineScope()
-    val anneesAffichees = etat.lignes.reversed()
-
-    // Le graphique et le titre precedent les cartes: l'index d'une annee les compte.
-    fun allerA(annee: Int) {
-        val position = anneesAffichees.indexOfFirst { it.annee == annee }
-        if (position >= 0) portee.launch { liste.animateScrollToItem(ELEMENTS_AVANT_ANNEES + position) }
-    }
-
-    LazyColumn(
+fun DetailCeliappContenu(etat: DetailCeliappUiState, onVoirTransactions: (Int) -> Unit, modifier: Modifier = Modifier) {
+    ListeDetailAnnees(
+        lignes = etat.lignes,
+        annee = { it.annee },
+        titreGraphique = stringResource(R.string.detail_plafond_vie_restant),
+        valeurGraphique = { it.plafondVieRestant },
+        couleur = MaterialTheme.colorScheme.secondary,
         modifier = modifier,
-        state = liste,
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        if (etat.lignes.isNotEmpty()) {
-            item(key = "evolution") {
-                TitreSection(stringResource(R.string.detail_plafond_vie_restant))
-                GraphiqueAnnees(
-                    valeurs = etat.lignes.map { it.annee to it.plafondVieRestant },
-                    couleur = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
-                    onClicAnnee = ::allerA,
-                )
-            }
-            item(key = "titre-annees") { TitreSection(stringResource(R.string.detail_annee_par_annee)) }
-        }
-        items(anneesAffichees, key = { it.annee }) { ligne ->
-            CarteAnneeCeliapp(
-                ligne,
-                enCours = ligne.annee == anneeEnCours,
-                onVoirTransactions = if (ligne.annee in etat.anneesAvecTransactions) {
-                    { onVoirTransactions(ligne.annee) }
-                } else {
-                    null
-                },
-            )
-        }
+    ) { ligne, enCours ->
+        CarteAnneeCeliapp(
+            ligne,
+            enCours = enCours,
+            onVoirTransactions = ligne.annee.takeIf { it in etat.anneesAvecTransactions }?.let { annee -> { onVoirTransactions(annee) } },
+        )
     }
 }
 
@@ -126,16 +89,6 @@ private fun CarteAnneeCeliapp(ligne: DroitsAnneeCeliapp, enCours: Boolean, onVoi
     )
 }
 
-@Composable
-private fun TitreSection(texte: String) {
-    Text(
-        texte,
-        modifier = Modifier.padding(top = 12.dp),
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.secondary,
-    )
-}
-
 @Preview(showBackground = true)
 @Composable
 private fun DetailCeliappContenuApercu() {
@@ -153,5 +106,6 @@ private fun DetailCeliappContenuApercu() {
                 ),
             ),
         ),
+        onVoirTransactions = {},
     )
 }

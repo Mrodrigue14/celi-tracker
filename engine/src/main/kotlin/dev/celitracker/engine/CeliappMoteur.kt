@@ -48,8 +48,8 @@ object CeliappMoteur {
         var cotisationsCumulees = BigDecimal.ZERO
 
         for (annee in ouverture.year..jusqua) {
-            val depots = somme(txFhsa, annee, TypeTx.DEPOT)
-            val retraits = somme(txFhsa, annee, TypeTx.RETRAIT)
+            val depots = sommeTransactions(txFhsa, annee, TypeTx.DEPOT)
+            val retraits = sommeTransactions(txFhsa, annee, TypeTx.RETRAIT)
 
             val vieRestantAvant = (PLAFOND_VIE - cotisationsCumulees)
                 .coerceAtLeast(BigDecimal.ZERO)
@@ -105,8 +105,4 @@ object CeliappMoteur {
         val anneeSoixanteEtOnzeAns = profil.anneeNaissance + 71
         return LocalDate.of(minOf(anneeQuinzeAns, anneeSoixanteEtOnzeAns), 12, 31)
     }
-
-    private fun somme(transactions: List<Transaction>, annee: Int, type: TypeTx): BigDecimal = transactions
-        .filter { it.date.year == annee && it.type == type }
-        .fold(BigDecimal.ZERO) { total, tx -> total + tx.montant }
 }

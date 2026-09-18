@@ -45,6 +45,10 @@ class Depot(private val base: CeliTrackerBase) {
 
     suspend fun plafonds(): List<PlafondAnnuel> = dao.plafonds().map { PlafondAnnuel(it.compte, it.annee, it.montant, it.confirme) }
 
+    suspend fun enregistrerPlafonds(plafonds: List<PlafondAnnuel>) {
+        dao.enregistrerPlafonds(plafonds.map { PlafondEntity(it.compte, it.annee, it.montant, it.confirme) })
+    }
+
     suspend fun enregistrerPlafond(plafond: PlafondAnnuel) {
         dao.enregistrerPlafond(PlafondEntity(plafond.compte, plafond.annee, plafond.montant, plafond.confirme))
     }

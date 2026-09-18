@@ -74,17 +74,23 @@ fun AnneauDroits(fraction: Float, couleur: Color, modifier: Modifier = Modifier)
     }
 }
 
-/** Pastille ronde teintee de la couleur du compte, qui porte son icone. */
+/** Pastille ronde teintee, qui porte une icone. */
 @Composable
-fun PastilleCompte(icone: ImageVector, fond: Color, teinte: Color) {
+fun PastilleCompte(icone: ImageVector, fond: Color, teinte: Color, description: String? = null) {
     Box(
         modifier = Modifier
             .size(40.dp)
             .background(fond, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icone, contentDescription = null, tint = teinte)
+        Icon(icone, contentDescription = description, tint = teinte)
     }
+}
+
+/** Titre de section, dans la couleur d'accent de l'ecran. */
+@Composable
+fun TitreSection(texte: String, modifier: Modifier = Modifier, couleur: Color = MaterialTheme.colorScheme.primary) {
+    Text(texte, modifier = modifier, style = MaterialTheme.typography.labelLarge, color = couleur)
 }
 
 /** Une valeur secondaire de la carte: le chiffre d'abord, son etiquette dessous. */

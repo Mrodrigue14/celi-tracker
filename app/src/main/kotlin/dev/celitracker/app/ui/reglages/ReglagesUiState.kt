@@ -1,5 +1,6 @@
 package dev.celitracker.app.ui.reglages
 
+import dev.celitracker.app.ui.format.versMontantSaisi
 import dev.celitracker.app.ui.texte.TexteUi
 import dev.celitracker.engine.PlafondAnnuel
 import dev.celitracker.engine.Profil
@@ -62,8 +63,7 @@ data class ReglagesUiState(
     val profilValide: Boolean get() = anneeNaissanceValide != null && !dateOuvertureInvalide
 
     val nouveauPlafondAnneeValide: Int? get() = nouveauPlafondAnnee.toIntOrNull()
-    val nouveauPlafondMontantValide: BigDecimal? get() =
-        nouveauPlafondMontant.replace(',', '.').toBigDecimalOrNull()?.takeIf { it > BigDecimal.ZERO }
+    val nouveauPlafondMontantValide: BigDecimal? get() = nouveauPlafondMontant.versMontantSaisi()
 
     val nouveauPlafondValide: Boolean get() =
         nouveauPlafondAnneeValide != null && nouveauPlafondMontantValide != null

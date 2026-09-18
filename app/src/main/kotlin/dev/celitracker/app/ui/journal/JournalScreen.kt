@@ -65,6 +65,7 @@ import dev.celitracker.app.CeliTrackerApplication
 import dev.celitracker.app.R
 import dev.celitracker.app.ui.composants.BandeauAlerte
 import dev.celitracker.app.ui.composants.ChampDate
+import dev.celitracker.app.ui.composants.PastilleCompte
 import dev.celitracker.app.ui.format.formatDate
 import dev.celitracker.app.ui.format.formatMontant
 import dev.celitracker.app.ui.texte.libelle
@@ -186,8 +187,9 @@ fun JournalContenu(
         JournalVide(onAjouter = onAjouter, modifier = modifier)
         return
     }
+    val parAnnee = remember(etat.transactions) { etat.transactions.groupBy { it.date.year } }
     LazyColumn(modifier = modifier.fillMaxSize(), state = liste) {
-        etat.transactions.groupBy { it.date.year }.forEach { (annee, transactions) ->
+        parAnnee.forEach { (annee, transactions) ->
             item(key = "annee-$annee") { EnTeteAnnee(annee) }
             items(transactions, key = { it.id }) { transaction ->
                 LigneTransaction(transaction, onClick = { onOuvrirTransaction(transaction) })
@@ -218,7 +220,7 @@ private fun JournalVide(onAjouter: () -> Unit, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Pastille(
+        PastilleCompte(
             icone = Icons.AutoMirrored.Filled.List,
             fond = MaterialTheme.colorScheme.surfaceVariant,
             teinte = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -265,7 +267,7 @@ private fun LigneTransaction(transaction: Transaction, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Pastille(
+            PastilleCompte(
                 icone = if (depot) Icons.Filled.South else Icons.Filled.North,
                 fond = if (depot) {
                     MaterialTheme.colorScheme.primaryContainer
@@ -299,18 +301,6 @@ private fun LigneTransaction(transaction: Transaction, onClick: () -> Unit) {
             )
         }
         HorizontalDivider(modifier = Modifier.padding(start = 72.dp))
-    }
-}
-
-@Composable
-private fun Pastille(icone: ImageVector, fond: Color, teinte: Color, description: String? = null) {
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .background(fond, CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(icone, contentDescription = description, tint = teinte)
     }
 }
 

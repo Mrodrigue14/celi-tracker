@@ -112,8 +112,8 @@ fun AccueilContenu(
     onOuvrirDetail: (Compte) -> Unit,
     onOuvrirReglages: () -> Unit,
     modifier: Modifier = Modifier,
-    onAjouter: (Compte) -> Unit = {},
-    onOuvrirJournal: (Compte) -> Unit = {},
+    onAjouter: (Compte) -> Unit,
+    onOuvrirJournal: (Compte) -> Unit,
 ) {
     if (!etat.chargementTermine) return
     if (!etat.profilEnregistre) {
@@ -376,6 +376,8 @@ private fun AccueilContenuApercu() {
         ),
         onOuvrirDetail = {},
         onOuvrirReglages = {},
+        onAjouter = {},
+        onOuvrirJournal = {},
     )
 }
 
@@ -386,5 +388,7 @@ private fun AccueilContenuApercuVide() {
         etat = AccueilUiState(profil = null, anneeCourante = 2026, moisCourant = 9),
         onOuvrirDetail = {},
         onOuvrirReglages = {},
+        onAjouter = {},
+        onOuvrirJournal = {},
     )
 }

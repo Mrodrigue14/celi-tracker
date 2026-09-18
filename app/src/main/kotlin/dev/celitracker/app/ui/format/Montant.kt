@@ -23,3 +23,6 @@ fun BigDecimal.formatMontant(locale: Locale = Locale.getDefault()): String = Num
 
 /** « 4 septembre 2026 » ou « September 4, 2026 »: une date se lit, elle ne se decode pas. */
 fun LocalDate.formatDate(locale: Locale = Locale.getDefault()): String = format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale))
+
+/** Montant tape par l'utilisateur: la virgule d'un clavier francais est acceptee, zero ou moins est refuse. */
+fun String.versMontantSaisi(): BigDecimal? = replace(',', '.').toBigDecimalOrNull()?.takeIf { it > BigDecimal.ZERO }
