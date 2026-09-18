@@ -54,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,10 +62,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.celitracker.app.CeliTrackerApplication
+import dev.celitracker.app.R
 import dev.celitracker.app.ui.composants.BandeauAlerte
 import dev.celitracker.app.ui.composants.ChampDate
 import dev.celitracker.app.ui.format.formatDate
 import dev.celitracker.app.ui.format.formatMontant
+import dev.celitracker.app.ui.texte.libelle
+import dev.celitracker.app.ui.texte.resoudre
 import dev.celitracker.app.ui.theme.chiffres
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.Transaction
@@ -83,16 +87,17 @@ fun JournalScreen() {
 
     // Le message est un imperatif joue une fois, pas un etat durable: il part
     // dans un snackbar et le ViewModel l'oublie ensuite.
+    val contexte = LocalContext.current
     LaunchedEffect(etat.message) {
         val message = etat.message ?: return@LaunchedEffect
-        snackbar.showSnackbar(message)
+        snackbar.showSnackbar(message.resoudre(contexte))
         viewModel.messageAffiche()
     }
 
     Scaffold(
         topBar = {
             Column {
-                TopAppBar(title = { Text("Journal") })
+                TopAppBar(title = { Text(stringResource(R.string.journal_titre)) })
                 ChoixCompte(
                     compte = etat.compte,
                     onChanger = viewModel::changerCompte,
@@ -106,7 +111,7 @@ fun JournalScreen() {
             // ferait doublon. Le bouton flottant revient des la premiere transaction.
             if (etat.transactions.isNotEmpty()) {
                 ExtendedFloatingActionButton(
-                    text = { Text("Ajouter") },
+                    text = { Text(stringResource(R.string.action_ajouter)) },
                     icon = { Icon(Icons.Filled.Add, contentDescription = null) },
                     onClick = viewModel::ouvrirNouvelle,
                 )
@@ -163,7 +168,7 @@ private fun ChoixCompte(compte: Compte, onChanger: (Compte) -> Unit, modifier: M
                     },
                 ),
             ) {
-                Text(choix.name)
+                Text(choix.libelle())
             }
         }
     }
@@ -219,19 +224,19 @@ private fun JournalVide(onAjouter: () -> Unit, modifier: Modifier = Modifier) {
             teinte = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
-            "Aucune transaction",
+            stringResource(R.string.journal_vide_titre),
             modifier = Modifier.padding(top = 16.dp),
             style = MaterialTheme.typography.titleMedium,
         )
         Text(
-            "Inscris tes dépôts et tes retraits ici. Les droits de cotisation se recalculent à partir d'eux.",
+            stringResource(R.string.journal_vide_texte),
             modifier = Modifier.padding(top = 8.dp),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
         Button(onClick = onAjouter, modifier = Modifier.padding(top = 24.dp)) {
-            Text("Ajouter une transaction")
+            Text(stringResource(R.string.journal_vide_action))
         }
     }
 }
@@ -272,7 +277,7 @@ private fun LigneTransaction(transaction: Transaction, onClick: () -> Unit) {
                 } else {
                     MaterialTheme.colorScheme.onTertiaryContainer
                 },
-                description = if (depot) "Dépôt" else "Retrait",
+                description = if (depot) stringResource(R.string.type_depot) else stringResource(R.string.type_retrait),
             )
             Column(modifier = Modifier.weight(1f)) {
                 // Chiffres a chasse fixe: les montants s'alignent d'une ligne a
@@ -282,7 +287,7 @@ private fun LigneTransaction(transaction: Transaction, onClick: () -> Unit) {
                     style = MaterialTheme.typography.titleMedium.chiffres(),
                 )
                 Text(
-                    if (depot) "Dépôt" else "Retrait",
+                    if (depot) stringResource(R.string.type_depot) else stringResource(R.string.type_retrait),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -335,7 +340,7 @@ private fun FeuilleTransaction(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
-                if (formulaire.estNouvelle) "Nouvelle transaction" else "Modifier la transaction",
+                if (formulaire.estNouvelle) stringResource(R.string.journal_nouvelle) else stringResource(R.string.journal_modifier),
                 style = MaterialTheme.typography.titleLarge,
             )
             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
@@ -345,14 +350,14 @@ private fun FeuilleTransaction(
                         onClick = { onType(type) },
                         shape = SegmentedButtonDefaults.itemShape(index, TypeTx.entries.size),
                     ) {
-                        Text(if (type == TypeTx.DEPOT) "Dépôt" else "Retrait")
+                        Text(if (type == TypeTx.DEPOT) stringResource(R.string.type_depot) else stringResource(R.string.type_retrait))
                     }
                 }
             }
             OutlinedTextField(
                 value = formulaire.montant,
                 onValueChange = onMontant,
-                label = { Text("Montant") },
+                label = { Text(stringResource(R.string.journal_montant)) },
                 suffix = { Text("$") },
                 isError = formulaire.montant.isNotEmpty() && formulaire.montantValide == null,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -360,21 +365,21 @@ private fun FeuilleTransaction(
                 textStyle = MaterialTheme.typography.headlineSmall.chiffres(),
                 modifier = Modifier.fillMaxWidth(),
             )
-            ChampDate(date = formulaire.date, onDate = onDate, etiquette = "Date")
-            formulaire.avertissement?.let { BandeauAlerte(it, Icons.Filled.Warning) }
+            ChampDate(date = formulaire.date, onDate = onDate, etiquette = stringResource(R.string.journal_date))
+            formulaire.avertissement?.let { BandeauAlerte(it.resoudre(), Icons.Filled.Warning) }
             Button(
                 onClick = onEnregistrer,
                 enabled = formulaire.valide,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(if (formulaire.avertissement == null) "Enregistrer" else "Enregistrer quand même")
+                Text(if (formulaire.avertissement == null) stringResource(R.string.action_enregistrer) else stringResource(R.string.action_enregistrer_quand_meme))
             }
             formulaire.erreur?.let {
-                Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+                Text(it.resoudre(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
             }
             if (!formulaire.estNouvelle) {
                 TextButton(onClick = onSupprimer, modifier = Modifier.fillMaxWidth()) {
-                    Text("Supprimer", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.action_supprimer), color = MaterialTheme.colorScheme.error)
                 }
             }
         }

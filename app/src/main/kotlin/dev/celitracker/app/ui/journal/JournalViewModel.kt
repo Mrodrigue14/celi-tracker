@@ -2,8 +2,12 @@ package dev.celitracker.app.ui.journal
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dev.celitracker.app.ui.format.formatMontant
+import dev.celitracker.app.R
+import dev.celitracker.app.ui.texte.TexteUi
+import dev.celitracker.app.ui.texte.texte
+import dev.celitracker.app.ui.texte.texteRes
 import dev.celitracker.data.Depot
+import dev.celitracker.data.SaisieInvalide
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.NiveauUtilisation
 import dev.celitracker.engine.Transaction
@@ -94,8 +98,8 @@ class JournalViewModel(
             }
             try {
                 if (formulaire.estNouvelle) depot.ajouterTransaction(transaction) else depot.modifierTransaction(transaction)
-            } catch (e: IllegalArgumentException) {
-                _uiState.update { it.copy(formulaire = it.formulaire?.copy(erreur = e.message)) }
+            } catch (e: SaisieInvalide) {
+                _uiState.update { it.copy(formulaire = it.formulaire?.copy(erreur = texte(e.raison.texteRes()))) }
                 return@launch
             }
             recharger(message = messageApres(date.year))
@@ -106,28 +110,25 @@ class JournalViewModel(
      * Texte a confirmer si ce depot porterait l'utilisation de l'annee a 95 % ou
      * au-dela. Un retrait n'en demande jamais: il ne consomme pas de droits.
      */
-    private suspend fun avertissementAvant(transaction: Transaction): String? {
+    private suspend fun avertissementAvant(transaction: Transaction): TexteUi? {
         if (transaction.type != TypeTx.DEPOT) return null
         val autres = depot.transactions().filter { it.id != transaction.id }
         val apres = utilisation(autres, transaction.date.year)?.avecDepot(transaction.montant) ?: return null
         val annee = transaction.date.year
         return when (apres.niveau) {
-            NiveauUtilisation.DEPASSE ->
-                "Ce dépôt dépasse tes droits $compte de $annee de ${apres.excedent.formatMontant()}. " +
-                    "L'ARC impose 1 % par mois sur l'excédent tant qu'il reste dans le compte."
+            NiveauUtilisation.DEPASSE -> texte(R.string.journal_avertissement_depassement, compte, annee, apres.excedent)
 
             NiveauUtilisation.CRITIQUE ->
-                "Ce dépôt porterait ton utilisation à ${apres.pourcentage} % de tes droits $compte de $annee. " +
-                    "Il te resterait ${apres.restant.formatMontant()}."
+                texte(R.string.journal_avertissement_critique, apres.pourcentage ?: 0, compte, annee, apres.restant)
 
             else -> null
         }
     }
 
-    private suspend fun messageApres(annee: Int): String {
+    private suspend fun messageApres(annee: Int): TexteUi {
         val courante = utilisation(depot.transactions(), annee)
-        if (courante == null || courante.niveau == NiveauUtilisation.NORMAL) return "Transaction enregistrée."
-        return "Transaction enregistrée. Tu as utilisé ${courante.pourcentage} % de tes droits $compte de $annee."
+        if (courante == null || courante.niveau == NiveauUtilisation.NORMAL) return texte(R.string.journal_enregistree)
+        return texte(R.string.journal_enregistree_utilisation, courante.pourcentage ?: 0, compte, annee)
     }
 
     private suspend fun utilisation(transactions: List<Transaction>, annee: Int): Utilisation? {
@@ -142,11 +143,11 @@ class JournalViewModel(
         val formulaire = _uiState.value.formulaire?.takeUnless { it.estNouvelle } ?: return
         viewModelScope.launch {
             depot.supprimerTransaction(formulaire.id)
-            recharger(message = "Transaction supprimée.")
+            recharger(message = texte(R.string.journal_supprimee))
         }
     }
 
-    private suspend fun recharger(message: String) {
+    private suspend fun recharger(message: TexteUi) {
         val transactions = transactionsDuCompte()
         _uiState.update { it.copy(transactions = transactions, formulaire = null, message = message) }
     }

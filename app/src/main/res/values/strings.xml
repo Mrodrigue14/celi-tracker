@@ -1,3 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Textes de l'application. Le francais est la langue par defaut: un appareil
+  regle dans une langue sans traduction affiche le francais. Chaque autre
+  langue vit dans values-xx/strings.xml, et lint refuse un texte sans
+  traduction.
+
+  Registre: tutoiement, phrases directes. Garder le meme ton en traduction.
+-->
 <resources>
     <string name="app_name">CELI Tracker</string>
+
+    <!-- Comptes et organismes -->
+    <string name="compte_celi">CELI</string>
+    <string name="compte_celiapp">CELIAPP</string>
+
+    <!-- Actions communes -->
+    <string name="action_ajouter">Ajouter</string>
+    <string name="action_annuler">Annuler</string>
+    <string name="action_choisir">Choisir</string>
+    <string name="action_confirmer">Confirmer</string>
+    <string name="action_enregistrer">Enregistrer</string>
+    <string name="action_enregistrer_quand_meme">Enregistrer quand même</string>
+    <string name="action_journal">Journal</string>
+    <string name="action_rejeter">Rejeter</string>
+    <string name="action_retour">Retour</string>
+    <string name="action_supprimer">Supprimer</string>
+    <string name="action_voir_detail">Voir le détail</string>
+    <string name="action_voir_transactions">Voir les transactions</string>
+    <string name="action_aller_a_annee">Aller à %1$d</string>
+
+    <!-- Onglets -->
+    <string name="onglet_accueil">Accueil</string>
+    <string name="onglet_journal">Journal</string>
+    <string name="onglet_reglages">Réglages</string>
+
+    <!-- Accueil -->
+    <string name="accueil_droits_restants">Droits restants</string>
+    <string name="accueil_cotise_en">Cotisé en %1$d</string>
+    <string name="accueil_plafond_annee">Plafond %1$d</string>
+    <string name="accueil_plafond_vie_restant">Plafond à vie restant</string>
+    <string name="accueil_report_recu">Report reçu</string>
+    <string name="accueil_echeance">Échéance</string>
+    <string name="accueil_sans_profil_titre">Commence par ton profil</string>
+    <string name="accueil_sans_profil_texte">Ton année de naissance suffit pour calculer tes droits CELI. Ajoute la date d\'ouverture de ton CELIAPP si tu en as un.</string>
+    <string name="accueil_sans_profil_action">Saisir mon profil</string>
+    <string name="accueil_sans_celiapp">Aucun compte ouvert. Ajoute sa date d\'ouverture dans les réglages pour suivre tes droits.</string>
+    <string name="accueil_ouvrir_reglages">Ouvrir les réglages</string>
+    <string name="alerte_plafond_non_confirme">Plafond de l\'année non confirmé : droits sous-estimés.</string>
+    <string name="alerte_sur_cotisation">Sur-cotisation : pénalité estimée %1$s.</string>
+    <string name="alerte_utilisation_attention">Tu as utilisé %1$d %% de tes droits de %2$d. Il te reste %3$s.</string>
+    <string name="alerte_utilisation_critique">Tu as utilisé %1$d %% de tes droits de %2$d. Il ne te reste que %3$s : vérifie avant ton prochain dépôt.</string>
+    <string name="alerte_utilisation_depassee">Tu dépasses tes droits de %1$d de %2$s. L\'ARC impose 1 %% par mois sur l\'excédent.</string>
+    <string name="anneau_pourcentage">%1$d %%</string>
+    <string name="anneau_utilise">utilisé</string>
+    <string name="anneau_description">%1$d %% des droits de l\'année utilisés</string>
+
+    <!-- Detail d'un compte -->
+    <string name="detail_titre_celi">Détail du CELI</string>
+    <string name="detail_titre_celiapp">Détail du CELIAPP</string>
+    <string name="detail_journal_celi">Journal du CELI</string>
+    <string name="detail_journal_celiapp">Journal du CELIAPP</string>
+    <string name="detail_droits_fin_annee">Droits en fin d\'année</string>
+    <string name="detail_plafond_vie_restant">Plafond à vie restant</string>
+    <string name="detail_annee_par_annee">Année par année</string>
+    <string name="detail_annee_en_cours">%1$d, en cours</string>
+    <string name="detail_droits_restants">Droits restants</string>
+    <string name="detail_droits_non_utilises">Droits non utilisés</string>
+    <string name="detail_plafond_annee">Plafond de l\'année</string>
+    <string name="detail_droits_premier_janvier">Droits au 1er janvier</string>
+    <string name="detail_depots">Dépôts</string>
+    <string name="detail_retraits">Retraits</string>
+    <string name="detail_report_recu">Report reçu</string>
+    <string name="detail_droits_annee">Droits de l\'année</string>
+    <string name="detail_report_transmis">Report transmis</string>
+    <string name="detail_plafond_non_confirme">Plafond de %1$d non confirmé : droits sous-estimés.</string>
+    <string name="graphique_barre">%1$d : %2$s</string>
+
+    <!-- Journal -->
+    <string name="journal_titre">Journal</string>
+    <string name="journal_vide_titre">Aucune transaction</string>
+    <string name="journal_vide_texte">Inscris tes dépôts et tes retraits ici. Les droits de cotisation se recalculent à partir d\'eux.</string>
+    <string name="journal_vide_action">Ajouter une transaction</string>
+    <string name="journal_nouvelle">Nouvelle transaction</string>
+    <string name="journal_modifier">Modifier la transaction</string>
+    <string name="journal_montant">Montant</string>
+    <string name="journal_date">Date</string>
+    <string name="type_depot">Dépôt</string>
+    <string name="type_retrait">Retrait</string>
+    <string name="journal_enregistree">Transaction enregistrée.</string>
+    <string name="journal_enregistree_utilisation">Transaction enregistrée. Tu as utilisé %1$d %% de tes droits %2$s de %3$d.</string>
+    <string name="journal_supprimee">Transaction supprimée.</string>
+    <string name="journal_avertissement_critique">Ce dépôt porterait ton utilisation à %1$d %% de tes droits %2$s de %3$d. Il te resterait %4$s.</string>
+    <string name="journal_avertissement_depassement">Ce dépôt dépasse tes droits %1$s de %2$d de %3$s. L\'ARC impose 1 %% par mois sur l\'excédent tant qu\'il reste dans le compte.</string>
+    <string name="saisie_montant_non_positif">Le montant doit être plus grand que zéro.</string>
+    <string name="saisie_profil_absent">Enregistre d\'abord ton profil dans les réglages.</string>
+    <string name="saisie_celi_avant_admissibilite">Cette date précède ton admissibilité au CELI.</string>
+    <string name="saisie_celiapp_non_ouvert">Ajoute d\'abord la date d\'ouverture de ton CELIAPP dans les réglages.</string>
+    <string name="saisie_celiapp_avant_ouverture">Cette date précède l\'ouverture de ton CELIAPP.</string>
+    <string name="saisie_transaction_introuvable">Cette transaction n\'existe plus.</string>
+
+    <!-- Champ de date -->
+    <string name="date_format_saisie">%1$s (AAAA-MM-JJ)</string>
+    <string name="date_retirer">Retirer la date</string>
+
+    <!-- Reglages -->
+    <string name="reglages_titre">Réglages</string>
+    <string name="reglages_profil">Profil</string>
+    <string name="reglages_annee_naissance">Année de naissance</string>
+    <string name="reglages_annee_naissance_aide">Elle détermine l\'année où tes droits CELI commencent.</string>
+    <string name="reglages_droits_depuis">Droits CELI depuis %1$d</string>
+    <string name="reglages_entre_naissance">Entre ton année de naissance</string>
+    <string name="reglages_admissibilite_regle">Calculé : l\'année de tes 18 ans, au plus tôt 2009.</string>
+    <string name="reglages_ouverture_celiapp">Ouverture du CELIAPP (facultatif)</string>
+    <string name="reglages_enregistrer_profil">Enregistrer le profil</string>
+    <string name="reglages_propose_arc">Proposé par l\'ARC</string>
+    <string name="reglages_propose_arc_aide">Lu sur le site de l\'ARC. Il n\'entre dans le calcul qu\'une fois confirmé.</string>
+    <string name="reglages_lecture_impossible">Lecture automatique impossible</string>
+    <string name="reglages_saisie_manuelle">Saisis le plafond à la main plus bas.</string>
+    <string name="reglages_source_plafonds">Source des plafonds</string>
+    <string name="reglages_page_arc">Page de l\'ARC</string>
+    <string name="reglages_derniere_lecture">Dernière lecture : %1$s</string>
+    <string name="reglages_jamais_lue">Jamais lue. L\'application vérifie une fois par mois, et seulement s\'il manque un plafond.</string>
+    <string name="reglages_tester_enregistrer">Tester et enregistrer</string>
+    <string name="reglages_verifier">Vérifier</string>
+    <string name="reglages_lecture_en_cours">Lecture en cours</string>
+    <string name="reglages_retablir_adresse">Rétablir l\'adresse d\'origine</string>
+    <string name="reglages_plafonds_celi">Plafonds CELI</string>
+    <string name="reglages_aucun_plafond">Aucun plafond enregistré. Sans plafond confirmé, les droits de l\'année restent à zéro plutôt que d\'être devinés.</string>
+    <string name="reglages_annee">Année</string>
+    <string name="reglages_montant">Montant</string>
+    <string name="reglages_ajouter_plafond">Ajouter le plafond</string>
+    <string name="reglages_masquer_anterieures">Masquer les années antérieures</string>
+    <plurals name="reglages_afficher_anterieures">
+        <item quantity="one">Afficher %1$d année antérieure (%2$d)</item>
+        <item quantity="other">Afficher %1$d années antérieures (%2$d à %3$d)</item>
+    </plurals>
+    <string name="reglages_plafond_propose_ligne">%1$d : %2$s</string>
+    <string name="reglages_sauvegarde">Sauvegarde</string>
+    <string name="reglages_sauvegarde_texte">Tes données sont copiées automatiquement vers ton compte Google et reprises lors d\'un transfert vers un nouveau téléphone. Le fichier JSON reste la copie que tu peux vérifier et ranger où tu veux.</string>
+    <string name="reglages_exporter">Exporter</string>
+    <string name="reglages_importer">Importer</string>
+    <string name="reglages_import_titre">Remplacer toutes les données ?</string>
+    <string name="reglages_import_texte">L\'import écrase le profil, les plafonds et le journal des transactions par le contenu du fichier. Ce n\'est pas une fusion.</string>
+    <string name="reglages_import_remplacer">Remplacer</string>
+
+    <!-- Messages des reglages -->
+    <string name="message_profil_enregistre">Profil enregistré.</string>
+    <string name="message_plafond_enregistre">Plafond enregistré.</string>
+    <string name="message_plafond_propose">Plafond %1$d proposé par l\'ARC, à confirmer.</string>
+    <string name="message_arc_rien_de_nouveau">Rien de nouveau sur le site de l\'ARC.</string>
+    <string name="message_plafond_confirme">Plafond %1$d confirmé.</string>
+    <string name="message_proposition_rejetee">Proposition %1$d rejetée.</string>
+    <string name="message_adresse_enregistree">Adresse vérifiée et enregistrée.</string>
+    <string name="message_adresse_refusee">%1$s L\'adresse précédente est conservée.</string>
+    <string name="message_donnees_exportees">Données exportées.</string>
+    <string name="message_export_impossible">Export impossible : le fichier n\'a pas pu être écrit.</string>
+    <string name="message_donnees_importees">Données importées.</string>
+    <string name="message_import_refuse">Import refusé : %1$s</string>
+    <string name="arc_echec_adresse_absente">Aucune adresse de page de l\'ARC enregistrée.</string>
+    <string name="arc_echec_injoignable">La page de l\'ARC est injoignable.</string>
+    <string name="arc_echec_forme">La page de l\'ARC ne donne plus le plafond sous la forme attendue.</string>
+    <string name="adresse_refus_hors_canada">L\'adresse doit être une page https de canada.ca.</string>
+    <string name="adresse_refus_injoignable">La page est injoignable.</string>
+    <string name="adresse_refus_sans_plafond">Cette page ne donne pas le plafond du CELI.</string>
+    <string name="import_version_inconnue">le fichier vient d\'une version inconnue de l\'application.</string>
+    <string name="import_json_malforme">le fichier n\'est pas un export valide.</string>
+    <string name="import_fichier_illisible">le fichier est illisible.</string>
 </resources>

@@ -4,6 +4,8 @@ package dev.celitracker.app.ui.reglages
 
 import dev.celitracker.app.DepotDeTest
 import dev.celitracker.app.MainDeTest
+import dev.celitracker.app.R
+import dev.celitracker.app.ui.texte.texte
 import dev.celitracker.data.URL_PAGE_ARC_PAR_DEFAUT
 import dev.celitracker.engine.Profil
 import dev.celitracker.engine.Reglages
@@ -50,7 +52,7 @@ class ReglagesViewModelTest {
         viewModel.enregistrerProfil()
         val etat = viewModel.uiState.first { it.message != null }
 
-        assertEquals("Profil enregistré.", etat.message)
+        assertEquals(texte(R.string.message_profil_enregistre), etat.message)
         val profil = depot.profil()
         assertEquals(1995, profil?.anneeNaissance)
         // Derivee de la naissance, jamais saisie.
@@ -127,7 +129,7 @@ class ReglagesViewModelTest {
 
         val etat = viewModel.uiState.first { it.erreurArc != null }
 
-        assertEquals("réseau indisponible", etat.erreurArc)
+        assertEquals(texte(R.string.arc_echec_injoignable), etat.erreurArc)
     }
 
     @Test
@@ -149,7 +151,7 @@ class ReglagesViewModelTest {
 
         viewModel.modifierUrlPageArc(autrePage)
         viewModel.enregistrerUrlPageArc()
-        viewModel.uiState.first { it.message?.startsWith("Adresse") == true }
+        viewModel.uiState.first { it.message?.id in setOf(R.string.message_adresse_enregistree, R.string.message_adresse_refusee) }
 
         assertEquals(autrePage, depot.reglages().urlPageArc)
     }
@@ -159,15 +161,15 @@ class ReglagesViewModelTest {
         val viewModel = ReglagesViewModel(depot, horsLigne)
         viewModel.modifierAnneeNaissance("1995")
         viewModel.enregistrerProfil()
-        viewModel.uiState.first { it.message == "Profil enregistré." }
+        viewModel.uiState.first { it.message == texte(R.string.message_profil_enregistre) }
 
         var exporte = ""
         viewModel.exporter { exporte = it }
-        viewModel.uiState.first { it.message == "Données exportées." }
+        viewModel.uiState.first { it.message == texte(R.string.message_donnees_exportees) }
 
         fixture.depot.enregistrerProfil(Profil(anneeNaissance = 1980, dateOuvertureCeliapp = null))
         viewModel.importer { exporte }
-        viewModel.uiState.first { it.message == "Données importées." }
+        viewModel.uiState.first { it.message == texte(R.string.message_donnees_importees) }
 
         assertEquals(1995, depot.profil()?.anneeNaissance)
     }
@@ -177,12 +179,12 @@ class ReglagesViewModelTest {
         val viewModel = ReglagesViewModel(depot, horsLigne)
         viewModel.modifierAnneeNaissance("1995")
         viewModel.enregistrerProfil()
-        viewModel.uiState.first { it.message == "Profil enregistré." }
+        viewModel.uiState.first { it.message == texte(R.string.message_profil_enregistre) }
 
         viewModel.importer { "ceci n'est pas du JSON" }
-        val etat = viewModel.uiState.first { it.message?.startsWith("Import refusé") == true }
+        val etat = viewModel.uiState.first { it.message?.id == R.string.message_import_refuse }
 
-        assertTrue(etat.message!!.startsWith("Import refusé"))
+        assertEquals(texte(R.string.message_import_refuse, texte(R.string.import_json_malforme)), etat.message)
         assertEquals(1995, depot.profil()?.anneeNaissance)
     }
 
@@ -213,7 +215,7 @@ class ReglagesViewModelTest {
         val viewModel = ReglagesViewModel(depot, pageArc)
 
         viewModel.retablirUrlPageArc()
-        viewModel.uiState.first { it.message?.startsWith("Adresse") == true }
+        viewModel.uiState.first { it.message?.id in setOf(R.string.message_adresse_enregistree, R.string.message_adresse_refusee) }
 
         assertEquals(URL_PAGE_ARC_PAR_DEFAUT, depot.reglages().urlPageArc)
     }

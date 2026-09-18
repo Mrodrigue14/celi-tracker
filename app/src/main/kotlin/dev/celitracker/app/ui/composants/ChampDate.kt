@@ -22,7 +22,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import dev.celitracker.app.R
 import dev.celitracker.app.ui.format.formatDate
 import java.time.Instant
 import java.time.LocalDate
@@ -55,7 +57,7 @@ fun ChampDate(
         OutlinedTextField(
             value = date,
             onValueChange = onDate,
-            label = { Text("$etiquette (AAAA-MM-JJ)") },
+            label = { Text(stringResource(R.string.date_format_saisie, etiquette)) },
             isError = estErreur,
             singleLine = true,
             modifier = modifier.fillMaxWidth(),
@@ -74,7 +76,7 @@ fun ChampDate(
             trailingIcon = if (croix) {
                 {
                     IconButton(onClick = { onDate("") }) {
-                        Icon(Icons.Filled.Clear, contentDescription = "Retirer la date")
+                        Icon(Icons.Filled.Clear, contentDescription = stringResource(R.string.date_retirer))
                     }
                 }
             } else {
@@ -121,10 +123,10 @@ private fun Calendrier(dateInitiale: LocalDate?, onChoisie: (LocalDate) -> Unit,
                 },
                 enabled = etat.selectedDateMillis != null,
             ) {
-                Text("Choisir")
+                Text(stringResource(R.string.action_choisir))
             }
         },
-        dismissButton = { TextButton(onClick = onFermer) { Text("Annuler") } },
+        dismissButton = { TextButton(onClick = onFermer) { Text(stringResource(R.string.action_annuler)) } },
     ) {
         DatePicker(state = etat)
     }

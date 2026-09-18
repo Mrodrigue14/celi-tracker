@@ -26,11 +26,13 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import dev.celitracker.app.R
 import dev.celitracker.app.ui.format.formatMontant
 import dev.celitracker.app.ui.theme.chiffres
 import java.math.BigDecimal
@@ -53,7 +55,7 @@ fun GraphiqueAnnees(
     val maximum = valeurs.maxOf { it.second }.takeIf { it.signum() > 0 } ?: BigDecimal.ONE
     val attenuee = couleur.copy(alpha = 0.35f)
     val pas = if (valeurs.size <= BARRES_TOUTES_ETIQUETEES) 1 else 2
-    val resume = valeurs.joinToString { (annee, montant) -> "$annee : ${montant.formatMontant()}" }
+    val resume = valeurs.map { (annee, montant) -> stringResource(R.string.graphique_barre, annee, montant.formatMontant()) }.joinToString()
 
     Column(modifier = modifier.semantics { contentDescription = resume }) {
         Box {
@@ -80,12 +82,14 @@ fun GraphiqueAnnees(
             if (onClicAnnee != null) {
                 Row(modifier = Modifier.matchParentSize()) {
                     valeurs.forEach { (annee, montant) ->
+                        val allerA = stringResource(R.string.action_aller_a_annee, annee)
+                        val description = stringResource(R.string.graphique_barre, annee, montant.formatMontant())
                         Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight()
-                                .clickable(onClickLabel = "Aller à $annee") { onClicAnnee(annee) }
-                                .semantics { contentDescription = "$annee : ${montant.formatMontant()}" },
+                                .clickable(onClickLabel = allerA) { onClicAnnee(annee) }
+                                .semantics { contentDescription = description },
                         )
                     }
                 }
@@ -133,7 +137,7 @@ fun CarteAnnee(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    if (enCours) "$annee, en cours" else annee.toString(),
+                    if (enCours) stringResource(R.string.detail_annee_en_cours, annee) else annee.toString(),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -148,7 +152,7 @@ fun CarteAnnee(
         onVoirTransactions?.let { voir ->
             TextButton(onClick = voir, modifier = Modifier.align(Alignment.End)) {
                 Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null, modifier = Modifier.size(18.dp))
-                Text("Voir les transactions", modifier = Modifier.padding(start = 8.dp))
+                Text(stringResource(R.string.action_voir_transactions), modifier = Modifier.padding(start = 8.dp))
             }
         }
     }

@@ -115,14 +115,12 @@ suspend fun Depot.exporterJson(): String {
 suspend fun Depot.importerJson(contenu: String) {
     val donnees = try {
         val version = json.parseToJsonElement(contenu).jsonObject["version"]?.jsonPrimitive?.intOrNull
-        require(version in VERSIONS_ACCEPTEES) {
-            "Version d'export non prise en charge : $version. Versions acceptees : ${VERSIONS_ACCEPTEES.sorted().joinToString()}."
-        }
+        if (version !in VERSIONS_ACCEPTEES) throw ImportInvalide(RaisonImport.VERSION_INCONNUE)
         json.decodeFromString(ExportDonnees.serializer(), contenu)
-    } catch (e: IllegalArgumentException) {
+    } catch (e: ImportInvalide) {
         throw e
     } catch (e: Exception) {
-        throw IllegalArgumentException("JSON malforme : ${e.message}", e)
+        throw ImportInvalide(RaisonImport.JSON_MALFORME, e)
     }
 
     val profil = donnees.profil?.let {

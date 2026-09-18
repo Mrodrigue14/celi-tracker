@@ -22,11 +22,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.celitracker.app.CeliTrackerApplication
+import dev.celitracker.app.R
 import dev.celitracker.app.ui.composants.CarteAnnee
 import dev.celitracker.app.ui.composants.GraphiqueAnnees
 import dev.celitracker.app.ui.format.formatMontant
@@ -48,15 +50,15 @@ fun DetailCeliScreen(onRetour: () -> Unit, onOuvrirJournal: () -> Unit, onVoirTr
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Détail du CELI") },
+                title = { Text(stringResource(R.string.detail_titre_celi)) },
                 navigationIcon = {
                     IconButton(onClick = onRetour) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_retour))
                     }
                 },
                 actions = {
                     IconButton(onClick = onOuvrirJournal) {
-                        Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = "Journal du CELI")
+                        Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = stringResource(R.string.detail_journal_celi))
                     }
                 },
             )
@@ -91,7 +93,7 @@ fun DetailCeliContenu(etat: DetailCeliUiState, modifier: Modifier = Modifier, on
     ) {
         if (etat.lignes.isNotEmpty()) {
             item(key = "evolution") {
-                TitreSection("Droits en fin d'année")
+                TitreSection(stringResource(R.string.detail_droits_fin_annee))
                 GraphiqueAnnees(
                     valeurs = etat.lignes.map { it.annee to it.droitsFin },
                     couleur = MaterialTheme.colorScheme.primary,
@@ -99,7 +101,7 @@ fun DetailCeliContenu(etat: DetailCeliUiState, modifier: Modifier = Modifier, on
                     onClicAnnee = ::allerA,
                 )
             }
-            item(key = "titre-annees") { TitreSection("Année par année") }
+            item(key = "titre-annees") { TitreSection(stringResource(R.string.detail_annee_par_annee)) }
         }
         items(anneesAffichees, key = { it.annee }) { ligne ->
             CarteAnneeCeli(
@@ -120,17 +122,17 @@ private fun CarteAnneeCeli(ligne: DroitsAnnee, enCours: Boolean, onVoirTransacti
     CarteAnnee(
         annee = ligne.annee,
         montant = ligne.droitsFin.formatMontant(),
-        libelleMontant = if (enCours) "Droits restants" else "Droits en fin d'année",
+        libelleMontant = if (enCours) stringResource(R.string.detail_droits_restants) else stringResource(R.string.detail_droits_fin_annee),
         enCours = enCours,
         onVoirTransactions = onVoirTransactions,
         tuiles = listOf(
-            ligne.plafond.formatMontant() to "Plafond de l'année",
-            ligne.droitsDebut.formatMontant() to "Droits au 1er janvier",
-            ligne.depots.formatMontant() to "Dépôts",
-            ligne.retraits.formatMontant() to "Retraits",
+            ligne.plafond.formatMontant() to stringResource(R.string.detail_plafond_annee),
+            ligne.droitsDebut.formatMontant() to stringResource(R.string.detail_droits_premier_janvier),
+            ligne.depots.formatMontant() to stringResource(R.string.detail_depots),
+            ligne.retraits.formatMontant() to stringResource(R.string.detail_retraits),
         ),
         // Un plafond absent est compte a zero: les droits sont sous-estimes, pas inventes.
-        note = if (ligne.plafondManquant) "Plafond de ${ligne.annee} non confirmé : droits sous-estimés." else null,
+        note = if (ligne.plafondManquant) stringResource(R.string.detail_plafond_non_confirme, ligne.annee) else null,
     )
 }
 

@@ -1,5 +1,6 @@
 package dev.celitracker.app.ui.journal
 
+import dev.celitracker.app.ui.texte.TexteUi
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.Transaction
 
@@ -9,5 +10,5 @@ data class JournalUiState(
     val anneeCiblee: Int? = null,
     val transactions: List<Transaction> = emptyList(),
     val formulaire: FormulaireTransaction? = null,
-    val message: String? = null,
+    val message: TexteUi? = null,
 )

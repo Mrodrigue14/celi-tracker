@@ -17,7 +17,7 @@ private const val TAILLE_MAX = 1_000_000
  */
 suspend fun telechargerPageArc(url: String): String = withContext(Dispatchers.IO) {
     val adresse = URI(url).toURL()
-    require(adresse.protocol == "https") { "Seules les adresses https sont acceptées." }
+    require(adresse.protocol == "https") { "https required" }
 
     val connexion = (adresse.openConnection() as HttpURLConnection).apply {
         connectTimeout = DELAI_MS
@@ -26,7 +26,7 @@ suspend fun telechargerPageArc(url: String): String = withContext(Dispatchers.IO
     }
     try {
         val code = connexion.responseCode
-        require(code == HttpURLConnection.HTTP_OK) { "La page de l'ARC a répondu $code." }
+        require(code == HttpURLConnection.HTTP_OK) { "HTTP $code" }
         connexion.inputStream.bufferedReader().use { lecteur ->
             // Lecture en boucle: un seul appel a read() rend ce qui est deja
             // arrive, pas la page entiere, et la phrase cherchee est au milieu.
