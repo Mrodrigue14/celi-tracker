@@ -58,8 +58,6 @@
     <!-- Detail d'un compte -->
     <string name="detail_titre_celi">Détail du CELI</string>
     <string name="detail_titre_celiapp">Détail du CELIAPP</string>
-    <string name="detail_journal_celi">Journal du CELI</string>
-    <string name="detail_journal_celiapp">Journal du CELIAPP</string>
     <string name="detail_droits_fin_annee">Droits en fin d\'année</string>
     <string name="detail_plafond_vie_restant">Plafond à vie restant</string>
     <string name="detail_annee_par_annee">Année par année</string>
@@ -166,4 +164,8 @@
     <string name="import_version_inconnue">le fichier vient d\'une version inconnue de l\'application.</string>
     <string name="import_json_malforme">le fichier n\'est pas un export valide.</string>
     <string name="import_fichier_illisible">le fichier est illisible.</string>
+    <string name="reglages_apparence">Apparence</string>
+    <string name="theme_systeme">Système</string>
+    <string name="theme_clair">Clair</string>
+    <string name="theme_sombre">Sombre</string>
 </resources>

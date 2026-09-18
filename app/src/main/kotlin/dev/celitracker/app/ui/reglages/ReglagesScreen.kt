@@ -32,6 +32,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -60,6 +63,7 @@ import dev.celitracker.app.ui.composants.ChampDate
 import dev.celitracker.app.ui.format.formatDate
 import dev.celitracker.app.ui.format.formatMontant
 import dev.celitracker.app.ui.texte.resoudre
+import dev.celitracker.app.ui.theme.ModeTheme
 import dev.celitracker.app.ui.theme.chiffres
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.PlafondAnnuel
@@ -72,6 +76,7 @@ import java.time.ZoneId
 @Composable
 fun ReglagesScreen() {
     val application = LocalContext.current.applicationContext as CeliTrackerApplication
+    val modeTheme by application.preferenceTheme.mode.collectAsStateWithLifecycle()
     val viewModel: ReglagesViewModel = viewModel(factory = application.viewModelFactory)
     val etat by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
@@ -114,6 +119,8 @@ fun ReglagesScreen() {
             onConfirmerProposition = viewModel::confirmerProposition,
             onRejeterProposition = viewModel::rejeterProposition,
             onExporter = { lanceurExport.launch(NOM_FICHIER_EXPORT) },
+            modeTheme = modeTheme,
+            onModeTheme = application.preferenceTheme::choisir,
             onImporter = { lanceurImport.launch(arrayOf(TYPE_JSON)) },
         )
     }
@@ -173,6 +180,8 @@ fun ReglagesContenu(
     onConfirmerProposition: (PlafondAnnuel) -> Unit,
     onRejeterProposition: (PlafondAnnuel) -> Unit,
     onExporter: () -> Unit,
+    modeTheme: ModeTheme,
+    onModeTheme: (ModeTheme) -> Unit,
     onImporter: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -212,6 +221,10 @@ fun ReglagesContenu(
         ) {
             Text(stringResource(R.string.reglages_enregistrer_profil))
         }
+
+        HorizontalDivider(modifier = Modifier.padding(top = 32.dp))
+
+        Apparence(mode = modeTheme, onChoisir = onModeTheme)
 
         HorizontalDivider(modifier = Modifier.padding(top = 32.dp))
 
@@ -312,6 +325,32 @@ fun ReglagesContenu(
         HorizontalDivider(modifier = Modifier.padding(top = 32.dp))
 
         SauvegardeEtRecuperation(onExporter = onExporter, onImporter = onImporter)
+    }
+}
+
+/** Le choix est garde sur l'appareil: pas besoin de le refaire a chaque ouverture. */
+@Composable
+private fun Apparence(mode: ModeTheme, onChoisir: (ModeTheme) -> Unit) {
+    TitreSection(stringResource(R.string.reglages_apparence))
+    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+        ModeTheme.entries.forEachIndexed { index, choix ->
+            SegmentedButton(
+                selected = mode == choix,
+                onClick = { onChoisir(choix) },
+                shape = SegmentedButtonDefaults.itemShape(index, ModeTheme.entries.size),
+                colors = SegmentedButtonDefaults.colors(activeContainerColor = MaterialTheme.colorScheme.primaryContainer),
+            ) {
+                Text(
+                    stringResource(
+                        when (choix) {
+                            ModeTheme.SYSTEME -> R.string.theme_systeme
+                            ModeTheme.CLAIR -> R.string.theme_clair
+                            ModeTheme.SOMBRE -> R.string.theme_sombre
+                        },
+                    ),
+                )
+            }
+        }
     }
 }
 
@@ -521,5 +560,7 @@ private fun ReglagesContenuApercu() {
         onRejeterProposition = {},
         onExporter = {},
         onImporter = {},
+        modeTheme = ModeTheme.SYSTEME,
+        onModeTheme = {},
     )
 }

@@ -17,6 +17,7 @@ import dev.celitracker.app.ui.navigation.ARG_ANNEE
 import dev.celitracker.app.ui.navigation.ARG_COMPTE
 import dev.celitracker.app.ui.navigation.AUCUNE_ANNEE
 import dev.celitracker.app.ui.reglages.ReglagesViewModel
+import dev.celitracker.app.ui.theme.PreferenceTheme
 import dev.celitracker.data.CeliTrackerBase
 import dev.celitracker.data.Depot
 import dev.celitracker.data.configurerBase
@@ -35,8 +36,12 @@ class CeliTrackerApplication : Application() {
     lateinit var viewModelFactory: ViewModelProvider.Factory
         private set
 
+    lateinit var preferenceTheme: PreferenceTheme
+        private set
+
     override fun onCreate() {
         super.onCreate()
+        preferenceTheme = PreferenceTheme(this)
         val builder = Room.databaseBuilder(this, CeliTrackerBase::class.java, File(filesDir, "celi-tracker.db").absolutePath)
             // TRUNCATE plutot que le WAL par defaut: la sauvegarde Android copie
             // le repertoire des bases, et des ecritures restees dans un `-wal`

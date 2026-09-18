@@ -82,10 +82,15 @@ private val Sombre = darkColorScheme(
     surfaceContainerHighest = Color(0xFF262C38),
 )
 
-/** Suit le theme du telephone, clair ou sombre, sans reglage dans l'application. */
+/** Suit le telephone par defaut; les reglages peuvent forcer le clair ou le sombre. */
 @Composable
-fun CeliTrackerTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = if (isSystemInDarkTheme()) Sombre else Clair, content = content)
+fun CeliTrackerTheme(mode: ModeTheme = ModeTheme.SYSTEME, content: @Composable () -> Unit) {
+    val sombre = when (mode) {
+        ModeTheme.SYSTEME -> isSystemInDarkTheme()
+        ModeTheme.CLAIR -> false
+        ModeTheme.SOMBRE -> true
+    }
+    MaterialTheme(colorScheme = if (sombre) Sombre else Clair, content = content)
 }
 
 /**
