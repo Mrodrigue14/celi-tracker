@@ -3,7 +3,6 @@ package dev.celitracker.app.ui.composants
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -87,10 +86,12 @@ fun <T> ListeDetailAnnees(
     }
 
     if (deuxVolets) {
-        Row(modifier = modifier) {
-            graphique(Modifier.weight(PART_VOLET_GRAPHIQUE).padding(start = 16.dp, end = 8.dp))
-            annees(Modifier.weight(1f - PART_VOLET_GRAPHIQUE))
-        }
+        DeuxVolets(
+            gauche = { graphique(it.padding(horizontal = 16.dp)) },
+            droite = annees,
+            modifier = modifier,
+            partGauche = PART_VOLET_GRAPHIQUE,
+        )
     } else {
         annees(modifier)
     }

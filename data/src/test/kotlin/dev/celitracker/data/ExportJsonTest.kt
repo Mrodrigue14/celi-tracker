@@ -164,4 +164,32 @@ class ExportJsonTest {
 
         assertEquals(premierExport, secondExport)
     }
+
+    /**
+     * A version 2 backup file as the app writes it today. Users keep these
+     * files; field names and stored values must survive any renaming in code.
+     */
+    private val exportVersion2 =
+        """{"version":2,"profil":{"anneeNaissance":2002,"dateOuvertureCeliapp":"2023-06-01"},""" +
+            """"plafonds":[{"compte":"CELI","annee":2026,"montant":"7000.00","confirme":true},""" +
+            """{"compte":"CELIAPP","annee":2026,"montant":"8000.00","confirme":false}],""" +
+            """"transactions":[{"id":1,"compte":"CELI","date":"2026-01-15","type":"DEPOT","montant":"1234.56"},""" +
+            """{"id":2,"compte":"CELIAPP","date":"2025-03-01","type":"RETRAIT","montant":"500.00"}],""" +
+            """"snapshotsArc":[{"id":1,"compte":"CELI","dateReference":"2026-01-01","droitsDeclares":"41800.00"}],""" +
+            """"reglages":{"urlPageArc":"https://example.org/arc","dateDerniereVerification":"2026-09-08T12:00:00Z"}}"""
+
+    @Test
+    fun `a version 2 backup imports and exports back byte for byte`() = runTest {
+        depotVierge.importerJson(exportVersion2)
+
+        assertEquals(Profil(anneeNaissance = 2002, dateOuvertureCeliapp = LocalDate.of(2023, 6, 1)), depotVierge.profil())
+        assertEquals(
+            listOf(
+                Transaction(Compte.CELI, LocalDate.of(2026, 1, 15), TypeTx.DEPOT, BigDecimal("1234.56"), id = 1),
+                Transaction(Compte.CELIAPP, LocalDate.of(2025, 3, 1), TypeTx.RETRAIT, BigDecimal("500.00"), id = 2),
+            ),
+            depotVierge.transactions().sortedBy { it.id },
+        )
+        assertEquals(exportVersion2, depotVierge.exporterJson())
+    }
 }

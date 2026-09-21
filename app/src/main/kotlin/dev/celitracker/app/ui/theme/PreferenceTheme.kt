@@ -12,6 +12,11 @@ enum class ModeTheme { SYSTEME, CLAIR, SOMBRE }
 private const val FICHIER = "affichage"
 private const val CLE_THEME = "theme"
 
+/** The value written to the preferences file; must not change once shipped. */
+internal fun ModeTheme.valeurEnregistree(): String = name
+
+internal fun modeThemeEnregistre(valeur: String?): ModeTheme = ModeTheme.entries.find { it.valeurEnregistree() == valeur } ?: ModeTheme.SYSTEME
+
 /**
  * Choix clair, sombre ou systeme, garde sur l'appareil. C'est une preference
  * d'affichage, pas une donnee financiere: elle vit hors de la base, donc hors
@@ -23,11 +28,7 @@ private const val CLE_THEME = "theme"
 class PreferenceTheme(private val contexte: Context) {
     private val preferences = contexte.getSharedPreferences(FICHIER, Context.MODE_PRIVATE)
 
-    private val _mode = MutableStateFlow(
-        preferences.getString(CLE_THEME, null)
-            ?.let { enregistre -> ModeTheme.entries.find { it.name == enregistre } }
-            ?: ModeTheme.SYSTEME,
-    )
+    private val _mode = MutableStateFlow(modeThemeEnregistre(preferences.getString(CLE_THEME, null)))
     val mode: StateFlow<ModeTheme> = _mode.asStateFlow()
 
     init {
@@ -35,7 +36,7 @@ class PreferenceTheme(private val contexte: Context) {
     }
 
     fun choisir(nouveau: ModeTheme) {
-        preferences.edit().putString(CLE_THEME, nouveau.name).apply()
+        preferences.edit().putString(CLE_THEME, nouveau.valeurEnregistree()).apply()
         _mode.value = nouveau
         appliquerAuSysteme(nouveau)
     }

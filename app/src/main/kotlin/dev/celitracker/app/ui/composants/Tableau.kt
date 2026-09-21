@@ -19,9 +19,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -34,6 +39,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.celitracker.app.R
 import dev.celitracker.app.ui.theme.chiffres
@@ -168,6 +174,74 @@ fun ContenuLargeurLimitee(modifier: Modifier = Modifier, contenu: @Composable Bo
     val largeurMax = if (ecranLarge()) LARGEUR_MAX_DEUX_VOLETS else LARGEUR_MAX_UN_VOLET
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
         Box(modifier = Modifier.widthIn(max = largeurMax).fillMaxSize(), content = contenu)
+    }
+}
+
+/**
+ * Les deux volets d'un ecran large, separes par un filet. Chaque ecran decide
+ * lui-meme de sa mise en page en un seul volet: elles n'ont rien en commun.
+ */
+@Composable
+fun DeuxVolets(
+    gauche: @Composable (Modifier) -> Unit,
+    droite: @Composable (Modifier) -> Unit,
+    modifier: Modifier = Modifier,
+    partGauche: Float = 0.5f,
+) {
+    Row(modifier = modifier.fillMaxSize()) {
+        gauche(Modifier.weight(partGauche))
+        VerticalDivider()
+        droite(Modifier.weight(1f - partGauche))
+    }
+}
+
+/** Un ecran ou un volet sans contenu: ce qui manque et, s'il y a lieu, le geste pour y remedier. */
+@Composable
+fun EtatVide(
+    icone: ImageVector,
+    texte: String,
+    modifier: Modifier = Modifier,
+    titre: String? = null,
+    libelleAction: String? = null,
+    onAction: () -> Unit = {},
+    fond: Color = MaterialTheme.colorScheme.surfaceVariant,
+    teinte: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        PastilleCompte(icone = icone, fond = fond, teinte = teinte)
+        titre?.let { Text(it, style = MaterialTheme.typography.titleLarge) }
+        Text(texte, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+        libelleAction?.let { Button(onClick = onAction, modifier = Modifier.padding(top = 12.dp)) { Text(it) } }
+    }
+}
+
+/** Un choix exclusif parmi quelques options, en boutons segmentes pleine largeur. */
+@Composable
+fun <T> ChoixSegmente(
+    options: List<T>,
+    selection: T,
+    onChoisir: (T) -> Unit,
+    libelle: @Composable (T) -> String,
+    modifier: Modifier = Modifier,
+    couleurActive: @Composable (T) -> Color = { MaterialTheme.colorScheme.secondaryContainer },
+) {
+    SingleChoiceSegmentedButtonRow(modifier = modifier.fillMaxWidth()) {
+        options.forEachIndexed { index, option ->
+            SegmentedButton(
+                selected = option == selection,
+                onClick = { if (option != selection) onChoisir(option) },
+                shape = SegmentedButtonDefaults.itemShape(index, options.size),
+                colors = SegmentedButtonDefaults.colors(activeContainerColor = couleurActive(option)),
+            ) {
+                Text(libelle(option))
+            }
+        }
     }
 }
 
