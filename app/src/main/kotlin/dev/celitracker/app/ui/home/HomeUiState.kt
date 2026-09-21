@@ -1,11 +1,15 @@
 package dev.celitracker.app.ui.home
 
+import dev.celitracker.engine.CraSnapshot
 import dev.celitracker.engine.FhsaEngine
 import dev.celitracker.engine.FhsaYear
 import dev.celitracker.engine.MonthlyExcess
 import dev.celitracker.engine.Profile
+import dev.celitracker.engine.SnapshotComparison
 import dev.celitracker.engine.TfsaYear
 import dev.celitracker.engine.Usage
+import dev.celitracker.engine.fhsaSnapshotComparison
+import dev.celitracker.engine.tfsaSnapshotComparison
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -18,6 +22,7 @@ data class HomeUiState(
     val tfsaRoom: List<TfsaYear> = emptyList(),
     val fhsaRoom: List<FhsaYear> = emptyList(),
     val tfsaExcesses: List<MonthlyExcess> = emptyList(),
+    val craSnapshots: List<CraSnapshot> = emptyList(),
     /** False until the database has answered, or the empty home screen flashes on every open. */
     val loaded: Boolean = true,
 ) {
@@ -29,6 +34,10 @@ data class HomeUiState(
 
     val currentTfsaExcess: MonthlyExcess? get() =
         tfsaExcesses.find { it.year == currentYear && it.month == currentMonth }
+
+    val tfsaCraComparison: SnapshotComparison? get() = tfsaSnapshotComparison(craSnapshots, tfsaRoom)
+
+    val fhsaCraComparison: SnapshotComparison? get() = fhsaSnapshotComparison(craSnapshots, fhsaRoom)
 
     val fhsaParticipationDeadline: LocalDate? get() = profile?.let(FhsaEngine::participationPeriodEnd)
 

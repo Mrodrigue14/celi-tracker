@@ -6,10 +6,12 @@ import dev.celitracker.app.TestMainDispatcher
 import dev.celitracker.app.TestRepository
 import dev.celitracker.engine.Account
 import dev.celitracker.engine.AnnualLimit
+import dev.celitracker.engine.CraSnapshot
 import dev.celitracker.engine.Profile
 import dev.celitracker.engine.TfsaEngine
 import dev.celitracker.engine.Transaction
 import dev.celitracker.engine.TransactionType
+import dev.celitracker.engine.UNSAVED_ID
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeAll
@@ -63,5 +65,18 @@ class HomeViewModelTest {
             currentYear,
         ).last()
         assertEquals(expected, state.tfsaCurrentYear)
+    }
+
+    @Test
+    fun `a saved CRA figure is compared with the room calculated from the database`() = runTest {
+        repository.saveProfile(Profile(birthYear = 1990, fhsaOpeningDate = null))
+        (2009..currentYear).forEach { repository.saveLimit(AnnualLimit(Account.TFSA, it, BigDecimal("7000.00"), confirmed = true)) }
+        val calculatedRoom = BigDecimal(7000 * (currentYear - 2008))
+        repository.saveCraSnapshot(CraSnapshot(UNSAVED_ID, Account.TFSA, LocalDate.of(currentYear, 1, 1), calculatedRoom - BigDecimal(100)))
+
+        val viewModel = HomeViewModel(repository).also { it.load() }
+        val state = viewModel.uiState.first { it.hasProfile }
+
+        assertEquals(BigDecimal("-100.00"), state.tfsaCraComparison?.difference)
     }
 }

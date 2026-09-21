@@ -1,8 +1,11 @@
 package dev.celitracker.app.ui.settings
 
 import dev.celitracker.app.ui.format.toEnteredAmount
+import dev.celitracker.app.ui.format.toEnteredRoom
 import dev.celitracker.app.ui.text.UiText
+import dev.celitracker.engine.Account
 import dev.celitracker.engine.AnnualLimit
+import dev.celitracker.engine.CraSnapshot
 import dev.celitracker.engine.Profile
 import java.math.BigDecimal
 import java.time.Instant
@@ -17,6 +20,10 @@ data class SettingsUiState(
     val limits: List<AnnualLimit> = emptyList(),
     val newLimitYear: String = "",
     val newLimitAmount: String = "",
+    val snapshots: List<CraSnapshot> = emptyList(),
+    val snapshotAccount: Account = Account.TFSA,
+    val snapshotDate: String = "",
+    val snapshotAmount: String = "",
     val craPageUrl: String = "",
     val lastCraCheck: Instant? = null,
     val checkInProgress: Boolean = false,
@@ -52,4 +59,14 @@ data class SettingsUiState(
 
     val isNewLimitValid: Boolean get() =
         validNewLimitYear != null && validNewLimitAmount != null
+
+    /** A future date would stay the latest snapshot until a later one is entered. */
+    val validSnapshotDate: LocalDate? get() =
+        runCatching { LocalDate.parse(snapshotDate) }.getOrNull()?.takeIf { !it.isAfter(LocalDate.now()) }
+
+    val invalidSnapshotDate: Boolean get() = snapshotDate.isNotBlank() && validSnapshotDate == null
+
+    val validSnapshotAmount: BigDecimal? get() = snapshotAmount.toEnteredRoom()
+
+    val isNewSnapshotValid: Boolean get() = validSnapshotDate != null && validSnapshotAmount != null
 }

@@ -1,5 +1,7 @@
 package dev.celitracker.app.ui.home
 
+import dev.celitracker.engine.Account
+import dev.celitracker.engine.CraSnapshot
 import dev.celitracker.engine.FhsaYear
 import dev.celitracker.engine.MonthlyExcess
 import dev.celitracker.engine.Profile
@@ -94,6 +96,20 @@ class HomeUiStateTest {
         val state = HomeUiState(profile = profile, currentYear = 2026, currentMonth = 9, tfsaRoom = listOf(row))
 
         assertNull(state.tfsaUsage)
+    }
+
+    @Test
+    fun `the CRA comparison uses the room of the snapshot's year and never mixes accounts`() {
+        val state = HomeUiState(
+            profile = profile,
+            currentYear = 2026,
+            currentMonth = 9,
+            tfsaRoom = listOf(tfsaRow(2025), tfsaRow(2026)),
+            craSnapshots = listOf(CraSnapshot(1, Account.TFSA, LocalDate.of(2026, 1, 1), BigDecimal("6900.00"))),
+        )
+
+        assertEquals(BigDecimal("-100.00"), state.tfsaCraComparison?.difference)
+        assertNull(state.fhsaCraComparison)
     }
 
     private fun tfsaRow(year: Int) = TfsaYear(

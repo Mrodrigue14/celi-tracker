@@ -68,6 +68,17 @@ class RepositoryTest {
     }
 
     @Test
+    fun `deleting a cra snapshot removes only that one`() = runTest {
+        repository.saveCraSnapshot(CraSnapshot(0, Account.TFSA, LocalDate.of(2026, 1, 1), BigDecimal("100.00")))
+        repository.saveCraSnapshot(CraSnapshot(0, Account.FHSA, LocalDate.of(2026, 2, 1), BigDecimal("200.00")))
+        val toDelete = repository.craSnapshots().first { it.account == Account.TFSA }
+
+        repository.deleteCraSnapshot(toDelete.id)
+
+        assertEquals(listOf(Account.FHSA), repository.craSnapshots().map { it.account })
+    }
+
+    @Test
     fun `default settings then round trip`() = runTest {
         assertEquals(Settings(craPageUrl = DEFAULT_CRA_PAGE_URL, lastCheckDate = null), repository.settings())
 

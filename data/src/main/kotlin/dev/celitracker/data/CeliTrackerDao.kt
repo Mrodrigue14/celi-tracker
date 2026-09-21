@@ -47,6 +47,9 @@ interface CeliTrackerDao {
     @Insert
     suspend fun saveCraSnapshot(snapshot: CraSnapshotEntity)
 
+    @Query("DELETE FROM snapshots_arc WHERE id = :id")
+    suspend fun deleteCraSnapshot(id: Long)
+
     @Query("SELECT * FROM reglages WHERE id = 0")
     suspend fun settings(): SettingsEntity?
 

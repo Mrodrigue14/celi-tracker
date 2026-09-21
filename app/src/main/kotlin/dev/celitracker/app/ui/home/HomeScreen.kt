@@ -67,11 +67,13 @@ import dev.celitracker.app.ui.components.WidthLimitedContent
 import dev.celitracker.app.ui.components.isWideScreen
 import dev.celitracker.app.ui.format.formatAmount
 import dev.celitracker.app.ui.format.formatDate
+import dev.celitracker.app.ui.format.formatSignedAmount
 import dev.celitracker.app.ui.theme.tabularFigures
 import dev.celitracker.engine.Account
 import dev.celitracker.engine.FhsaYear
 import dev.celitracker.engine.MonthlyExcess
 import dev.celitracker.engine.Profile
+import dev.celitracker.engine.SnapshotComparison
 import dev.celitracker.engine.TfsaYear
 import dev.celitracker.engine.Usage
 import dev.celitracker.engine.UsageLevel
@@ -145,7 +147,7 @@ fun HomeContent(
             tiles = listOfNotNull(
                 state.tfsaCurrentYear?.let { it.deposits.formatAmount() to stringResource(R.string.home_contributed_in, state.currentYear) },
                 state.tfsaCurrentYear?.let { it.limit.formatAmount() to stringResource(R.string.home_year_limit, state.currentYear) },
-            ),
+            ) + craTiles(state.tfsaCraComparison),
             onClick = { onOpenDetail(Account.TFSA) },
             onAdd = { onAdd(Account.TFSA) },
             onOpenJournal = { onOpenJournal(Account.TFSA) },
@@ -181,7 +183,7 @@ fun HomeContent(
                     state.fhsaCurrentYear?.let { it.lifetimeLimitLeft.formatAmount() to stringResource(R.string.home_lifetime_limit_left) },
                     state.fhsaCurrentYear?.let { it.carryForwardIn.formatAmount() to stringResource(R.string.home_carry_forward_received) },
                     state.fhsaParticipationDeadline?.let { it.formatDate() to stringResource(R.string.home_deadline) },
-                ),
+                ) + craTiles(state.fhsaCraComparison),
                 onClick = { onOpenDetail(Account.FHSA) },
                 onAdd = { onAdd(Account.FHSA) },
                 onOpenJournal = { onOpenJournal(Account.FHSA) },
@@ -214,6 +216,16 @@ fun HomeContent(
             fhsaCard(Modifier.fillMaxWidth())
         }
     }
+}
+
+@Composable
+private fun craTiles(comparison: SnapshotComparison?): List<Pair<String, String>> {
+    if (comparison == null) return emptyList()
+    val snapshot = comparison.snapshot
+    return listOf(
+        snapshot.declaredRoom.formatAmount() to stringResource(R.string.home_cra_figure, snapshot.referenceDate.formatDate()),
+        comparison.difference.formatSignedAmount() to stringResource(R.string.home_cra_difference, snapshot.referenceDate.year),
+    )
 }
 
 @Composable
