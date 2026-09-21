@@ -9,16 +9,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 
 /*
- * Palette de l'application. Le bleu (confiance) porte le CELI et l'identite;
- * le vert-bleu porte le CELIAPP, pour que chaque compte se reconnaisse a sa
- * couleur. Le rouge est reserve aux alertes: l'utiliser ailleurs lui ferait
- * perdre son sens.
+ * Application palette. Blue (trust) carries the TFSA and the app identity;
+ * teal carries the FHSA, so each account is recognizable by its
+ * color. Red is reserved for alerts: using it elsewhere would make it
+ * lose its meaning.
  *
- * En sombre, la hauteur d'une surface se lit a sa clarte, pas a son ombre,
- * qui disparait sur un fond presque noir.
+ * In dark mode, a surface's elevation reads from its brightness, not from its shadow,
+ * which disappears against a near-black background.
  */
 
-private val Clair = lightColorScheme(
+private val LightColors = lightColorScheme(
     primary = Color(0xFF1E4FB8),
     onPrimary = Color(0xFFFFFFFF),
     primaryContainer = Color(0xFFDCE6FF),
@@ -50,7 +50,7 @@ private val Clair = lightColorScheme(
     surfaceContainerHighest = Color(0xFFE3E7F0),
 )
 
-private val Sombre = darkColorScheme(
+private val DarkColors = darkColorScheme(
     primary = Color(0xFFA9C2FF),
     onPrimary = Color(0xFF0A2A6B),
     primaryContainer = Color(0xFF1C3A80),
@@ -82,19 +82,19 @@ private val Sombre = darkColorScheme(
     surfaceContainerHighest = Color(0xFF262C38),
 )
 
-/** Suit le telephone par defaut; les reglages peuvent forcer le clair ou le sombre. */
+/** Follows the phone by default; settings can force light or dark mode. */
 @Composable
-fun CeliTrackerTheme(mode: ModeTheme = ModeTheme.SYSTEME, content: @Composable () -> Unit) {
-    val sombre = when (mode) {
-        ModeTheme.SYSTEME -> isSystemInDarkTheme()
-        ModeTheme.CLAIR -> false
-        ModeTheme.SOMBRE -> true
+fun CeliTrackerTheme(mode: ThemeMode = ThemeMode.SYSTEM, content: @Composable () -> Unit) {
+    val dark = when (mode) {
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
     }
-    MaterialTheme(colorScheme = if (sombre) Sombre else Clair, content = content)
+    MaterialTheme(colorScheme = if (dark) DarkColors else LightColors, content = content)
 }
 
 /**
- * Chiffres tabulaires de la police normale: les montants s'alignent d'une
- * ligne a l'autre sans l'aspect machine a ecrire d'une police a chasse fixe.
+ * Tabular figures from the regular typeface: amounts line up from one
+ * row to the next without the typewriter look of a monospace font.
  */
-fun TextStyle.chiffres(): TextStyle = copy(fontFeatureSettings = "tnum")
+fun TextStyle.tabularFigures(): TextStyle = copy(fontFeatureSettings = "tnum")

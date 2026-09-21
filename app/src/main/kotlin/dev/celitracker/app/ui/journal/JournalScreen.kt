@@ -62,23 +62,23 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.celitracker.app.CeliTrackerApplication
 import dev.celitracker.app.R
-import dev.celitracker.app.ui.composants.BandeauAlerte
-import dev.celitracker.app.ui.composants.ChampDate
-import dev.celitracker.app.ui.composants.ChampMontant
-import dev.celitracker.app.ui.composants.ChoixSegmente
-import dev.celitracker.app.ui.composants.ContenuLargeurLimitee
-import dev.celitracker.app.ui.composants.DeuxVolets
-import dev.celitracker.app.ui.composants.EtatVide
-import dev.celitracker.app.ui.composants.PastilleCompte
-import dev.celitracker.app.ui.composants.ecranLarge
+import dev.celitracker.app.ui.components.AlertBanner
+import dev.celitracker.app.ui.components.AmountField
+import dev.celitracker.app.ui.components.DateField
+import dev.celitracker.app.ui.components.EmptyState
+import dev.celitracker.app.ui.components.IconBadge
+import dev.celitracker.app.ui.components.SegmentedChoice
+import dev.celitracker.app.ui.components.TwoPanes
+import dev.celitracker.app.ui.components.WidthLimitedContent
+import dev.celitracker.app.ui.components.isWideScreen
+import dev.celitracker.app.ui.format.formatAmount
 import dev.celitracker.app.ui.format.formatDate
-import dev.celitracker.app.ui.format.formatMontant
-import dev.celitracker.app.ui.texte.libelle
-import dev.celitracker.app.ui.texte.resoudre
-import dev.celitracker.app.ui.theme.chiffres
-import dev.celitracker.engine.Compte
+import dev.celitracker.app.ui.text.label
+import dev.celitracker.app.ui.text.resolve
+import dev.celitracker.app.ui.theme.tabularFigures
+import dev.celitracker.engine.Account
 import dev.celitracker.engine.Transaction
-import dev.celitracker.engine.TypeTx
+import dev.celitracker.engine.TransactionType
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -87,66 +87,67 @@ import java.time.LocalDate
 fun JournalScreen() {
     val application = LocalContext.current.applicationContext as CeliTrackerApplication
     val viewModel: JournalViewModel = viewModel(factory = application.viewModelFactory)
-    val etat by viewModel.uiState.collectAsStateWithLifecycle()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
-    val liste = rememberLazyListState()
-    val deuxVolets = ecranLarge()
+    val list = rememberLazyListState()
+    val twoPanes = isWideScreen()
 
-    // Le message est un imperatif joue une fois, pas un etat durable: il part
-    // dans un snackbar et le ViewModel l'oublie ensuite.
-    val contexte = LocalContext.current
-    LaunchedEffect(etat.message) {
-        val message = etat.message ?: return@LaunchedEffect
-        snackbar.showSnackbar(message.resoudre(contexte))
-        viewModel.messageAffiche()
+    // The message is a one-shot imperative, not durable state: it goes
+    // into a snackbar and the ViewModel then forgets it.
+    val context = LocalContext.current
+    LaunchedEffect(state.message) {
+        val message = state.message ?: return@LaunchedEffect
+        snackbar.showSnackbar(message.resolve(context))
+        viewModel.messageShown()
     }
 
     Scaffold(
         topBar = {
             Column {
-                TopAppBar(title = { Text(stringResource(R.string.journal_titre)) })
-                ChoixCompte(
-                    compte = etat.compte,
-                    onChanger = viewModel::changerCompte,
+                TopAppBar(title = { Text(stringResource(R.string.journal_title)) })
+                AccountChoice(
+                    account = state.account,
+                    onChange = viewModel::changeAccount,
                     modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp),
                 )
             }
         },
         snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
-            // Journal vide: l'etat vide porte deja son propre bouton, un second
-            // ferait doublon. Le bouton flottant revient des la premiere transaction.
-            if (etat.transactions.isNotEmpty()) {
+            // Empty journal: the empty state already has its own button, a
+            // second one would be redundant. The floating button comes back
+            // as soon as there's a first transaction.
+            if (state.transactions.isNotEmpty()) {
                 ExtendedFloatingActionButton(
-                    text = { Text(stringResource(R.string.action_ajouter)) },
+                    text = { Text(stringResource(R.string.action_add)) },
                     icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                    onClick = viewModel::ouvrirNouvelle,
+                    onClick = viewModel::openNew,
                 )
             }
         },
     ) { innerPadding ->
-        ContenuLargeurLimitee(modifier = Modifier.padding(innerPadding)) {
-            val journal: @Composable (Modifier) -> Unit = { modifierJournal ->
-                JournalContenu(
-                    etat = etat,
-                    onOuvrirTransaction = viewModel::ouvrirModification,
-                    onAjouter = viewModel::ouvrirNouvelle,
-                    modifier = modifierJournal,
-                    liste = liste,
+        WidthLimitedContent(modifier = Modifier.padding(innerPadding)) {
+            val journal: @Composable (Modifier) -> Unit = { journalModifier ->
+                JournalContent(
+                    state = state,
+                    onOpenTransaction = viewModel::openEdit,
+                    onAdd = viewModel::openNew,
+                    modifier = journalModifier,
+                    list = list,
                 )
             }
-            if (deuxVolets) {
-                DeuxVolets(
-                    gauche = journal,
-                    droite = {
-                        VoletTransaction(
-                            formulaire = etat.formulaire,
-                            onDate = viewModel::modifierDate,
-                            onType = viewModel::modifierType,
-                            onMontant = viewModel::modifierMontant,
-                            onEnregistrer = viewModel::enregistrer,
-                            onSupprimer = viewModel::supprimer,
-                            onFermer = viewModel::fermerFormulaire,
+            if (twoPanes) {
+                TwoPanes(
+                    left = journal,
+                    right = {
+                        TransactionPane(
+                            form = state.form,
+                            onDate = viewModel::updateDate,
+                            onType = viewModel::updateType,
+                            onAmount = viewModel::updateAmount,
+                            onSave = viewModel::save,
+                            onDelete = viewModel::delete,
+                            onClose = viewModel::closeForm,
                             modifier = it,
                         )
                     },
@@ -157,96 +158,96 @@ fun JournalScreen() {
         }
     }
 
-    // Arrivee depuis le detail: on amene l'annee demandee en haut de la liste,
-    // une seule fois, des que ses transactions sont chargees.
-    LaunchedEffect(etat.anneeCiblee, etat.transactions) {
-        val annee = etat.anneeCiblee ?: return@LaunchedEffect
-        if (etat.transactions.isEmpty()) return@LaunchedEffect
-        val position = positionEnTete(etat.transactions, annee)
-        if (position >= 0) liste.scrollToItem(position)
-        viewModel.anneeCibleeAtteinte()
+    // Arriving from the detail screen: bring the requested year to the top
+    // of the list, once, as soon as its transactions are loaded.
+    LaunchedEffect(state.targetYear, state.transactions) {
+        val year = state.targetYear ?: return@LaunchedEffect
+        if (state.transactions.isEmpty()) return@LaunchedEffect
+        val position = headerPosition(state.transactions, year)
+        if (position >= 0) list.scrollToItem(position)
+        viewModel.targetYearReached()
     }
 
-    // En deux volets, le formulaire est deja a droite: une feuille modale
-    // par-dessus recouvrirait la liste pour rien.
-    if (!deuxVolets) {
-        etat.formulaire?.let { formulaire ->
-            FeuilleTransaction(
-                formulaire = formulaire,
-                onDate = viewModel::modifierDate,
-                onType = viewModel::modifierType,
-                onMontant = viewModel::modifierMontant,
-                onEnregistrer = viewModel::enregistrer,
-                onSupprimer = viewModel::supprimer,
-                onFermer = viewModel::fermerFormulaire,
+    // In two-pane mode, the form is already on the right: a modal sheet
+    // on top would cover the list for nothing.
+    if (!twoPanes) {
+        state.form?.let { form ->
+            TransactionSheet(
+                form = form,
+                onDate = viewModel::updateDate,
+                onType = viewModel::updateType,
+                onAmount = viewModel::updateAmount,
+                onSave = viewModel::save,
+                onDelete = viewModel::delete,
+                onClose = viewModel::closeForm,
             )
         }
     }
 }
 
-/** Les deux comptes a portee de pouce, au lieu d'un journal par ecran de detail. */
+/** Both accounts within thumb's reach, instead of a separate journal per detail screen. */
 @Composable
-private fun ChoixCompte(compte: Compte, onChanger: (Compte) -> Unit, modifier: Modifier = Modifier) {
-    ChoixSegmente(
-        options = Compte.entries,
-        selection = compte,
-        onChoisir = onChanger,
-        libelle = { it.libelle() },
+private fun AccountChoice(account: Account, onChange: (Account) -> Unit, modifier: Modifier = Modifier) {
+    SegmentedChoice(
+        options = Account.entries,
+        selection = account,
+        onChoose = onChange,
+        label = { it.label() },
         modifier = modifier,
-        // Chaque compte garde sa couleur, ici comme sur l'accueil.
-        couleurActive = {
-            if (it == Compte.CELI) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
+        // Each account keeps its color, here as on the home screen.
+        activeColor = {
+            if (it == Account.TFSA) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
         },
     )
 }
 
 @Composable
-fun JournalContenu(
-    etat: JournalUiState,
-    onOuvrirTransaction: (Transaction) -> Unit,
-    onAjouter: () -> Unit,
+fun JournalContent(
+    state: JournalUiState,
+    onOpenTransaction: (Transaction) -> Unit,
+    onAdd: () -> Unit,
     modifier: Modifier = Modifier,
-    liste: LazyListState = rememberLazyListState(),
+    list: LazyListState = rememberLazyListState(),
 ) {
-    if (etat.transactions.isEmpty()) {
-        EtatVide(
-            icone = Icons.AutoMirrored.Filled.List,
-            titre = stringResource(R.string.journal_vide_titre),
-            texte = stringResource(R.string.journal_vide_texte),
-            libelleAction = stringResource(R.string.journal_vide_action),
-            onAction = onAjouter,
+    if (state.transactions.isEmpty()) {
+        EmptyState(
+            icon = Icons.AutoMirrored.Filled.List,
+            title = stringResource(R.string.journal_empty_title),
+            text = stringResource(R.string.journal_empty_text),
+            actionLabel = stringResource(R.string.journal_empty_action),
+            onAction = onAdd,
             modifier = modifier,
         )
         return
     }
-    val parAnnee = remember(etat.transactions) { etat.transactions.groupBy { it.date.year } }
-    LazyColumn(modifier = modifier.fillMaxSize(), state = liste) {
-        parAnnee.forEach { (annee, transactions) ->
-            item(key = "annee-$annee") { EnTeteAnnee(annee) }
+    val byYear = remember(state.transactions) { state.transactions.groupBy { it.date.year } }
+    LazyColumn(modifier = modifier.fillMaxSize(), state = list) {
+        byYear.forEach { (year, transactions) ->
+            item(key = "year-$year") { YearHeader(year) }
             items(transactions, key = { it.id }) { transaction ->
-                LigneTransaction(transaction, onClick = { onOuvrirTransaction(transaction) })
+                TransactionRow(transaction, onClick = { onOpenTransaction(transaction) })
             }
         }
     }
 }
 
 /**
- * Position de l'en-tete de [annee] dans la liste: chaque annee occupe une ligne
- * d'en-tete puis une ligne par transaction, dans l'ordre d'affichage.
+ * Position of [year]'s header in the list: each year occupies one header
+ * row then one row per transaction, in display order.
  */
-internal fun positionEnTete(transactions: List<Transaction>, annee: Int): Int {
+internal fun headerPosition(transactions: List<Transaction>, year: Int): Int {
     var position = 0
-    transactions.groupBy { it.date.year }.forEach { (groupe, lignes) ->
-        if (groupe == annee) return position
-        position += 1 + lignes.size
+    transactions.groupBy { it.date.year }.forEach { (group, rows) ->
+        if (group == year) return position
+        position += 1 + rows.size
     }
     return -1
 }
 
 @Composable
-private fun EnTeteAnnee(annee: Int) {
+private fun YearHeader(year: Int) {
     Text(
-        annee.toString(),
+        year.toString(),
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp),
@@ -256,8 +257,8 @@ private fun EnTeteAnnee(annee: Int) {
 }
 
 @Composable
-private fun LigneTransaction(transaction: Transaction, onClick: () -> Unit) {
-    val depot = transaction.type == TypeTx.DEPOT
+private fun TransactionRow(transaction: Transaction, onClick: () -> Unit) {
+    val isDeposit = transaction.type == TransactionType.DEPOSIT
     Column(modifier = Modifier.clickable(onClick = onClick)) {
         Row(
             modifier = Modifier
@@ -267,29 +268,29 @@ private fun LigneTransaction(transaction: Transaction, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            PastilleCompte(
-                icone = if (depot) Icons.Filled.South else Icons.Filled.North,
-                fond = if (depot) {
+            IconBadge(
+                icon = if (isDeposit) Icons.Filled.South else Icons.Filled.North,
+                backgroundColor = if (isDeposit) {
                     MaterialTheme.colorScheme.primaryContainer
                 } else {
                     MaterialTheme.colorScheme.tertiaryContainer
                 },
-                teinte = if (depot) {
+                tint = if (isDeposit) {
                     MaterialTheme.colorScheme.onPrimaryContainer
                 } else {
                     MaterialTheme.colorScheme.onTertiaryContainer
                 },
-                description = if (depot) stringResource(R.string.type_depot) else stringResource(R.string.type_retrait),
+                description = if (isDeposit) stringResource(R.string.type_deposit) else stringResource(R.string.type_withdrawal),
             )
             Column(modifier = Modifier.weight(1f)) {
-                // Chiffres a chasse fixe: les montants s'alignent d'une ligne a
-                // l'autre, ce qui rend la colonne lisible d'un coup d'oeil.
+                // Tabular figures: amounts line up from one row to the next,
+                // making the column readable at a glance.
                 Text(
-                    transaction.montant.formatMontant(),
-                    style = MaterialTheme.typography.titleMedium.chiffres(),
+                    transaction.amount.formatAmount(),
+                    style = MaterialTheme.typography.titleMedium.tabularFigures(),
                 )
                 Text(
-                    if (depot) stringResource(R.string.type_depot) else stringResource(R.string.type_retrait),
+                    if (isDeposit) stringResource(R.string.type_deposit) else stringResource(R.string.type_withdrawal),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -306,19 +307,19 @@ private fun LigneTransaction(transaction: Transaction, onClick: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FeuilleTransaction(
-    formulaire: FormulaireTransaction,
+private fun TransactionSheet(
+    form: TransactionForm,
     onDate: (String) -> Unit,
-    onType: (TypeTx) -> Unit,
-    onMontant: (String) -> Unit,
-    onEnregistrer: () -> Unit,
-    onSupprimer: () -> Unit,
-    onFermer: () -> Unit,
+    onType: (TransactionType) -> Unit,
+    onAmount: (String) -> Unit,
+    onSave: () -> Unit,
+    onDelete: () -> Unit,
+    onClose: () -> Unit,
 ) {
-    // Ouverte a pleine hauteur: a moitie deployee, le bouton d'enregistrement
-    // tombait sous le bord de l'ecran.
+    // Opened at full height: half expanded, the save button fell below
+    // the edge of the screen.
     ModalBottomSheet(
-        onDismissRequest = onFermer,
+        onDismissRequest = onClose,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
         Column(
@@ -330,39 +331,39 @@ private fun FeuilleTransaction(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
-                if (formulaire.estNouvelle) stringResource(R.string.journal_nouvelle) else stringResource(R.string.journal_modifier),
+                if (form.isNew) stringResource(R.string.journal_new) else stringResource(R.string.journal_edit),
                 style = MaterialTheme.typography.titleLarge,
             )
-            ChampsTransaction(
-                formulaire = formulaire,
+            TransactionFields(
+                form = form,
                 onDate = onDate,
                 onType = onType,
-                onMontant = onMontant,
-                onEnregistrer = onEnregistrer,
-                onSupprimer = onSupprimer,
+                onAmount = onAmount,
+                onSave = onSave,
+                onDelete = onDelete,
             )
         }
     }
 }
 
 /**
- * Volet de droite des ecrans larges: le formulaire s'ouvre a cote de la liste,
- * qui reste lisible et cliquable pendant la saisie. Sans transaction ouverte,
- * le volet dit quoi faire plutot que de rester blanc.
+ * Right pane on wide screens: the form opens next to the list, which
+ * stays readable and clickable during input. With no transaction open,
+ * the pane says what to do instead of staying blank.
  */
 @Composable
-private fun VoletTransaction(
-    formulaire: FormulaireTransaction?,
+private fun TransactionPane(
+    form: TransactionForm?,
     onDate: (String) -> Unit,
-    onType: (TypeTx) -> Unit,
-    onMontant: (String) -> Unit,
-    onEnregistrer: () -> Unit,
-    onSupprimer: () -> Unit,
-    onFermer: () -> Unit,
+    onType: (TransactionType) -> Unit,
+    onAmount: (String) -> Unit,
+    onSave: () -> Unit,
+    onDelete: () -> Unit,
+    onClose: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (formulaire == null) {
-        EtatVide(icone = Icons.AutoMirrored.Filled.List, texte = stringResource(R.string.journal_volet_vide), modifier = modifier)
+    if (form == null) {
+        EmptyState(icon = Icons.AutoMirrored.Filled.List, text = stringResource(R.string.journal_pane_empty), modifier = modifier)
         return
     }
     Column(
@@ -371,93 +372,93 @@ private fun VoletTransaction(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp)
             .padding(top = 16.dp)
-            // Le bouton flottant « Ajouter » plane sur ce volet: de quoi faire
-            // remonter le dernier bouton au-dessus de lui.
+            // The floating "Add" button hovers over this pane: enough
+            // padding to lift the last button above it.
             .padding(bottom = 88.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                if (formulaire.estNouvelle) stringResource(R.string.journal_nouvelle) else stringResource(R.string.journal_modifier),
+                if (form.isNew) stringResource(R.string.journal_new) else stringResource(R.string.journal_edit),
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.titleLarge,
             )
-            IconButton(onClick = onFermer) {
-                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.action_annuler))
+            IconButton(onClick = onClose) {
+                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.action_cancel))
             }
         }
-        ChampsTransaction(
-            formulaire = formulaire,
+        TransactionFields(
+            form = form,
             onDate = onDate,
             onType = onType,
-            onMontant = onMontant,
-            onEnregistrer = onEnregistrer,
-            onSupprimer = onSupprimer,
+            onAmount = onAmount,
+            onSave = onSave,
+            onDelete = onDelete,
         )
     }
 }
 
-/** Les memes champs, que le formulaire s'ouvre en feuille ou dans un volet. */
+/** The same fields, whether the form opens in a sheet or in a pane. */
 @Composable
-private fun ChampsTransaction(
-    formulaire: FormulaireTransaction,
+private fun TransactionFields(
+    form: TransactionForm,
     onDate: (String) -> Unit,
-    onType: (TypeTx) -> Unit,
-    onMontant: (String) -> Unit,
-    onEnregistrer: () -> Unit,
-    onSupprimer: () -> Unit,
+    onType: (TransactionType) -> Unit,
+    onAmount: (String) -> Unit,
+    onSave: () -> Unit,
+    onDelete: () -> Unit,
 ) {
-    ChoixSegmente(
-        options = TypeTx.entries,
-        selection = formulaire.type,
-        onChoisir = onType,
-        libelle = { if (it == TypeTx.DEPOT) stringResource(R.string.type_depot) else stringResource(R.string.type_retrait) },
+    SegmentedChoice(
+        options = TransactionType.entries,
+        selection = form.type,
+        onChoose = onType,
+        label = { if (it == TransactionType.DEPOSIT) stringResource(R.string.type_deposit) else stringResource(R.string.type_withdrawal) },
     )
-    ChampMontant(
-        valeur = formulaire.montant,
-        onValeur = onMontant,
-        etiquette = stringResource(R.string.journal_montant),
-        estErreur = formulaire.montant.isNotEmpty() && formulaire.montantValide == null,
+    AmountField(
+        value = form.amount,
+        onValue = onAmount,
+        label = stringResource(R.string.journal_amount),
+        isError = form.amount.isNotEmpty() && form.validAmount == null,
         style = MaterialTheme.typography.headlineSmall,
         modifier = Modifier.fillMaxWidth(),
     )
-    ChampDate(date = formulaire.date, onDate = onDate, etiquette = stringResource(R.string.journal_date))
-    formulaire.avertissement?.let { BandeauAlerte(it.resoudre(), Icons.Filled.Warning) }
+    DateField(date = form.date, onDate = onDate, label = stringResource(R.string.journal_date))
+    form.warning?.let { AlertBanner(it.resolve(), Icons.Filled.Warning) }
     Button(
-        onClick = onEnregistrer,
-        enabled = formulaire.valide,
+        onClick = onSave,
+        enabled = form.valid,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Text(if (formulaire.avertissement == null) stringResource(R.string.action_enregistrer) else stringResource(R.string.action_enregistrer_quand_meme))
+        Text(if (form.warning == null) stringResource(R.string.action_save) else stringResource(R.string.action_save_anyway))
     }
-    formulaire.erreur?.let {
-        Text(it.resoudre(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+    form.error?.let {
+        Text(it.resolve(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
     }
-    if (!formulaire.estNouvelle) {
-        TextButton(onClick = onSupprimer, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.action_supprimer), color = MaterialTheme.colorScheme.error)
+    if (!form.isNew) {
+        TextButton(onClick = onDelete, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
         }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun JournalContenuApercu() {
-    JournalContenu(
-        etat = JournalUiState(
+private fun JournalContentPreview() {
+    JournalContent(
+        state = JournalUiState(
             transactions = listOf(
-                Transaction(Compte.CELI, LocalDate.of(2026, 3, 1), TypeTx.RETRAIT, BigDecimal("500.00"), id = 2),
-                Transaction(Compte.CELI, LocalDate.of(2026, 1, 15), TypeTx.DEPOT, BigDecimal("2000.00"), id = 1),
-                Transaction(Compte.CELI, LocalDate.of(2025, 11, 3), TypeTx.DEPOT, BigDecimal("1500.00"), id = 3),
+                Transaction(Account.TFSA, LocalDate.of(2026, 3, 1), TransactionType.WITHDRAWAL, BigDecimal("500.00"), id = 2),
+                Transaction(Account.TFSA, LocalDate.of(2026, 1, 15), TransactionType.DEPOSIT, BigDecimal("2000.00"), id = 1),
+                Transaction(Account.TFSA, LocalDate.of(2025, 11, 3), TransactionType.DEPOSIT, BigDecimal("1500.00"), id = 3),
             ),
         ),
-        onOuvrirTransaction = {},
-        onAjouter = {},
+        onOpenTransaction = {},
+        onAdd = {},
     )
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun JournalVideApercu() {
-    JournalContenu(etat = JournalUiState(), onOuvrirTransaction = {}, onAjouter = {})
+private fun JournalEmptyPreview() {
+    JournalContent(state = JournalUiState(), onOpenTransaction = {}, onAdd = {})
 }

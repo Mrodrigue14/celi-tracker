@@ -1,137 +1,150 @@
 # CLAUDE.md
 
-Guidance pour Claude Code (claude.ai/code) dans ce dépôt.
+Guidance for Claude Code (claude.ai/code) in this repository.
 
-## Projet
+## Project
 
-Application Android personnelle (Kotlin, Jetpack Compose, Room) de suivi des
-droits de cotisation CELI et CELIAPP. Remplace un classeur Excel. Utilisateur
-unique, aucun backend, aucune authentification.
+Personal Android app (Kotlin, Jetpack Compose, Room) that tracks TFSA and FHSA
+contribution room (CELI and CELIAPP in French). It replaces an Excel workbook.
+Single user, no backend, no authentication.
 
-Le design de référence est
-`docs/superpowers/specs/2026-09-07-suivi-celi-celiapp-design.md`. Lis-le avant
-toute modification du moteur de calcul.
+The reference design is
+`docs/superpowers/specs/2026-09-07-tfsa-fhsa-tracker-design.md`. Read it before
+changing the calculation engine.
 
-Le développement se fait sans Android Studio : JDK 21 + SDK Android installé par
-`sdkmanager` (`cmdline-tools`).
+Development happens without Android Studio: JDK 21 plus the Android SDK
+installed with `sdkmanager` (`cmdline-tools`).
 
-## Invariants — à ne pas casser
+## Language
 
-**1. Rien de calculé n'est stocké.** La base contient le profil, la table des
-plafonds et le journal des transactions. Rien d'autre. Les droits sont une
-fonction pure `(profil, plafonds, transactions triées par date) → droits`,
-recalculée à la lecture. Ajouter une table `droits_par_annee` ou mettre en cache
-un solde en base réintroduit exactement le bug du classeur Excel que ce projet
-corrige.
+Code, comments, test names, docs and commit messages are in English. The app
+ships English (`app/src/main/res/values/strings.xml`, the default) and French
+(`values-fr/strings.xml`). The README and PR descriptions are bilingual,
+English first.
 
-**1 bis. L'année d'admissibilité au CELI se calcule, elle ne se saisit pas.**
-`Profil.anneeAdmissibiliteCeli` est une propriété dérivée : l'année des 18 ans,
-jamais avant 2009. Elle suppose la résidence canadienne depuis cet âge, ce qui
-est le cas de l'unique utilisateur. La stocker en base ou la ressaisir dans
-l'interface ferait diverger deux sources pour le même fait.
+## Invariants: do not break
 
-**1 ter. Aucun texte visible en dur.** Tout texte affiché vit dans
-`app/src/main/res/values*/strings.xml`. `:engine` et `:data` ne renvoient jamais
-de phrase : ils renvoient des raisons typées (`RaisonSaisie`, `RaisonImport`,
-`RaisonEchecArc`, `RaisonRefusAdresse`), que `:app` traduit. Les ViewModels
-produisent des `TexteUi` (ressource et arguments), résolus dans la langue de
-l'appareil au moment de l'affichage. Un montant se formate toujours en dollars
-canadiens, quelle que soit la langue : seuls les séparateurs changent.
+**1. Nothing computed is stored.** The database holds the profile, the table of
+annual limits and the transaction journal. Nothing else. Contribution room is a
+pure function `(profile, limits, transactions sorted by date) -> room`,
+recomputed on read. Adding a `room_by_year` table or caching a balance in the
+database reintroduces exactly the Excel workbook bug this project fixes.
 
-**2. Deux moteurs séparés, CELI et CELIAPP.** Ne pas les fusionner en un moteur
-paramétré par un drapeau de type de compte. Les règles divergent partout :
+**1a. The TFSA eligibility year is computed, never entered.**
+`Profile.tfsaEligibilityYear` is a derived property: the year the user turns
+18, never before 2009. It assumes Canadian residence since that age, which is
+true for the only user. Storing it or asking for it again in the UI would give
+two sources for the same fact.
 
-| | CELI | CELIAPP |
+**1b. No hardcoded user-facing text.** Every displayed text lives in
+`app/src/main/res/values*/strings.xml`. `:engine` and `:data` never return a
+sentence: they return typed reasons (`InputRejectionReason`,
+`ImportFailureReason`, `CraFailureReason`, `AddressRejectionReason`) that `:app`
+translates. ViewModels produce `UiText` (resource plus arguments), resolved in
+the device language at display time. An amount is always formatted in Canadian
+dollars whatever the language: only the separators change.
+
+**1c. Stored names stay French.** Room table and column names, JSON backup
+field names, stored enum values (`CELI`, `CELIAPP`, `DEPOT`, `RETRAIT`) and the
+theme preference values (`SYSTEME`, `CLAIR`, `SOMBRE`) predate the move to
+English and are already on users' devices. They are spelled out explicitly
+(`@ColumnInfo`, `@SerialName`, `storedValue()`), so renaming Kotlin code never
+changes them. `SchemaV2CompatibilityTest`, `ExportJsonTest` and
+`ThemePreferenceTest` fail if they drift. Changing one of them needs a Room
+migration or an export version bump, never a silent rename.
+
+**2. Two separate engines, TFSA and FHSA.** Do not merge them into one engine
+driven by an account-type flag. The rules differ everywhere:
+
+| | TFSA | FHSA |
 |---|---|---|
-| Début de l'accumulation | 18 ans + résidence, même sans compte | à l'ouverture du compte |
-| Retrait | redonne des droits le 1er janvier suivant | ne redonne **jamais** de droits |
-| Plafond à vie | aucun | 40 000 $ |
-| Report des droits inutilisés | illimité, cumulatif | plafonné à 8 000 $, **non cumulatif** |
+| Room starts accruing | at 18 with residence, even without an account | when the account is opened |
+| Withdrawal | gives room back on the next January 1 | **never** gives room back |
+| Lifetime limit | none | $40,000 |
+| Unused room carry-forward | unlimited, cumulative | capped at $8,000, **not cumulative** |
 
-Le report CELIAPP est le piège du régime : il est plafonné à 8 000 $ *par année
-d'arrivée*, donc il ne s'accumule pas. Trois années sans cotiser ne donnent pas
-32 000 $ de droits — le plafond annuel se stabilise à 16 000 $. Écrire
-`report += reste` au lieu de `report = min(reste, 8000)` produit un chiffre
-faux et plausible.
+The FHSA carry-forward is the trap of the plan: it is capped at $8,000 *per
+year of arrival*, so it does not accumulate. Three years without contributing
+do not give $32,000 of room: the annual limit levels off at $16,000. Writing
+`carryForward += remaining` instead of `carryForward = min(remaining, 8000)`
+produces a wrong but plausible number.
 
-Réutiliser le chemin de restitution du CELI pour le CELIAPP est le bug de
-correctness le plus probable de ce projet.
+Reusing the TFSA room-restoration path for the FHSA is the most likely
+correctness bug in this project.
 
-**3. `BigDecimal`, jamais `Double`.** Ce sont des sommes d'argent exactes, et
-une dérive de virgule flottante sur une comparaison de sur-cotisation est
-inacceptable.
+**3. `BigDecimal`, never `Double`.** These are exact sums of money, and a
+floating-point drift on an overcontribution comparison is unacceptable.
 
-**4. Un plafond non confirmé n'entre pas dans le calcul.** Un plafond lu
-automatiquement sur le site de l'ARC est enregistré avec `confirme = false` et
-reste inerte jusqu'à validation par l'utilisateur. Aucune modification
-silencieuse des droits.
+**4. An unconfirmed limit is left out of the calculation.** A limit read
+automatically from the CRA website is saved with `confirmed = false` and stays
+inert until the user confirms it. No silent change to contribution room.
 
-**5. Aucune donnée financière nominative dans le dépôt.** Vérifie-le
-mécaniquement avant de committer : `bash tools/verifier-confidentialite.sh`.
-Les motifs privés vivent dans `local-data/motifs-prives.txt`, gitignoré — les
-écrire dans un fichier suivi les publierait, ce qui est précisément le
-problème. Sans ce fichier le script ne vérifie rien et le dit. Il est public. Les
-fixtures de test sont des scénarios anonymes, sans nom d'institution ni
-formulation à la première personne. Les bases et les exports JSON sont exclus
-par `.gitignore`.
+**5. No named financial data in the repository.** Check it mechanically before
+committing: `bash tools/check-privacy.sh`. The private patterns live in
+`local-data/private-patterns.txt`, which is gitignored (the script still reads
+the older name `local-data/motifs-prives.txt`). Writing them in a tracked file
+would publish them, which is precisely the problem. Without that file the
+script checks nothing and says so. The repository is public. Test fixtures are
+anonymous scenarios, with no institution name and no first-person wording.
+Databases and JSON exports are excluded by `.gitignore`.
 
-## Test d'acceptation
+## Acceptance test
 
-`scenario_2019_eligible_three_deposits` — admissibilité 2019, aucun retrait,
-dépôts de 5 000,00 $ (2021-03-10), 3 500,00 $ (2023-06-15) et 1 200,00 $
-(2024-11-02), plafonds 6 000 / 6 000 / 6 000 / 6 000 / 6 500 / 7 000 / 7 000 /
-7 000 (2019 à 2026).
+`scenario_2019_eligible_three_deposits`: eligible in 2019, no withdrawal,
+deposits of $5,000.00 (2021-03-10), $3,500.00 (2023-06-15) and $1,200.00
+(2024-11-02), limits 6,000 / 6,000 / 6,000 / 6,000 / 6,500 / 7,000 / 7,000 /
+7,000 (2019 to 2026).
 
-Droits fin 2026 attendus : **41 800,00 $**. Scénario synthétique, dérivé des
-plafonds annuels publiés par l'ARC. Contrôle : cumul des plafonds 51 500 $ −
-dépôts 9 700 $ = 41 800 $.
+Expected room at the end of 2026: **$41,800.00**. Synthetic scenario, derived
+from the annual limits published by the CRA. Check: sum of limits $51,500 minus
+deposits $9,700 = $41,800.
 
-`scenario_fhsa_opened_2023_no_contributions` — CELIAPP ouvert en avril 2023,
-aucune cotisation. Droits 2026 attendus : **16 000 $**, pas 32 000 $. Plafond à
-vie restant 40 000 $. Fin de période de participation : **2038-12-31**.
+`scenario_fhsa_opened_2023_no_contributions`: FHSA opened in April 2023, no
+contribution. Expected 2026 room: **$16,000**, not $32,000. Lifetime limit left
+$40,000. End of the participation period: **2038-12-31**.
 
-Ce scénario ne contient **aucun retrait**, donc le chemin de restitution des
-droits n'a aucune validation externe : il est couvert uniquement par des
-fixtures synthétiques, à traiter avec la même rigueur.
+This scenario has **no withdrawal**, so the room-restoration path has no
+external validation: only synthetic fixtures cover it, and they deserve the
+same rigour.
 
 ## Git
 
-`main` est protégée : le check « Build & test » doit passer, et la branche doit
-être à jour avec `main` avant le merge. Travailler en branche, ouvrir une PR,
-laisser la CI verte avant de merger.
+`main` is protected: the "Build & test", "Analyze (java-kotlin)" and "Revue des
+dépendances" checks must pass, and the branch must be up to date with `main`
+before merging. The last check keeps its French name because branch protection
+refers to it by name. Work on a branch, open a PR, let CI go green before
+merging.
 
-Les PRs Dependabot patch et mineures sont auto-mergées une fois la CI verte.
-Les montées majeures ne sont jamais auto-mergées : `.github/dependabot.yml`
-empêche Dependabot d'en ouvrir pour Gradle, et le `if:` du workflow
-d'auto-merge exclut toute majeure pour les autres écosystèmes. Elles restent
-en revue manuelle.
+Dependabot patch and minor PRs are auto-merged once CI is green. Major bumps
+are never auto-merged: `.github/dependabot.yml` stops Dependabot from opening
+them for Gradle, and the `if:` of the auto-merge workflow excludes any major
+bump for the other ecosystems. They stay in manual review.
 
 ## Style
 
-`./gradlew ktlintFormat` avant de committer ; la CI lance `ktlintCheck` avant
-les tests. Le style est dans `.editorconfig` (`intellij_idea`, mesure faite sur
-le code existant : c'est celui qui demandait le moins de corrections). Le code
-genere par KSP dans `build/` est exclu, et les fonctions `@Composable` gardent
-leur PascalCase.
+Run `./gradlew ktlintFormat` before committing; CI runs `ktlintCheck` before
+the tests. The style lives in `.editorconfig` (`intellij_idea`, chosen by
+measuring the existing code: it asked for the fewest corrections). Code
+generated by KSP under `build/` is excluded, and `@Composable` functions keep
+their PascalCase.
 
-## Contraintes de versions
+## Version constraints
 
-**Kotlin est plafonné par CodeQL, pas par Gradle.** L'extracteur Kotlin de
-CodeQL refuse toute version qu'il ne connaît pas encore
-(`KotlinVersionTooRecentError`), et `Analyze (java-kotlin)` est un check requis
-sur `main`. Une montée de Kotlin trop en avance échoue donc en CI — c'est
-voulu, et c'est le check qui fait autorité. Aucun plafond n'est figé dans
-`dependabot.yml` : la PR reste simplement bloquée jusqu'à ce que CodeQL
-rattrape, ce qui s'auto-résout sans maintenance.
+**Kotlin is capped by CodeQL, not by Gradle.** The CodeQL Kotlin extractor
+rejects any version it does not know yet (`KotlinVersionTooRecentError`), and
+`Analyze (java-kotlin)` is a required check on `main`. A Kotlin bump that runs
+too far ahead therefore fails in CI. That is intended, and that check has the
+last word. No cap is pinned in `dependabot.yml`: the PR simply stays blocked
+until CodeQL catches up, which resolves itself without maintenance.
 
-Constaté le 2026-09-08 : Kotlin 2.4.20 rejeté, 2.4.10 accepté.
+Observed on 2026-09-08: Kotlin 2.4.20 rejected, 2.4.10 accepted.
 
-## Licence
+## License
 
-PolyForm Shield License 1.0.0 — libre d'usage, de modification et de
-redistribution, sauf pour bâtir un produit concurrent. Ne pas relicencier ni
-retirer la mention de droit d'auteur (`Required Notice`) en tête de `LICENSE`.
+PolyForm Shield License 1.0.0: free to use, modify and redistribute, except to
+build a competing product. Do not relicense or remove the copyright notice
+(`Required Notice`) at the top of `LICENSE`.
 
-Aucun code tiers n'est repris dans ce dépôt : il n'y a donc pas de `NOTICE` ni
-de `third_party/`. Si du code sous une autre licence est intégré plus tard, il
-faudra les ajouter.
+No third-party code is copied into this repository, so there is no `NOTICE` and
+no `third_party/`. If code under another license is added later, they will be
+needed.

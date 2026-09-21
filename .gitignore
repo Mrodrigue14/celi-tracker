@@ -1,6 +1,6 @@
-# ─── Données personnelles — ne JAMAIS committer ───────────────────────────
-# Le journal de cotisations est de la donnée financière nominative. Il vit sur
-# le téléphone et dans les sauvegardes, jamais dans le dépôt.
+# --- Personal data: never commit ---
+# The contribution log is nominative financial data. It lives on the phone
+# and in backups, never in the repository.
 *.db
 *.db-shm
 *.db-wal
@@ -8,7 +8,7 @@ celi-export*.json
 celiapp-export*.json
 /local-data/
 
-# ─── Android / Gradle ─────────────────────────────────────────────────────
+# --- Android / Gradle ---
 .gradle/
 build/
 local.properties
@@ -20,9 +20,9 @@ captures/
 .cxx/
 .kotlin/
 
-# ─── IDE ──────────────────────────────────────────────────────────────────
+# --- IDE ---
 .idea/
 *.iml
 
-# Espace de travail des sous-agents (scratch, jamais versionne)
+# Subagent workspace (scratch, never versioned)
 /.superpowers/

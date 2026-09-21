@@ -1,62 +1,65 @@
 # celi-tracker
 
-Application Android personnelle pour suivre ses droits de cotisation au CELI
-(compte d'épargne libre d'impôt) et au CELIAPP (compte d'épargne libre d'impôt
-pour l'achat d'une première propriété).
+[![English](https://img.shields.io/badge/lang-English-1E4FB8)](README.md)
+[![Français](https://img.shields.io/badge/lang-Fran%C3%A7ais-7A8295)](README.fr.md)
 
-Elle remplace un classeur Excel où les droits de chaque année étaient saisis à
-la main au lieu d'être calculés. Corriger un montant dans le journal des
-transactions désynchronisait tout le reste sans avertissement.
+Personal Android app that tracks contribution room for a TFSA (tax-free
+savings account) and an FHSA (first home savings account). In French these are
+the CELI and the CELIAPP, hence the project name.
 
-## Principe
+It replaces an Excel workbook where each year's room was typed in by hand
+instead of being calculated. Fixing an amount in the transaction log put
+everything else out of sync, with no warning.
 
-La base ne stocke aucun résultat de calcul. Elle contient seulement les
-saisies : le profil, la table des plafonds annuels et le journal des dépôts et
-retraits. L'application recalcule les droits à partir de ces trois entrées à
-chaque affichage, et il n'y a pas de table de droits par année.
+## How it works
 
-Le CELI et le CELIAPP ont chacun leur moteur de calcul. Leurs règles diffèrent
-sur le début de l'accumulation, la restitution des droits après un retrait, le
-plafond à vie et le report des droits inutilisés, alors un moteur commun
-paramétré par un drapeau ne tiendrait pas.
+The database stores no calculated result. It only holds what the user enters:
+the profile, the table of annual limits, and the log of deposits and
+withdrawals. The app recalculates contribution room from those three inputs
+every time it displays it. There is no table of room per year.
 
-## État
+The TFSA and the FHSA each have their own calculation engine. Their rules
+differ on when room starts to build up, whether a withdrawal gives room back,
+the lifetime limit and how unused room carries forward, so a single engine
+switched by a flag would not hold up.
 
-Le design est dans
-[`docs/superpowers/specs/`](docs/superpowers/specs/2026-09-07-suivi-celi-celiapp-design.md).
+## Status
 
-Déjà livré :
+The design is in
+[`docs/superpowers/specs/`](docs/superpowers/specs/2026-09-07-tfsa-fhsa-tracker-design.md).
 
-0. Installation du SDK Android en ligne de commande et wrapper Gradle
-1. Moteur de calcul (module Kotlin pur) et ses tests
-2. Persistance Room, export et import JSON
-3. Interface Compose : accueil, détail d'un compte, réglages
-4. Journal des transactions : ajout, modification, suppression
-5. Plafonds du CELI déjà inscrits, et lecture du plafond de l'année sur le
-   site de l'ARC, proposé puis confirmé à la main
-6. Sauvegarde : copie automatique vers le compte Google et transfert
-   d'appareil, plus export et import d'un fichier JSON depuis les réglages
+Done:
 
-À venir :
+0. Command-line Android SDK setup and Gradle wrapper
+1. Calculation engine (pure Kotlin module) and its tests
+2. Room persistence, JSON export and import
+3. Compose interface: home, account detail, settings
+4. Transaction log: add, edit, delete
+5. TFSA limits already filled in, plus the current year's limit read from the
+   CRA website, proposed and then confirmed by hand
+6. Backup: automatic copy to the Google account and device-to-device transfer,
+   plus JSON file export and import from the settings
+7. English and French interface, light and dark themes, two-pane layout on
+   tablets
 
-7. Instantané des droits déclarés par l'ARC
-8. APK
+Next:
 
-## Avertissement
+8. Snapshot of the room reported by the CRA
+9. APK
 
-Ce projet ne donne aucun conseil fiscal ou financier. Les montants affichés
-sont calculés à partir des données saisies par l'utilisateur et n'ont aucune
-valeur officielle. Pour connaître vos droits de cotisation, fiez-vous à Mon
-dossier de l'Agence du revenu du Canada.
+## Disclaimer
 
-## Confidentialité
+This project gives no tax or financial advice. The amounts shown are
+calculated from the data the user enters and have no official value. To know
+your contribution room, rely on My Account at the Canada Revenue Agency.
 
-Le dépôt est public et ne contient aucune donnée financière nominative. Les
-scénarios de test sont fictifs, et `.gitignore` exclut les bases de données et
-les exports JSON.
+## Privacy
 
-## Licence
+The repository is public and holds no named financial data. The test
+scenarios are made up, and `.gitignore` excludes databases and JSON exports.
 
-[PolyForm Shield License 1.0.0](LICENSE). L'usage, la modification et la
-redistribution sont libres, sauf pour construire un produit qui fait
-concurrence à celui du concédant. Cette restriction n'expire pas.
+## License
+
+[PolyForm Shield License 1.0.0](LICENSE). Use, modification and redistribution
+are free, except to build a product that competes with the licensor's. This
+restriction does not expire.

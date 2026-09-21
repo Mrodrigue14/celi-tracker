@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android backup for devices on API 30 and earlier.
+
+  Only the Room database is backed up. It contains personal financial
+  data, which is a deliberate choice: without a copy off the device, a
+  lost phone would lose the entire contribution history, a
+  regression compared to the synced Excel workbook this app
+  replaces. The destination is the device owner's Google account.
+
+  An inclusion list is already a whitelist: anything not listed
+  (preferences, cache, files) is excluded by default.
+-->
+<full-backup-content>
+    <include domain="database" path="." />
+</full-backup-content>

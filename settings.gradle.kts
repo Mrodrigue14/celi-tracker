@@ -1,6 +1,6 @@
 pluginManagement {
     repositories {
-        // Le plugin Gradle androidx.room n'est pas publie sur le portail Gradle.
+        // The androidx.room Gradle plugin is not published on the Gradle portal.
         google()
         gradlePluginPortal()
         mavenCentral()

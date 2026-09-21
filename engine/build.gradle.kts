@@ -3,8 +3,8 @@ plugins {
     id("org.jetbrains.kotlinx.kover")
 }
 
-// Gradle n'a aucun depot par defaut: sans ce bloc, kotlin-stdlib et
-// kotlin-test ne peuvent pas etre resolus.
+// Gradle has no default repository: without this block, kotlin-stdlib and
+// kotlin-test cannot be resolved.
 repositories {
     mavenCentral()
 }
@@ -13,9 +13,9 @@ kotlin {
     jvmToolchain(21)
 
     compilerOptions {
-        // Strict en CI (-PwarningsAsErrors=true), souple en local: un
-        // avertissement ne doit pas bloquer l'iteration, mais ne doit pas non
-        // plus s'accumuler dans la branche stable.
+        // Strict in CI (-PwarningsAsErrors=true), lenient locally: a
+        // warning should not block iteration, but should not pile up in the
+        // stable branch either.
         allWarningsAsErrors.set(
             providers.gradleProperty("warningsAsErrors").map { it.toBoolean() }.orElse(false),
         )
@@ -23,7 +23,7 @@ kotlin {
 }
 
 dependencies {
-    // Seule dependance du moteur. Il ne connait ni Android, ni Room, ni reseau.
+    // Only dependency of the engine. It knows nothing about Android, Room, or networking.
     testImplementation(kotlin("test"))
 }
 

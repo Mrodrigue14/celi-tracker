@@ -1,7 +1,7 @@
 name: "celi-tracker CodeQL config"
 
-# Suite complete: securite (security-extended) + qualite de code. Bien plus
-# large que le jeu de requetes par defaut -- c'est le principal levier pour
-# renforcer la couverture de l'analyse.
+# Full suite: security (security-extended) + code quality. Much broader
+# than the default query set -- this is the main lever for
+# strengthening the analysis coverage.
 queries:
   - uses: security-and-quality
