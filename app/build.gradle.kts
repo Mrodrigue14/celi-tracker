@@ -80,6 +80,7 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+    inputs.dir("src/main/res/xml")
 }
 
 // No Kover here: the Compose code is only testable with instrumentation, so it is excluded from verification.

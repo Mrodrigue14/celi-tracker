@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- API 30 and earlier. The database holds personal financial data and is backed up deliberately, to the
-     owner's Google account: without a copy off the device, a lost phone loses the whole contribution history. -->
+     owner's Google account: without a copy off the device, a lost phone loses the whole contribution history.
+     It sits in files/, not databases/, so it is included under domain "file". -->
 <full-backup-content>
-    <include domain="database" path="." />
+    <include domain="file" path="celi-tracker.db" />
 </full-backup-content>

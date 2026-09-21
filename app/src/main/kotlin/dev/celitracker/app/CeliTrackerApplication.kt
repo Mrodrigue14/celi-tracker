@@ -26,6 +26,9 @@ import dev.celitracker.engine.Account
 import kotlinx.coroutines.runBlocking
 import java.io.File
 
+/** Inside `files/`, not `databases/`: the backup rules must name it under domain `file`. */
+internal const val DATABASE_FILE_NAME = "celi-tracker.db"
+
 /** Manual wiring instead of Hilt or Koin: one repository in one process needs no container. */
 class CeliTrackerApplication : Application() {
 
@@ -38,7 +41,7 @@ class CeliTrackerApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         themePreference = ThemePreference(this)
-        val builder = Room.databaseBuilder(this, CeliTrackerDatabase::class.java, File(filesDir, "celi-tracker.db").absolutePath)
+        val builder = Room.databaseBuilder(this, CeliTrackerDatabase::class.java, File(filesDir, DATABASE_FILE_NAME).absolutePath)
             // TRUNCATE, not WAL: Android backup copies the directory and would miss writes still in the `-wal` file.
             .setJournalMode(JournalMode.TRUNCATE)
         val repository = Repository(configureDatabase(builder))
