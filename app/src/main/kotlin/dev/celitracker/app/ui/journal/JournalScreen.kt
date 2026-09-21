@@ -62,6 +62,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.celitracker.app.CeliTrackerApplication
 import dev.celitracker.app.R
+import dev.celitracker.app.ui.components.AccountChoice
 import dev.celitracker.app.ui.components.AlertBanner
 import dev.celitracker.app.ui.components.AmountField
 import dev.celitracker.app.ui.components.DateField
@@ -178,20 +179,6 @@ fun JournalScreen() {
             )
         }
     }
-}
-
-@Composable
-private fun AccountChoice(account: Account, onChange: (Account) -> Unit, modifier: Modifier = Modifier) {
-    SegmentedChoice(
-        options = Account.entries,
-        selection = account,
-        onChoose = onChange,
-        label = { it.label() },
-        modifier = modifier,
-        activeColor = {
-            if (it == Account.TFSA) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
-        },
-    )
 }
 
 @Composable

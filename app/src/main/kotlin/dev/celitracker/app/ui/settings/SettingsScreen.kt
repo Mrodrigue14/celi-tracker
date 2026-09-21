@@ -123,6 +123,13 @@ fun SettingsScreen() {
                 onNewLimitYearChange = viewModel::updateNewLimitYear,
                 onNewLimitAmountChange = viewModel::updateNewLimitAmount,
                 onAddLimit = viewModel::addLimit,
+                craSnapshot = CraSnapshotCallbacks(
+                    onAccountChange = viewModel::updateSnapshotAccount,
+                    onDateChange = viewModel::updateSnapshotDate,
+                    onAmountChange = viewModel::updateSnapshotAmount,
+                    onSave = viewModel::saveSnapshot,
+                    onDelete = viewModel::deleteSnapshot,
+                ),
                 onCraPageUrlChange = viewModel::updateCraPageUrl,
                 onSaveCraPageUrl = viewModel::saveCraPageUrl,
                 onRestoreCraPageUrl = viewModel::restoreCraPageUrl,
@@ -184,6 +191,7 @@ fun SettingsContent(
     onNewLimitYearChange: (String) -> Unit,
     onNewLimitAmountChange: (String) -> Unit,
     onAddLimit: () -> Unit,
+    craSnapshot: CraSnapshotCallbacks,
     onCraPageUrlChange: (String) -> Unit,
     onSaveCraPageUrl: () -> Unit,
     onCheckCra: () -> Unit,
@@ -324,6 +332,10 @@ fun SettingsContent(
             ) {
                 Text(stringResource(R.string.settings_add_limit))
             }
+
+            HorizontalDivider(modifier = Modifier.padding(top = 32.dp))
+
+            CraSnapshotSection(state, craSnapshot)
         }
     }
 
@@ -547,6 +559,7 @@ private fun SettingsContentPreview() {
         onNewLimitYearChange = {},
         onNewLimitAmountChange = {},
         onAddLimit = {},
+        craSnapshot = CraSnapshotCallbacks({}, {}, {}, {}, {}),
         onCraPageUrlChange = {},
         onSaveCraPageUrl = {},
         onRestoreCraPageUrl = {},

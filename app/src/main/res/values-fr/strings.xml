@@ -40,6 +40,8 @@
     <string name="home_lifetime_limit_left">Plafond à vie restant</string>
     <string name="home_carry_forward_received">Report reçu</string>
     <string name="home_deadline">Échéance</string>
+    <string name="home_cra_figure">Chiffre de l\'ARC, %1$s</string>
+    <string name="home_cra_difference">ARC moins droits calculés au 1er janvier %1$d</string>
     <string name="home_no_profile_title">Commence par ton profil</string>
     <string name="home_no_profile_text">Ton année de naissance suffit pour calculer tes droits CELI. Ajoute la date d\'ouverture de ton CELIAPP si tu en as un.</string>
     <string name="home_no_profile_action">Saisir mon profil</string>
@@ -128,6 +130,11 @@
     <string name="settings_year">Année</string>
     <string name="settings_amount">Montant</string>
     <string name="settings_add_limit">Ajouter le plafond</string>
+    <string name="settings_cra_snapshot">Chiffre de l\'ARC</string>
+    <string name="settings_cra_snapshot_help">Saisis les droits affichés dans ton dossier de l\'ARC et la date visée. Le chiffre s\'affiche à côté du calcul, sans jamais le remplacer.</string>
+    <string name="settings_cra_snapshot_date">En date du</string>
+    <string name="settings_cra_snapshot_amount">Droits affichés par l\'ARC</string>
+    <string name="settings_cra_snapshot_save">Enregistrer le chiffre</string>
     <string name="settings_hide_earlier">Masquer les années antérieures</string>
     <plurals name="settings_show_earlier">
         <item quantity="one">Afficher %1$d année antérieure (%2$d)</item>
@@ -145,6 +152,8 @@
     <!-- Settings messages -->
     <string name="message_profile_saved">Profil enregistré.</string>
     <string name="message_limit_saved">Plafond enregistré.</string>
+    <string name="message_cra_snapshot_saved">Chiffre de l\'ARC enregistré.</string>
+    <string name="message_cra_snapshot_deleted">Chiffre de l\'ARC supprimé.</string>
     <string name="message_limit_proposed">Plafond %1$d proposé par l\'ARC, à confirmer.</string>
     <string name="message_cra_nothing_new">Rien de nouveau sur le site de l\'ARC.</string>
     <string name="message_limit_confirmed">Plafond %1$d confirmé.</string>

@@ -16,7 +16,9 @@ import dev.celitracker.data.exportJson
 import dev.celitracker.data.importJson
 import dev.celitracker.engine.Account
 import dev.celitracker.engine.AnnualLimit
+import dev.celitracker.engine.CraSnapshot
 import dev.celitracker.engine.Profile
+import dev.celitracker.engine.UNSAVED_ID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,6 +52,7 @@ class SettingsViewModel(
                     birthYear = if (replaceInputs) birth else it.birthYear.ifBlank { birth },
                     fhsaOpeningDate = if (replaceInputs) opening else it.fhsaOpeningDate.ifBlank { opening },
                     limits = limits,
+                    snapshots = craSnapshots(),
                     craPageUrl = it.craPageUrl.ifBlank { settings.craPageUrl },
                     lastCraCheck = settings.lastCheckDate,
                 )
@@ -61,6 +64,10 @@ class SettingsViewModel(
     fun updateFhsaOpeningDate(value: String) = _uiState.update { it.copy(fhsaOpeningDate = value) }
     fun updateNewLimitYear(value: String) = _uiState.update { it.copy(newLimitYear = value) }
     fun updateNewLimitAmount(value: String) = _uiState.update { it.copy(newLimitAmount = value) }
+
+    fun updateSnapshotAccount(value: Account) = _uiState.update { it.copy(snapshotAccount = value) }
+    fun updateSnapshotDate(value: String) = _uiState.update { it.copy(snapshotDate = value) }
+    fun updateSnapshotAmount(value: String) = _uiState.update { it.copy(snapshotAmount = value) }
 
     fun updateCraPageUrl(value: String) = _uiState.update { it.copy(craPageUrl = value) }
 
@@ -94,6 +101,30 @@ class SettingsViewModel(
                     message = uiText(R.string.message_limit_saved),
                 )
             }
+        }
+    }
+
+    fun saveSnapshot() {
+        val state = _uiState.value
+        val date = state.validSnapshotDate ?: return
+        val amount = state.validSnapshotAmount ?: return
+        viewModelScope.launch {
+            repository.saveCraSnapshot(CraSnapshot(UNSAVED_ID, state.snapshotAccount, date, amount))
+            _uiState.update {
+                it.copy(
+                    snapshots = craSnapshots(),
+                    snapshotDate = "",
+                    snapshotAmount = "",
+                    message = uiText(R.string.message_cra_snapshot_saved),
+                )
+            }
+        }
+    }
+
+    fun deleteSnapshot(snapshot: CraSnapshot) {
+        viewModelScope.launch {
+            repository.deleteCraSnapshot(snapshot.id)
+            _uiState.update { it.copy(snapshots = craSnapshots(), message = uiText(R.string.message_cra_snapshot_deleted)) }
         }
     }
 
@@ -194,6 +225,9 @@ class SettingsViewModel(
             _uiState.update { it.copy(message = message) }
         }
     }
+
+    private suspend fun craSnapshots(): List<CraSnapshot> = repository.craSnapshots()
+        .sortedWith(compareByDescending<CraSnapshot> { it.referenceDate }.thenByDescending { it.id })
 
     private suspend fun tfsaLimits(): List<AnnualLimit> = repository.limits().filter { it.account == Account.TFSA }.sortedBy { it.year }
 }

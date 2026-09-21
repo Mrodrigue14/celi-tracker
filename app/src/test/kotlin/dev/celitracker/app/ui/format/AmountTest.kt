@@ -4,6 +4,7 @@ import java.math.BigDecimal
 import java.util.Locale
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class AmountTest {
@@ -43,5 +44,28 @@ class AmountTest {
         assertEquals("CA$1,234.50", amount.formatAmount(Locale.US))
         assertTrue(amount.formatAmount(Locale.CANADA_FRENCH).startsWith("1"))
         assertTrue(amount.formatAmount(Locale.CANADA_FRENCH).endsWith("$"))
+    }
+
+    @Test
+    fun `a difference shows a plus sign only when positive`() {
+        assertEquals("+CA$150.00", BigDecimal("150.00").formatSignedAmount(Locale.US))
+        assertEquals("-CA$150.00", BigDecimal("-150.00").formatSignedAmount(Locale.US))
+        assertEquals("CA$0.00", BigDecimal("0.00").formatSignedAmount(Locale.US))
+    }
+
+    @Test
+    fun `an entered amount must be positive`() {
+        assertEquals(BigDecimal("12.50"), "12,50".toEnteredAmount())
+        assertNull("0".toEnteredAmount())
+        assertNull("abc".toEnteredAmount())
+    }
+
+    @Test
+    fun `an entered room may be zero but not negative`() {
+        assertEquals(BigDecimal("0"), "0".toEnteredRoom())
+        assertEquals(BigDecimal("0.00"), "0,00".toEnteredRoom())
+        assertEquals(BigDecimal("41800.00"), "41800.00".toEnteredRoom())
+        assertNull("-1".toEnteredRoom())
+        assertNull("".toEnteredRoom())
     }
 }

@@ -18,4 +18,11 @@ fun BigDecimal.formatAmount(locale: Locale = Locale.getDefault()): String = Numb
 
 fun LocalDate.formatDate(locale: Locale = Locale.getDefault()): String = format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale))
 
-fun String.toEnteredAmount(): BigDecimal? = replace(',', '.').toBigDecimalOrNull()?.takeIf { it > BigDecimal.ZERO }
+fun BigDecimal.formatSignedAmount(locale: Locale = Locale.getDefault()): String = if (signum() > 0) "+" + formatAmount(locale) else formatAmount(locale)
+
+private fun String.toDecimalOrNull(): BigDecimal? = replace(',', '.').toBigDecimalOrNull()
+
+fun String.toEnteredAmount(): BigDecimal? = toDecimalOrNull()?.takeIf { it > BigDecimal.ZERO }
+
+/** Zero is valid: fully used room is a real figure. */
+fun String.toEnteredRoom(): BigDecimal? = toDecimalOrNull()?.takeIf { it >= BigDecimal.ZERO }

@@ -7,8 +7,11 @@ import dev.celitracker.app.TestMainDispatcher
 import dev.celitracker.app.TestRepository
 import dev.celitracker.app.ui.text.uiText
 import dev.celitracker.data.DEFAULT_CRA_PAGE_URL
+import dev.celitracker.engine.Account
+import dev.celitracker.engine.CraSnapshot
 import dev.celitracker.engine.Profile
 import dev.celitracker.engine.Settings
+import dev.celitracker.engine.UNSAVED_ID
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeAll
@@ -210,5 +213,48 @@ class SettingsViewModelTest {
         viewModel.uiState.first { it.message?.id in setOf(R.string.message_address_saved, R.string.message_address_rejected) }
 
         assertEquals(DEFAULT_CRA_PAGE_URL, repository.settings().craPageUrl)
+    }
+
+    @Test
+    fun `saving a CRA figure stores it, clears the form and confirms`() = runTest {
+        val viewModel = SettingsViewModel(repository, offline)
+        val date = LocalDate.now().minusDays(3)
+        viewModel.updateSnapshotAccount(Account.FHSA)
+        viewModel.updateSnapshotDate(date.toString())
+        viewModel.updateSnapshotAmount("16000,00")
+
+        viewModel.saveSnapshot()
+        val state = viewModel.uiState.first { it.message == uiText(R.string.message_cra_snapshot_saved) }
+
+        assertEquals(listOf(CraSnapshot(state.snapshots.single().id, Account.FHSA, date, BigDecimal("16000.00"))), repository.craSnapshots())
+        assertEquals("", state.snapshotAmount)
+        assertEquals("", state.snapshotDate)
+    }
+
+    @Test
+    fun `an invalid CRA figure is not saved`() = runTest {
+        val viewModel = SettingsViewModel(repository, offline)
+        viewModel.updateSnapshotDate(LocalDate.now().plusDays(1).toString())
+        viewModel.updateSnapshotAmount("100")
+
+        viewModel.saveSnapshot()
+
+        assertEquals(emptyList(), repository.craSnapshots())
+    }
+
+    @Test
+    fun `saved CRA figures are listed newest first and can be deleted`() = runTest {
+        val today = LocalDate.now()
+        repository.saveCraSnapshot(CraSnapshot(UNSAVED_ID, Account.TFSA, today.minusDays(30), BigDecimal("1")))
+        repository.saveCraSnapshot(CraSnapshot(UNSAVED_ID, Account.TFSA, today.minusDays(2), BigDecimal("2")))
+        val viewModel = SettingsViewModel(repository, offline)
+        val listed = viewModel.uiState.first { it.snapshots.size == 2 }.snapshots
+        assertEquals(listOf(BigDecimal("2"), BigDecimal("1")), listed.map { it.declaredRoom })
+
+        viewModel.deleteSnapshot(listed.first())
+        val state = viewModel.uiState.first { it.message == uiText(R.string.message_cra_snapshot_deleted) }
+
+        assertEquals(listOf(BigDecimal("1")), state.snapshots.map { it.declaredRoom })
+        assertEquals(listOf(BigDecimal("1")), repository.craSnapshots().map { it.declaredRoom })
     }
 }

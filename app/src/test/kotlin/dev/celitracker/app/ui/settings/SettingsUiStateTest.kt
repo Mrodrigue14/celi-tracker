@@ -3,8 +3,11 @@ package dev.celitracker.app.ui.settings
 import dev.celitracker.engine.Account
 import dev.celitracker.engine.AnnualLimit
 import java.math.BigDecimal
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class SettingsUiStateTest {
 
@@ -25,5 +28,38 @@ class SettingsUiStateTest {
 
         assertEquals(limits, state.relevantLimits)
         assertEquals(emptyList(), state.earlierLimits)
+    }
+
+    @Test
+    fun `a CRA figure needs a past date and an amount`() {
+        val state = SettingsUiState(snapshotDate = LocalDate.now().toString(), snapshotAmount = "41800")
+
+        assertTrue(state.isNewSnapshotValid)
+    }
+
+    @Test
+    fun `a CRA figure of zero is valid`() {
+        assertTrue(SettingsUiState(snapshotDate = LocalDate.now().toString(), snapshotAmount = "0").isNewSnapshotValid)
+    }
+
+    @Test
+    fun `a future date is rejected and flagged`() {
+        val state = SettingsUiState(snapshotDate = LocalDate.now().plusDays(1).toString(), snapshotAmount = "100")
+
+        assertFalse(state.isNewSnapshotValid)
+        assertTrue(state.invalidSnapshotDate)
+    }
+
+    @Test
+    fun `an empty date is not flagged as an error, only incomplete`() {
+        val state = SettingsUiState(snapshotAmount = "100")
+
+        assertFalse(state.isNewSnapshotValid)
+        assertFalse(state.invalidSnapshotDate)
+    }
+
+    @Test
+    fun `a CRA figure without an amount is incomplete`() {
+        assertFalse(SettingsUiState(snapshotDate = LocalDate.now().toString()).isNewSnapshotValid)
     }
 }

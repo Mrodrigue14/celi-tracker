@@ -41,10 +41,11 @@ Done:
    plus JSON file export and import from the settings
 7. English and French interface, light and dark themes, two-pane layout on
    tablets
+8. CRA figure: enter the room your CRA account shows and its date, and the
+   home screen sets it beside the calculated room without replacing it
 
 Next:
 
-8. Snapshot of the room reported by the CRA
 9. APK
 
 ## Disclaimer

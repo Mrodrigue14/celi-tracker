@@ -36,6 +36,7 @@ class HomeViewModel(private val repository: Repository) : ViewModel() {
                 tfsaRoom = TfsaEngine.roomByYear(profile, limits, transactions, currentYear),
                 fhsaRoom = FhsaEngine.roomByYear(profile, transactions, currentYear),
                 tfsaExcesses = Overcontribution.tfsaExcesses(profile, limits, transactions, YearMonth.now()),
+                craSnapshots = repository.craSnapshots(),
             )
         }
     }

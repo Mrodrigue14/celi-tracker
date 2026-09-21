@@ -46,10 +46,12 @@ Déjà livré :
    d'appareil, plus export et import d'un fichier JSON depuis les réglages
 7. Interface en anglais et en français, thèmes clair et sombre, affichage en
    deux volets sur tablette
+8. Chiffre de l'ARC : on saisit les droits qu'affiche son dossier de l'ARC et
+   sa date, et l'accueil les place à côté des droits calculés sans les
+   remplacer
 
 À venir :
 
-8. Instantané des droits déclarés par l'ARC
 9. APK
 
 ## Avertissement

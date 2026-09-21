@@ -91,6 +91,8 @@ class Repository(private val database: CeliTrackerDatabase) {
         )
     }
 
+    suspend fun deleteCraSnapshot(id: Long) = dao.deleteCraSnapshot(id)
+
     suspend fun settings(): Settings = dao.settings()?.let { Settings(it.craPageUrl, it.lastCheckDate) }
         ?: Settings(craPageUrl = DEFAULT_CRA_PAGE_URL, lastCheckDate = null)
 
