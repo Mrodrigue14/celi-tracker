@@ -1,7 +1,14 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
 }
+
+// The keystore is personal and gitignored: CI and fresh clones have none, and build without signing.
+val releaseSigning = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.reader()?.use(::load)
+}.takeIf { it.containsKey("releaseStoreFile") }
 
 // The Compose BOM and androidx in general are only published on the Google repository.
 repositories {
@@ -20,6 +27,26 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+    }
+
+    signingConfigs {
+        if (releaseSigning != null) {
+            create("release") {
+                storeFile = file(releaseSigning.getProperty("releaseStoreFile"))
+                storePassword = releaseSigning.getProperty("releaseStorePassword")
+                keyAlias = releaseSigning.getProperty("releaseKeyAlias")
+                keyPassword = releaseSigning.getProperty("releaseKeyPassword")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+            signingConfig = signingConfigs.findByName("release")
+        }
     }
 
     buildFeatures {

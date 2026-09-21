@@ -43,10 +43,15 @@ Done:
    tablets
 8. CRA figure: enter the room your CRA account shows and its date, and the
    home screen sets it beside the calculated room without replacing it
+9. Signed release APK
 
-Next:
+## Release APK
 
-9. APK
+`./gradlew :app:assembleRelease` builds a minified APK. It is signed only when
+`local.properties` holds `releaseStoreFile`, `releaseStorePassword`,
+`releaseKeyAlias` and `releaseKeyPassword`. Without them the APK is unsigned
+and can't be installed. Keep the keystore out of the repository: if it is
+lost, later versions can't update the installed app.
 
 ## Disclaimer
 
