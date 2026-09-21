@@ -33,8 +33,8 @@ import java.time.ZoneOffset
 private const val MIN_CALENDAR_WIDTH = 360
 
 /**
- * Champ de date partage par les ecrans. Il est en lecture seule et ouvre le
- * calendrier: une date se choisit, elle ne se tape labelStep caractere par caractere.
+ * Date field shared by the screens. It is read-only and opens the
+ * calendar: a date is picked, it is not typed character by character.
  */
 @Composable
 fun DateField(
@@ -43,16 +43,16 @@ fun DateField(
     label: String,
     modifier: Modifier = Modifier,
     isError: Boolean = false,
-    /** Pour une date facultative: une showClearIcon permet de la retirer une fois choisie. */
+    /** For an optional date: a clear icon lets it be removed once chosen. */
     clearable: Boolean = false,
 ) {
     var calendarOpen by remember { mutableStateOf(false) }
     val showClearIcon = clearable && date.isNotEmpty()
     val validDate = remember(date) { runCatching { LocalDate.parse(date) }.getOrNull() }
 
-    // Le calendrier de Material occupe une largeur fixe de 360 dp et rogne ses
-    // propres boutons en dessous. Dans une fenetre plus etroite (ecran ancien,
-    // mode ecran partage), la date se tape donc au clavier.
+    // Material's calendar takes a fixed width of 360 dp and clips its
+    // own buttons below that. In a narrower window (old screen,
+    // split-screen mode), the date is therefore typed on the keyboard.
     if (LocalConfiguration.current.screenWidthDp < MIN_CALENDAR_WIDTH) {
         OutlinedTextField(
             value = date,
@@ -84,7 +84,7 @@ fun DateField(
             },
             modifier = Modifier.fillMaxWidth(),
         )
-        // La zone qui ouvre le calendrier laisse la showClearIcon cliquable.
+        // The zone that opens the calendar leaves the clear icon clickable.
         Box(
             modifier = Modifier
                 .matchParentSize()
@@ -114,8 +114,8 @@ private fun CalendarDialog(initialDate: LocalDate?, onPicked: (LocalDate) -> Uni
     DatePickerDialog(
         onDismissRequest = onClose,
         confirmButton = {
-            // Le selecteur rend un instant UTC: le relire en UTC evite de
-            // reculer d'un day selon le fuseau de l'appareil.
+            // The picker returns a UTC instant: reading it back in UTC avoids
+            // going back a day depending on the device's time zone.
             TextButton(
                 onClick = {
                     val millis = state.selectedDateMillis ?: return@TextButton

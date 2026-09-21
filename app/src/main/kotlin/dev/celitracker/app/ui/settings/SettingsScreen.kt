@@ -162,7 +162,7 @@ private suspend fun readFile(context: Context, uri: Uri): String = withContext(D
     stream.use { it.reader().readText() }
 }
 
-/** L'import remplace whole: il se confirmed, il ne se declenche labelStep d'un doigt qui glisse. */
+/** Import replaces everything: it requires confirmation, it doesn't trigger from a stray swipe. */
 @Composable
 private fun ImportConfirmation(onConfirm: () -> Unit, onCancel: () -> Unit) {
     AlertDialog(
@@ -197,9 +197,9 @@ fun SettingsContent(
     onImport: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Trois familles de settings: ce qui me decrit, d'ou viennent les limits,
-    // et la copie de mes data. Sur un ecran large, les limits prennent le
-    // volet de right et les deux autres restent a left.
+    // Three groups of settings: what describes me, where the limits come
+    // from, and the copy of my data. On a wide screen, limits take the
+    // right pane and the other two stay on the left.
     val profileAndAppearance: @Composable (Modifier) -> Unit = { groupModifier ->
         Column(modifier = groupModifier.padding(horizontal = 16.dp)) {
             SectionTitle(stringResource(R.string.settings_profile), Modifier.padding(top = 24.dp, bottom = 12.dp))
@@ -249,7 +249,7 @@ fun SettingsContent(
 
             SectionTitle(stringResource(R.string.settings_limits_source), Modifier.padding(top = 24.dp, bottom = 12.dp))
             OutlinedTextField(
-                value = state.urlPageArc,
+                value = state.craPageUrl,
                 onValueChange = onCraPageUrlChange,
                 label = { Text(stringResource(R.string.settings_cra_page)) },
                 supportingText = {
@@ -281,8 +281,9 @@ fun SettingsContent(
                     Text(if (state.checkInProgress) stringResource(R.string.settings_reading) else stringResource(R.string.settings_check))
                 }
             }
-            // Porte de sortie quand l'address en place ne marche plus, par exemple
-            // after une reorganisation du site ou une address mal input autrefois.
+            // An escape hatch for when the current address stops working,
+            // for example after a site reorganization or an address
+            // entered wrong in the past.
             TextButton(
                 onClick = onRestoreCraPageUrl,
                 enabled = !state.checkInProgress,
@@ -366,7 +367,7 @@ fun SettingsContent(
     }
 }
 
-/** Le choix est garde sur l'appareil: labelStep besoin de le refaire a chaque opening. */
+/** The choice is kept on the device: no need to redo it on every open. */
 @Composable
 private fun Appearance(mode: ThemeMode, onChoose: (ThemeMode) -> Unit) {
     SectionTitle(stringResource(R.string.settings_appearance), Modifier.padding(top = 24.dp, bottom = 12.dp))
@@ -388,10 +389,11 @@ private fun Appearance(mode: ThemeMode, onChoose: (ThemeMode) -> Unit) {
 }
 
 /**
- * La backup Android copie deja la database vers le account Google et la reprend
- * lors d'un transfert d'appareil. Elle a deux angles morts: elle ne se declenche
- * labelStep toujours quand l'application est installee par APK, et son content n'est
- * labelStep inspectable. Le file JSON, lui, se verifie AVANT d'en avoir besoin.
+ * Android backup already copies the database to the Google account and
+ * restores it on a device transfer. It has two blind spots: it doesn't
+ * always trigger when the app is installed via APK, and its content
+ * isn't inspectable. The JSON file, on the other hand, can be checked
+ * BEFORE it's needed.
  */
 @Composable
 private fun BackupAndRestore(onExport: () -> Unit, onImport: () -> Unit) {
@@ -411,8 +413,8 @@ private fun BackupAndRestore(onExport: () -> Unit, onImport: () -> Unit) {
 }
 
 /**
- * Les limits charsRead sur le site de l'ARC restent inertes tant qu'ils ne sont labelStep
- * confirmes: c'est une proposition, labelStep une modification des room.
+ * Limits read from the CRA website stay inert until they're confirmed:
+ * it's a proposal, not a change to room.
  */
 @Composable
 private fun CraProposals(
@@ -449,7 +451,7 @@ private fun CraProposals(
     }
 }
 
-/** Failed visible, labelStep de mode degrade silencieux: la input manuelle reste juste dessous. */
+/** Visible failure, not a silent degraded mode: manual entry stays right below. */
 @Composable
 private fun CraReadFailure(reason: String) {
     Column(
@@ -480,9 +482,9 @@ private fun CraReadFailure(reason: String) {
 }
 
 /**
- * Replies par defaut: ils ne comptent labelStep dans les room et repoussaient le
- * reste des settings loin sous le pouce. L'state ouvert/ferme est purement
- * visuel, donc il vit dans l'ecran et non dans le ViewModel.
+ * Collapsed by default: they don't count toward room and would push the
+ * rest of the settings far below thumb reach. The open/closed state is
+ * purely visual, so it lives in the screen, not in the ViewModel.
  */
 @Composable
 private fun EarlierLimits(limits: List<AnnualLimit>) {
@@ -503,7 +505,7 @@ private fun EarlierLimits(limits: List<AnnualLimit>) {
     }
 }
 
-/** Resultat d'un calcul, donc affiche et non saisi. */
+/** Result of a calculation, so displayed rather than entered. */
 @Composable
 private fun TfsaEligibility(year: Int?, modifier: Modifier = Modifier) {
     Row(
@@ -560,7 +562,7 @@ private fun SettingsContentPreview() {
                 AnnualLimit(Account.TFSA, 2026, BigDecimal("7000.00"), confirmed = true),
                 AnnualLimit(Account.TFSA, 2027, BigDecimal("7500.00"), confirmed = false),
             ),
-            urlPageArc = "https://www.canada.ca/...",
+            craPageUrl = "https://www.canada.ca/...",
         ),
         onBirthYearChange = {},
         onOpeningDateChange = {},

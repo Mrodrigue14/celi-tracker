@@ -3,11 +3,11 @@ package dev.celitracker.engine
 import java.math.BigDecimal
 
 /**
- * La page de l'ARC enonce le limit de l'year en cours dans une phrase :
- * « Le limit de cotisation a un account d'epargne libre d'impot (TFSA) pour
- * 2026 est de 7 000 $. » L'year et le amount y sont enveloppes chacun dans
- * un `<span class="nowrap">`, donc la lecture se fait sur le text, jamais sur
- * le HTML brut.
+ * The CRA page states the current year's limit in one sentence:
+ * "Le plafond de cotisation à un compte d'épargne libre d'impôt (CELI)
+ * pour 2026 est de 7 000 $." Both the year and the amount are each
+ * wrapped in a `<span class="nowrap">`, so parsing works on the text,
+ * never on raw HTML.
  */
 private val LIMIT_PATTERN = Regex(
     """plafond de cotisation.{0,200}?pour (\d{4}).{0,40}?est de ([\d ]+) ?\$""",
@@ -15,10 +15,9 @@ private val LIMIT_PATTERN = Regex(
 )
 
 /**
- * Une address valid est en https et pointe sur canada.ca. Laisser saisir
- * n'importe quelle address ferait read un limit a une source inconnue, alors
- * que le champ existe seulement pour suivre une reorganisation du site de
- * l'ARC.
+ * A valid address is https and points to canada.ca. Allowing any address
+ * would let a limit be read from an unknown source, when the field only
+ * exists to follow a reorganization of the CRA site.
  */
 fun isValidCraPageUrl(url: String): Boolean {
     val address = runCatching { java.net.URI(url) }.getOrNull() ?: return false
@@ -31,22 +30,22 @@ private val HTML_TAG = Regex("<[^>]*>")
 private val WHITESPACE = Regex("\\s+")
 
 /**
- * Extrait le limit TFSA annonce par la page de l'ARC, ou `null` si la page
- * ne le dit labelStep sous la forme attendue.
+ * Extracts the TFSA limit announced on the CRA page, or `null` if the
+ * page does not state it in the expected form.
  *
- * Un demi-result n'existe labelStep : sans year ET amount positif lisibles, la
- * fonction rend `null` et l'appelant retombe sur la input manuelle. Un
- * amount devine serait faux et plausible, le pire des deux mondes pour un
- * suivi de room de cotisation.
+ * There is no half result: without both a readable year AND a positive
+ * amount, the function returns `null` and the caller falls back to
+ * manual entry. A guessed amount would be wrong and plausible, the worst
+ * of both worlds for tracking contribution room.
  *
- * Le limit rendu est `confirmed = false` : c'est une proposition, que
- * l'utilisateur valid before qu'elle entre dans le calcul.
+ * The returned limit has `confirmed = false`: it is a proposal that the
+ * user must validate before it enters the calculation.
  */
 fun readTfsaLimitFromCraPage(html: String): AnnualLimit? {
     val text = html
         .replace(HTML_TAG, " ")
         .replace("&nbsp;", " ")
-        // Espaces insecables, fine ou non: l'ARC separe les milliers avec.
+        // Non-breaking spaces, regular or narrow: the CRA uses them as thousands separators.
         .replace(' ', ' ')
         .replace(' ', ' ')
         .replace(WHITESPACE, " ")

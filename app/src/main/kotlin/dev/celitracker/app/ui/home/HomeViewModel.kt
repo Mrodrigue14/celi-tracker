@@ -19,9 +19,9 @@ class HomeViewModel(private val repository: Repository) : ViewModel() {
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     /**
-     * Rappelee a chaque backStackEntry sur l'ecran (labelStep seulement a la creation du
-     * ViewModel): le profile ou les limits ont pu changer dans les
-     * settings depuis la latest visite, et rien n'est mis en cache ici.
+     * Called on every backStackEntry on the screen (not only when the
+     * ViewModel is created): the profile or limits may have changed in
+     * settings since the last visit, and nothing is cached here.
      */
     fun load() {
         viewModelScope.launch {

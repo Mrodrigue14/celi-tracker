@@ -24,18 +24,18 @@ import kotlinx.coroutines.Dispatchers
 abstract class CeliTrackerDatabase : RoomDatabase() {
     abstract fun dao(): CeliTrackerDao
 
-    /** L'year d'admissibilite se calcule desormais depuis l'year de birth. */
+    /** The eligibility year is now calculated from the birth year. */
     @DeleteColumn(tableName = "profil", columnName = "anneeAdmissibiliteCeli")
     class DropEligibilityYearColumn : AutoMigrationSpec
 }
 
 /**
- * Applique la configuration commune (pilote SQLite embarque, context de
- * coroutines pour les requetes) a un [builder] deja cree par l'appelant avec
- * la surcharge de `Room.databaseBuilder` propre a sa plateforme, puis
- * construit la database. `:data` ne reference ainsi plus aucune surcharge de
- * `Room.databaseBuilder`: c'est a chaque consommateur (JVM ou Android) de
- * creer le builder avec la sienne.
+ * Applies the shared configuration (bundled SQLite driver, coroutine context
+ * for queries) to a [builder] already created by the caller with the
+ * `Room.databaseBuilder` overload for its platform, then builds the database.
+ * This way `:data` never references any `Room.databaseBuilder` overload
+ * itself: it is up to each consumer (JVM or Android) to create the builder
+ * with its own.
  */
 fun configureDatabase(builder: RoomDatabase.Builder<CeliTrackerDatabase>): CeliTrackerDatabase = builder
     .setDriver(BundledSQLiteDriver())

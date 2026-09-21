@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Un bouclier (l'abri fiscal) et trois barres montantes (l'epargne qui croit).
-  Tout tient dans la zone sure de 66 dp au centre de l'icone adaptative.
+  A shield (the tax shelter) and three rising bars (savings growing).
+  Everything fits within the 66 dp safe zone at the center of the adaptive icon.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"

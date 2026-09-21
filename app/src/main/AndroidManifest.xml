@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Uniquement pour lire la page publique de l'ARC qui annonce le plafond
-         CELI de l'annee. Aucune donnee de l'utilisateur ne sort de l'appareil. -->
+    <!-- Only to read the CRA's public page announcing the year's TFSA
+         limit. No user data ever leaves the device. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application

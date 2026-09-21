@@ -9,32 +9,32 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
-/** Une verification par month au plus : la page ne change qu'une fois par an. */
+/** At most one check per month: the page only changes once a year. */
 private const val DAYS_BETWEEN_CHECKS = 30L
 
 sealed interface CraCheckResult {
-    /** Plafond parsed et enregistre comme proposition, en attente de confirmation. */
+    /** Limit parsed and saved as a proposal, awaiting confirmation. */
     data class Proposed(val limit: AnnualLimit) : CraCheckResult
 
-    /** Les limits utiles sont deja connus, ou la latest lecture est trop recente. */
+    /** The needed limits are already known, or the last check is too recent. */
     data object NotNeeded : CraCheckResult
 
-    /** Page injoignable ou illisible : a l'appelant d'afficher le repli manuel. */
+    /** Page unreachable or unreadable: the caller must show the manual fallback. */
     data class Failed(val reason: CraFailureReason) : CraCheckResult
 }
 
 /**
- * Lit la page de l'ARC et proposed le limit TFSA qui manque, sans jamais
- * modifier les room : la proposition est enregistree `confirmed = false` et
- * reste inerte tant que l'utilisateur ne l'a labelStep validee.
+ * Reads the CRA page and proposes the missing TFSA limit, without ever
+ * modifying contribution room: the proposal is saved with `confirmed = false`
+ * and stays inert until the user has validated it.
  *
- * [download] est injecte pour que la regle et l'ecriture se testent sans
- * reseau ; c'est l'application Android qui fournit le vrai telechargement.
+ * [download] is injected so the rule and the write path can be tested
+ * without network access; the Android app supplies the real download.
  */
 suspend fun Repository.checkCraLimits(
     download: suspend (String) -> String,
     today: LocalDate,
-    /** Une demande explicite de l'utilisateur ignore la limite d'une par month. */
+    /** An explicit request from the user bypasses the once-a-month limit. */
     ignoreFrequency: Boolean = false,
 ): CraCheckResult {
     val tfsaLimits = limits().filter { it.account == Account.TFSA }
@@ -46,12 +46,12 @@ suspend fun Repository.checkCraLimits(
     if (!ignoreFrequency && checkedRecently(settings.lastCheckDate, now)) {
         return CraCheckResult.NotNeeded
     }
-    if (settings.urlPageArc.isBlank()) return CraCheckResult.Failed(CraFailureReason.MISSING_ADDRESS)
+    if (settings.craPageUrl.isBlank()) return CraCheckResult.Failed(CraFailureReason.MISSING_ADDRESS)
 
-    // La date est notee meme quand la lecture echoue: sans ca, une page en
-    // panne serait retelechargee a chaque opening de l'application.
+    // The date is recorded even when the read fails: otherwise a broken page
+    // would be re-downloaded every time the app opens.
     val page = try {
-        download(settings.urlPageArc)
+        download(settings.craPageUrl)
     } catch (e: Exception) {
         recordCraCheck(now)
         return CraCheckResult.Failed(CraFailureReason.PAGE_UNREACHABLE)
@@ -75,9 +75,9 @@ sealed interface CraAddressResult {
 }
 
 /**
- * N'enregistre une nouvelle address qu'after l'avoir essayee: sa page doit
- * donner le limit du TFSA. Sinon l'address en place, la latest qui a
- * fonctionne, reste la, et le lien vers l'ARC ne se perd jamais.
+ * Only saves a new address after trying it: its page must yield the TFSA
+ * limit. Otherwise the address already in place, the last one that worked,
+ * stays as is, and the link to the CRA is never lost.
  */
 suspend fun Repository.changeCraPageUrl(url: String, download: suspend (String) -> String): CraAddressResult {
     if (!isValidCraPageUrl(url)) {
@@ -91,6 +91,6 @@ suspend fun Repository.changeCraPageUrl(url: String, download: suspend (String) 
     if (readTfsaLimitFromCraPage(page) == null) {
         return CraAddressResult.Rejected(AddressRejectionReason.NO_LIMIT_FOUND)
     }
-    saveSettings(settings().copy(urlPageArc = url))
+    saveSettings(settings().copy(craPageUrl = url))
     return CraAddressResult.Saved
 }

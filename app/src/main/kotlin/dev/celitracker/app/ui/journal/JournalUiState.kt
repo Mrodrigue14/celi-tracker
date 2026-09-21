@@ -6,7 +6,7 @@ import dev.celitracker.engine.Transaction
 
 data class JournalUiState(
     val account: Account = Account.TFSA,
-    /** Annee a amener a l'ecran, quand on arrive depuis le detail d'un account. */
+    /** Year to bring on screen, when arriving from an account's detail view. */
     val targetYear: Int? = null,
     val transactions: List<Transaction> = emptyList(),
     val form: TransactionForm? = null,

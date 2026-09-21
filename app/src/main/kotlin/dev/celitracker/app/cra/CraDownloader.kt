@@ -7,13 +7,12 @@ import java.net.URI
 
 private const val TIMEOUT_MS = 15_000
 
-/** La page fait une centaine de kilooctets; au-dela, ce n'est plus elle. */
+/** The page is about a hundred kilobytes; beyond that, it is not the right page anymore. */
 private const val MAX_SIZE = 1_000_000
 
 /**
- * Telecharge la page de l'ARC. Aucune donnee de l'utilisateur ne quitte
- * l'appareil: c'est une requete GET sur une address publique, sans cookie ni
- * parametre.
+ * Downloads the CRA page. No user data leaves the device: this is a GET
+ * request on a public address, with no cookie or parameter.
  */
 suspend fun downloadCraPage(url: String): String = withContext(Dispatchers.IO) {
     val address = URI(url).toURL()
@@ -28,8 +27,8 @@ suspend fun downloadCraPage(url: String): String = withContext(Dispatchers.IO) {
         val code = connection.responseCode
         require(code == HttpURLConnection.HTTP_OK) { "HTTP $code" }
         connection.inputStream.bufferedReader().use { reader ->
-            // Lecture en boucle: un seul appel a read() rend ce qui est deja
-            // arrive, labelStep la page entiere, et la phrase cherchee est au milieu.
+            // Read in a loop: a single call to read() returns what has already
+            // arrived, not the whole page, and the sentence being searched for is in the middle.
             val page = StringBuilder()
             val buffer = CharArray(8 * 1024)
             while (page.length < MAX_SIZE) {

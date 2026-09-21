@@ -27,9 +27,9 @@ import kotlinx.coroutines.runBlocking
 import java.io.File
 
 /**
- * Pas de Hilt ni Koin: un seul repository, un seul processus. Le [Repository] et la
- * fabrique de ViewModel sont construits une fois ici plutot que via un
- * container d'injection, qui serait de la ceremonie pure pour ce besoin.
+ * No Hilt or Koin: a single repository, a single process. The [Repository] and the
+ * ViewModel factory are built once here rather than through an
+ * injection container, which would be pure ceremony for this need.
  */
 class CeliTrackerApplication : Application() {
 
@@ -43,15 +43,15 @@ class CeliTrackerApplication : Application() {
         super.onCreate()
         themePreference = ThemePreference(this)
         val builder = Room.databaseBuilder(this, CeliTrackerDatabase::class.java, File(filesDir, "celi-tracker.db").absolutePath)
-            // TRUNCATE plutot que le WAL par defaut: la backup Android copie
-            // le repertoire des bases, et des ecritures restees dans un `-wal`
-            // manqueraient a la copie. Le cout est sans importance ici, quelques
-            // rows par month.
+            // TRUNCATE rather than the default WAL: Android backup copies
+            // the database directory, and writes still sitting in a `-wal`
+            // file would be missed by the copy. The cost does not matter here, just a
+            // few rows per month.
             .setJournalMode(JournalMode.TRUNCATE)
         val repository = Repository(configureDatabase(builder))
-        // Une poignee d'insertions au earliest demarrage, puis une seule
-        // lecture ensuite. Bloquer ici evite un earliest ecran a zero le temps
-        // qu'une coroutine de backgroundColor finisse.
+        // A handful of inserts on first launch, then only reads afterward.
+        // Blocking here avoids a first screen showing zero while a
+        // background coroutine finishes.
         runBlocking { repository.seedPublishedLimits() }
         viewModelFactory = viewModelFactory {
             initializer { HomeViewModel(repository) }
@@ -62,8 +62,8 @@ class CeliTrackerApplication : Application() {
                 val arguments = createSavedStateHandle()
                 val account = arguments.get<String>(ARG_ACCOUNT)?.let(Account::valueOf) ?: Account.TFSA
                 val openAdd = arguments.get<Boolean>(ARG_ADD) == true
-                // Consomme: une recreation after la mort du processus ne doit labelStep
-                // rouvrir la feuille d'ajout que l'utilisateur a deja fermee.
+                // Consumed: a recreation after the process is killed must not
+                // reopen the add sheet the user already closed.
                 arguments[ARG_ADD] = false
                 val year = arguments.get<Int>(ARG_YEAR)?.takeIf { it != NO_YEAR }
                 arguments[ARG_YEAR] = NO_YEAR

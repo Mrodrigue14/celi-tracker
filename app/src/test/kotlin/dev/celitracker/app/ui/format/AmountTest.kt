@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 class AmountTest {
 
     @Test
-    fun `montant positif contient le symbole dollar et les decimales`() {
+    fun `a positive amount contains the dollar sign and the decimals`() {
         val text = BigDecimal("7000.00").formatAmount()
         assertTrue("$" in text, "expected a dollar sign in '$text'")
         assertTrue("7" in text && "000" in text, "expected the digits of the amount in '$text'")
@@ -17,19 +17,19 @@ class AmountTest {
     }
 
     @Test
-    fun `montant negatif conserve le signe`() {
+    fun `a negative amount keeps the sign`() {
         val text = BigDecimal("-150.50").formatAmount()
         assertTrue("-" in text, "expected a minus sign in '$text'")
     }
 
     @Test
-    fun `montant zero ne leve pas d'exception`() {
+    fun `a zero amount does not throw`() {
         val text = BigDecimal.ZERO.setScale(2).formatAmount()
         assertTrue("0" in text)
     }
 
     @Test
-    fun `une date s'ecrit en toutes lettres, dans la langue demandee`() {
+    fun `a date is spelled out in full, in the requested language`() {
         val date = java.time.LocalDate.of(2026, 9, 4)
 
         assertEquals("4 septembre 2026", date.formatDate(Locale.CANADA_FRENCH))
@@ -37,10 +37,10 @@ class AmountTest {
     }
 
     @Test
-    fun `la devise reste le dollar canadien quelle que soit la langue`() {
+    fun `the currency stays the Canadian dollar regardless of language`() {
         val amount = BigDecimal("1234.50")
 
-        // En anglais americain, sans devise fixee, ce serait des dollars americains.
+        // In American English, without a fixed currency, this would be US dollars.
         assertEquals("CA$1,234.50", amount.formatAmount(Locale.US))
         assertTrue(amount.formatAmount(Locale.CANADA_FRENCH).startsWith("1"))
         assertTrue(amount.formatAmount(Locale.CANADA_FRENCH).endsWith("$"))

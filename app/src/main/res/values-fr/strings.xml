@@ -1,20 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Textes de l'application. Le francais est la langue par defaut: un appareil
-  regle dans une langue sans traduction affiche le francais. Chaque autre
-  langue vit dans values-xx/strings.xml, et lint refuse un texte sans
-  traduction.
+  French. English is the default language (values/strings.xml): a device set to
+  a language with no translation shows English. Lint rejects a string that
+  exists in one language and not the other.
 
-  Registre: tutoiement, phrases directes. Garder le meme ton en traduction.
+  Register: informal "tu", direct sentences. Keep the same tone as the English.
 -->
 <resources>
     <string name="app_name">CELI Tracker</string>
 
-    <!-- Comptes et organismes -->
+    <!-- Accounts and agencies -->
     <string name="account_tfsa">CELI</string>
     <string name="account_fhsa">CELIAPP</string>
 
-    <!-- Actions communes -->
+    <!-- Common actions -->
     <string name="action_add">Ajouter</string>
     <string name="action_cancel">Annuler</string>
     <string name="action_choose">Choisir</string>
@@ -29,12 +28,12 @@
     <string name="action_see_transactions">Voir les transactions</string>
     <string name="action_go_to_year">Aller à %1$d</string>
 
-    <!-- Onglets -->
+    <!-- Tabs -->
     <string name="tab_home">Accueil</string>
     <string name="tab_journal">Journal</string>
     <string name="tab_settings">Réglages</string>
 
-    <!-- Accueil -->
+    <!-- Home -->
     <string name="home_room_left">Droits restants</string>
     <string name="home_contributed_in">Cotisé en %1$d</string>
     <string name="home_year_limit">Plafond %1$d</string>
@@ -55,7 +54,7 @@
     <string name="ring_used">utilisé</string>
     <string name="ring_description">%1$d %% des droits de l\'année utilisés</string>
 
-    <!-- Detail d'un compte -->
+    <!-- Account details -->
     <string name="detail_title_tfsa">Détail du CELI</string>
     <string name="detail_title_fhsa">Détail du CELIAPP</string>
     <string name="detail_room_year_end">Droits en fin d\'année</string>
@@ -98,11 +97,11 @@
     <string name="input_fhsa_before_opening">Cette date précède l\'ouverture de ton CELIAPP.</string>
     <string name="input_transaction_not_found">Cette transaction n\'existe plus.</string>
 
-    <!-- Champ de date -->
+    <!-- Date field -->
     <string name="date_input_format">%1$s (AAAA-MM-JJ)</string>
     <string name="date_clear">Retirer la date</string>
 
-    <!-- Reglages -->
+    <!-- Settings -->
     <string name="settings_title">Réglages</string>
     <string name="settings_profile">Profil</string>
     <string name="settings_birth_year">Année de naissance</string>
@@ -143,7 +142,7 @@
     <string name="settings_import_text">L\'import écrase le profil, les plafonds et le journal des transactions par le contenu du fichier. Ce n\'est pas une fusion.</string>
     <string name="settings_import_replace">Remplacer</string>
 
-    <!-- Messages des reglages -->
+    <!-- Settings messages -->
     <string name="message_profile_saved">Profil enregistré.</string>
     <string name="message_limit_saved">Plafond enregistré.</string>
     <string name="message_limit_proposed">Plafond %1$d proposé par l\'ARC, à confirmer.</string>

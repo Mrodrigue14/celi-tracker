@@ -20,7 +20,7 @@ class OvercontributionTest {
     private fun tx(date: String, type: TransactionType, amount: String) = Transaction(Account.TFSA, LocalDate.parse(date), type, toMoney(amount))
 
     @Test
-    fun `aucun excedent quand les cotisations respectent les droits`() {
+    fun `no excess when contributions stay within room`() {
         val transactions = listOf(tx("2019-03-15", TransactionType.DEPOSIT, "6000.00"))
 
         val excesses = Overcontribution.tfsaExcesses(
@@ -34,8 +34,8 @@ class OvercontributionTest {
     }
 
     @Test
-    fun `un excedent persiste chaque mois jusqu'a la fin de l'annee`() {
-        // Droits 2019 = 6000, repository de 10000 -> excess de 4000.
+    fun `an excess persists every month until the end of the year`() {
+        // 2019 room = 6000, deposit of 10000 -> excess of 4000.
         val transactions = listOf(tx("2019-03-15", TransactionType.DEPOSIT, "10000.00"))
 
         val excesses = Overcontribution.tfsaExcesses(
@@ -45,7 +45,7 @@ class OvercontributionTest {
             upTo = YearMonth.of(2019, 12),
         )
 
-        // Mars a decembre inclus = 10 month.
+        // March through December inclusive = 10 months.
         assertEquals(10, excesses.size)
         assertEquals(3, excesses.first().month)
         assertEquals(toMoney("4000.00"), excesses.first().maxExcess)
@@ -55,14 +55,14 @@ class OvercontributionTest {
     }
 
     @Test
-    fun `re-cotiser un montant retire la meme annee recree l'excedent`() {
-        // LE piege du regime. Un withdrawal annule l'excess existant, mais ne
-        // redonne AUCUN droit before le 1er janvier suivant. Re-cotiser le meme
-        // amount la meme year cree donc un excess plein.
+    fun `re-contributing an amount withdrawn the same year recreates the excess`() {
+        // THE regime's trap. A withdrawal cancels the existing excess, but
+        // restores NO room before the following January 1st. Re-contributing
+        // the same amount the same year therefore creates a full excess.
         val transactions = listOf(
-            tx("2019-02-01", TransactionType.DEPOSIT, "6000.00"), // room epuises, 0 excess
-            tx("2019-04-01", TransactionType.WITHDRAWAL, "6000.00"), // aucun droit restitue
-            tx("2019-06-01", TransactionType.DEPOSIT, "6000.00"), // re-cotisation -> excess
+            tx("2019-02-01", TransactionType.DEPOSIT, "6000.00"), // room exhausted, 0 excess
+            tx("2019-04-01", TransactionType.WITHDRAWAL, "6000.00"), // no room restored
+            tx("2019-06-01", TransactionType.DEPOSIT, "6000.00"), // re-contribution -> excess
         )
 
         val excesses = Overcontribution.tfsaExcesses(
@@ -72,23 +72,23 @@ class OvercontributionTest {
             upTo = YearMonth.of(2019, 12),
         ).associateBy { it.month }
 
-        // Fevrier a mai: les room couvrent les cotisations, aucun excess.
+        // February through May: room covers the contributions, no excess.
         assertTrue(excesses[2] == null)
         assertTrue(excesses[5] == null)
-        // Juin: les room etaient deja epuises, le withdrawal n'en a labelStep rendu.
+        // June: room was already exhausted, the withdrawal did not restore any.
         assertEquals(toMoney("6000.00"), excesses.getValue(6).maxExcess)
         assertEquals(toMoney("60.00"), excesses.getValue(6).penalty)
-        // L'excess persiste jusqu'a la end de l'year: juin a decembre.
+        // The excess persists until the end of the year: june through december.
         assertEquals(7, excesses.size)
         assertEquals(toMoney("6000.00"), excesses.getValue(12).maxExcess)
     }
 
     @Test
-    fun `un retrait annule l'excedent mais le mois reste facture`() {
+    fun `a withdrawal cancels the excess but the month remains billed`() {
         val transactions = listOf(
             tx("2019-02-01", TransactionType.DEPOSIT, "6000.00"),
-            tx("2019-03-01", TransactionType.DEPOSIT, "1000.00"), // depassement de 1000
-            tx("2019-04-15", TransactionType.WITHDRAWAL, "1000.00"), // corrige en avril
+            tx("2019-03-01", TransactionType.DEPOSIT, "1000.00"), // overage of 1000
+            tx("2019-04-15", TransactionType.WITHDRAWAL, "1000.00"), // corrected in april
         )
 
         val excesses = Overcontribution.tfsaExcesses(
@@ -100,17 +100,17 @@ class OvercontributionTest {
 
         assertEquals(toMoney("1000.00"), excesses.getValue(3).maxExcess)
         assertEquals(toMoney("10.00"), excesses.getValue(3).penalty)
-        // Avril reste facture: la penalty porte sur l'excess le PLUS ELEVE
-        // du month, et il valait 1000 jusqu'au 15.
+        // April remains billed: the penalty is based on the HIGHEST excess
+        // of the month, and it was 1000 until the 15th.
         assertEquals(toMoney("1000.00"), excesses.getValue(4).maxExcess)
-        // Mai est propre: l'excess a ete annule par le withdrawal.
+        // May is clean: the excess was cancelled by the withdrawal.
         assertTrue(excesses[5] == null)
     }
 
     @Test
-    fun `l'excedent est absorbe par les droits de l'annee suivante`() {
-        // Droits 2019 = 6000, repository de 10000 -> excess de 4000 jusqu'en
-        // decembre. Au 1er janvier 2020, le limit de 6000 absorbed l'excess
+    fun `the excess is absorbed by the following year's room`() {
+        // 2019 room = 6000, deposit of 10000 -> excess of 4000 through
+        // december. On january 1, 2020, the 6000 limit absorbs the excess
         // (startRoom 2020 = -4000 + 6000 = 2000 > 0).
         val transactions = listOf(tx("2019-03-15", TransactionType.DEPOSIT, "10000.00"))
 
@@ -127,7 +127,7 @@ class OvercontributionTest {
     }
 
     @Test
-    fun `aucun excedent sans transaction`() {
+    fun `no excess without a transaction`() {
         val excesses = Overcontribution.tfsaExcesses(
             profile,
             limits,
@@ -139,10 +139,10 @@ class OvercontributionTest {
     }
 
     @Test
-    fun `une transaction anterieure a l'admissibilite ne cree aucun excedent`() {
-        // TfsaEngine ignore cette transaction (sa boucle demarre en 2019).
-        // Overcontribution doit l'ignorer aussi, sans quoi les 9000 deviendraient
-        // un excess facture a 1 % par month.
+    fun `a transaction before eligibility creates no excess`() {
+        // TfsaEngine ignores this transaction (its loop starts in 2019).
+        // Overcontribution must ignore it too, otherwise the 9000 would become
+        // an excess billed at 1% per month.
         val transactions = listOf(tx("2018-05-01", TransactionType.DEPOSIT, "9000.00"))
 
         val excesses = Overcontribution.tfsaExcesses(

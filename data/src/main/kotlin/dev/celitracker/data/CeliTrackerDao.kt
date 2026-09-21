@@ -54,19 +54,19 @@ interface CeliTrackerDao {
     suspend fun saveSettings(settings: SettingsEntity)
 
     @Query("DELETE FROM profil")
-    suspend fun viderProfil()
+    suspend fun clearProfile()
 
     @Query("DELETE FROM plafonds")
-    suspend fun viderPlafonds()
+    suspend fun clearLimits()
 
     @Query("DELETE FROM transactions")
-    suspend fun viderTransactions()
+    suspend fun clearTransactions()
 
     @Query("DELETE FROM snapshots_arc")
-    suspend fun viderSnapshotsArc()
+    suspend fun clearCraSnapshots()
 
     @Query("DELETE FROM reglages")
-    suspend fun viderReglages()
+    suspend fun clearSettings()
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveLimits(limits: List<LimitEntity>)
@@ -78,8 +78,8 @@ interface CeliTrackerDao {
     suspend fun saveCraSnapshots(snapshots: List<CraSnapshotEntity>)
 
     /**
-     * Vide puis remplit toutes les tables en une seule transaction: reserve a
-     * l'import JSON, qui remplace whole le content et ne fusionne jamais.
+     * Clears and refills every table in a single transaction: used only by
+     * the JSON import, which replaces the whole content and never merges.
      */
     @Transaction
     suspend fun replaceEverything(
@@ -89,11 +89,11 @@ interface CeliTrackerDao {
         snapshots: List<CraSnapshotEntity>,
         settings: SettingsEntity,
     ) {
-        viderProfil()
-        viderPlafonds()
-        viderTransactions()
-        viderSnapshotsArc()
-        viderReglages()
+        clearProfile()
+        clearLimits()
+        clearTransactions()
+        clearCraSnapshots()
+        clearSettings()
         profile?.let { saveProfile(it) }
         saveLimits(limits)
         addTransactions(transactions)

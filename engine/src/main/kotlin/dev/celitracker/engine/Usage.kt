@@ -4,8 +4,8 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 
 /**
- * 80 % previent, 95 % presse, au-dela c'est une sur-cotisation: les seuils que
- * les outils de suivi du TFSA utilisent pour eviter la penalty de 1 % par month.
+ * 80% warns, 95% is urgent, beyond that it's an over-contribution: the
+ * thresholds TFSA tracking tools use to avoid the 1% per month penalty.
  */
 enum class UsageLevel { NORMAL, WARNING, CRITICAL, EXCEEDED }
 
@@ -13,13 +13,13 @@ private val WARNING_THRESHOLD = BigDecimal("0.80")
 private val CRITICAL_THRESHOLD = BigDecimal("0.95")
 private val HUNDRED = BigDecimal(100)
 
-/** Part des room d'une year deja cotisee, pour un account. */
+/** Share of a year's room already contributed, for one account. */
 data class Usage(val room: BigDecimal, val contributed: BigDecimal) {
     val remaining: BigDecimal get() = (room - contributed).max(BigDecimal.ZERO).toMoney()
 
     val excess: BigDecimal get() = (contributed - room).max(BigDecimal.ZERO).toMoney()
 
-    /** `null` sans room: un percent de zero n'a labelStep de sens. */
+    /** `null` with no room: a percentage of zero would not make sense. */
     val percent: Int? get() =
         if (room.signum() <= 0) null else contributed.multiply(HUNDRED).divide(room, 0, RoundingMode.HALF_UP).toInt()
 
@@ -35,12 +35,13 @@ data class Usage(val room: BigDecimal, val contributed: BigDecimal) {
 }
 
 /**
- * Usage TFSA de [year]: les room du 1er janvier et les deposits de
- * l'year. Un withdrawal ne redonne des room que l'year suivante, il n'entre
- * donc labelStep ici.
+ * TFSA usage for [year]: the January 1st room and the year's deposits.
+ * A withdrawal only restores room the following year, so it does not
+ * factor in here.
  *
- * `null` si un limit manque jusqu'a [year]: les room sont alors
- * sous-estimes, et une alerte de depassement calculee dessus serait fausse.
+ * `null` if a limit is missing up to [year]: room would then be
+ * underestimated, and an over-contribution alert based on it would be
+ * wrong.
  */
 fun tfsaUsage(
     profile: Profile,
@@ -53,7 +54,7 @@ fun tfsaUsage(
     return rows.find { it.year == year }?.let { Usage(room = it.startRoom, contributed = it.deposits) }
 }
 
-/** Usage FHSA de [year], ou `null` sans account ouvert cette year-la. */
+/** FHSA usage for [year], or `null` if no account was open that year. */
 fun fhsaUsage(profile: Profile, transactions: List<Transaction>, year: Int): Usage? = FhsaEngine.roomByYear(profile, transactions, year)
     .find { it.year == year }
     ?.let { Usage(room = it.yearRoom, contributed = it.deposits) }

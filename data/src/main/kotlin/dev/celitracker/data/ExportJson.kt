@@ -13,18 +13,18 @@ import java.time.Instant
 import java.time.LocalDate
 
 /**
- * Export/import JSON de la database, verse par [Repository]. Aucune value calculee
- * n'est exportee : profile, limits, transactions, snapshots ARC et settings,
- * tels que persistes, rien de plus.
+ * JSON export/import for the database, driven by [Repository]. No calculated
+ * value is exported: profile, limits, transactions, CRA snapshots and
+ * settings, exactly as persisted, nothing more.
  */
 
 private const val EXPORT_VERSION = 2
 
 /**
- * La version 1 portait une year d'admissibilite TFSA input a la main, qui se
- * calcule now depuis l'year de birth. Un export de version 1 reste
- * lisible : le champ en trop est ignore plutot que de rendre une ancienne
- * backup inutilisable, ce qui est whole l'interet de l'export.
+ * Version 1 carried a TFSA eligibility year entered by hand, which is now
+ * calculated from the birth year. A version 1 export stays readable: the
+ * extra field is ignored rather than making an old backup unusable, which
+ * would defeat the whole point of exporting.
  */
 private val ACCEPTED_VERSIONS = setOf(1, EXPORT_VERSION)
 
@@ -63,7 +63,7 @@ private data class CraSnapshotJson(
 
 @Serializable
 private data class SettingsJson(
-    @SerialName("urlPageArc") val urlPageArc: String,
+    @SerialName("urlPageArc") val craPageUrl: String,
     @SerialName("dateDerniereVerification") val lastCheckDate: String?,
 )
 
@@ -78,11 +78,11 @@ private data class ExportFile(
 )
 
 /**
- * Serialise la database en JSON. Les montants sont des chaines,
- * jamais des nombres JSON : un nombre JSON transite par un `double` chez la
- * plupart des lecteurs, ce qui detruirait l'exactitude de [BigDecimal]. Les
- * collections sont triees par une cle stable pour qu'a content egal, deux
- * exports successifs produisent la meme chaine.
+ * Serializes the database to JSON. Amounts are strings, never JSON numbers:
+ * a JSON number passes through a `double` in most readers, which would
+ * destroy [BigDecimal]'s precision. Collections are sorted by a stable key
+ * so that, for the same content, two successive exports produce the same
+ * string.
  */
 suspend fun Repository.exportJson(): String {
     val data = ExportFile(
@@ -102,16 +102,16 @@ suspend fun Repository.exportJson(): String {
         craSnapshots = craSnapshots()
             .sortedBy { it.id }
             .map { CraSnapshotJson(it.id, it.account.storedValue(), it.referenceDate.toString(), it.declaredRoom.toPlainString()) },
-        settings = settings().let { SettingsJson(it.urlPageArc, it.lastCheckDate?.toString()) },
+        settings = settings().let { SettingsJson(it.craPageUrl, it.lastCheckDate?.toString()) },
     )
     return json.encodeToString(ExportFile.serializer(), data)
 }
 
 /**
- * Remplace whole le content de la database par celui du JSON, dans une seule
- * transaction : ce n'est labelStep une fusion, les tables sont videes puis
- * remplies. Un import qui echoue - version inconnue, JSON malforme - ne
- * modifie jamais la database existing.
+ * Replaces the entire content of the database with that of the JSON, in a
+ * single transaction: this is not a merge, the tables are cleared then
+ * refilled. An import that fails - unknown version, malformed JSON - never
+ * modifies the existing database.
  */
 suspend fun Repository.importJson(content: String) {
     val data = try {
@@ -156,7 +156,7 @@ suspend fun Repository.importJson(content: String) {
         )
     }
     val settings = SettingsEntity(
-        urlPageArc = data.settings.urlPageArc,
+        craPageUrl = data.settings.craPageUrl,
         lastCheckDate = data.settings.lastCheckDate?.let(Instant::parse),
     )
 

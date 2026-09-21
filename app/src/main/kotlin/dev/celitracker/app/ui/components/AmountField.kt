@@ -19,9 +19,9 @@ import java.text.DecimalFormatSymbols
 import java.util.Locale
 
 /**
- * Champ de amount partage: separateurs de milliers affiches en tapant, comme
- * dans un tableur, sans toucher a la value brute qui sert au calcul (elle
- * garde le separator decimal tel que tape, `toEnteredAmount` accepte les deux).
+ * Shared amount field: thousands separators shown while typing, like
+ * in a spreadsheet, without touching the raw value used for the calculation (it
+ * keeps the decimal separator as typed, `toEnteredAmount` accepts both).
  */
 @Composable
 fun AmountField(
@@ -47,7 +47,7 @@ fun AmountField(
     )
 }
 
-/** L'toMoney n'a que deux decimales: une troisieme frappee, ou toute frappee after, est ignoree. */
+/** Money only has two decimals: a third digit typed, or anything typed after it, is ignored. */
 internal fun String.limitToTwoDecimals(): String {
     val separatorIndex = indexOfFirst { it == ',' || it == '.' }
     if (separatorIndex < 0) return this
@@ -56,13 +56,13 @@ internal fun String.limitToTwoDecimals(): String {
 }
 
 /**
- * Regroupe une suite de tabularFigures par milliers en partant de la right (« 1234567 »
- * -> « 1 234 567 »), et sait convertir une position de curseur d'un cote a
- * l'other. Pure logique, sans dependance a Compose: c'est ce qui la rend
- * testable sans instrumentation.
+ * Groups a sequence of digits by thousands starting from the right ("1234567"
+ * -> "1 234 567"), and can convert a cursor position from one side to the
+ * other. Pure logic, with no dependency on Compose: that is what makes it
+ * testable without instrumentation.
  */
 internal class ThousandsGrouper(digits: String, separator: Char) {
-    /** Position, dans [text], juste before le digit d'origine numero i (0..digits.length). */
+    /** Position, in [text], just before original digit number i (0..digits.length). */
     private val positions = IntArray(digits.length + 1)
     val text: String
 
@@ -79,13 +79,13 @@ internal class ThousandsGrouper(digits: String, separator: Char) {
 
     fun toGrouped(originalIndex: Int): Int = positions[originalIndex.coerceIn(0, positions.lastIndex)]
 
-    /** Le curseur pose sur un separator retombe sur le dernier digit deja tape. */
+    /** A cursor placed on a separator falls back onto the last digit already typed. */
     fun toOriginal(groupedIndex: Int): Int = positions.indexOfLast { it <= groupedIndex }.coerceAtLeast(0)
 }
 
 /**
- * Regroupe la part entiere par milliers. La part decimale, avec son
- * separator, suit sans y toucher: c'est elle qui porte les sous exacts.
+ * Groups the integer part by thousands. The decimal part, with its
+ * separator, follows untouched: it is what carries the exact cents.
  */
 private class AmountTransformation(private val locale: Locale) : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {

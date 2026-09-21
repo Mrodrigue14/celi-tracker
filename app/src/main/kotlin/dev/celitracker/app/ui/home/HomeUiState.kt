@@ -11,14 +11,14 @@ import java.math.RoundingMode
 import java.time.LocalDate
 
 /**
- * [currentYear] et [currentMonth] sont des ENTREES (l'instant de lecture),
- * labelStep des values derivees: comme le `upTo` des moteurs, ils viennent du
- * ViewModel pour que cet state reste une fonction pure de ses champs, testable
- * sans horloge.
+ * [currentYear] and [currentMonth] are INPUTS (the moment of reading), not
+ * derived values: like the `upTo` of the engines, they come from the
+ * ViewModel so this state remains a pure function of its fields, testable
+ * without a clock.
  *
- * Toute value labelled ailleurs est une propriete calculee, jamais un champ
- * du constructeur: un `copy()` ne doit jamais pouvoir produire un state
- * incoherent entre les listes et un total qui en derivait.
+ * Any other value is a computed property, never a constructor field: a
+ * `copy()` must never be able to produce a state that's inconsistent
+ * between the lists and a total derived from them.
  */
 data class HomeUiState(
     val profile: Profile?,
@@ -28,9 +28,9 @@ data class HomeUiState(
     val fhsaRoom: List<FhsaYear> = emptyList(),
     val tfsaExcesses: List<MonthlyExcess> = emptyList(),
     /**
-     * Faux tant que la database n'a labelStep repondu. Sans lui, « aucun profile » et
-     * « labelStep encore parsed » se confondaient, et l'ecran d'home vide clignotait
-     * a chaque opening.
+     * False until the database has answered. Without it, "no profile" and
+     * "not yet loaded" were indistinguishable, and the empty home screen
+     * would flash on every open.
      */
     val loaded: Boolean = true,
 ) {
@@ -44,13 +44,13 @@ data class HomeUiState(
         tfsaExcesses.find { it.year == currentYear && it.month == currentMonth }
 
     /**
-     * null si aucun FHSA ouvert. Le moteur FHSA est explicitement
-     * separe du TFSA: aucune penalty de sur-cotisation n'y est exposee ici,
-     * `Overcontribution.tfsaExcesses` ne couvre que le TFSA.
+     * null if no FHSA is open. The FHSA engine is deliberately kept
+     * separate from the TFSA: no overcontribution penalty is exposed here,
+     * `Overcontribution.tfsaExcesses` only covers the TFSA.
      */
     val fhsaParticipationDeadline: LocalDate? get() = profile?.let(FhsaEngine::participationPeriodEnd)
 
-    /** Inconnue si un limit manque: les room sont alors sous-estimes, l'alerte serait fausse. */
+    /** Unknown if a limit is missing: the room would then be underestimated, and the alert would be wrong. */
     val tfsaUsage: Usage? get() =
         if (tfsaRoom.any { it.limitMissing }) {
             null
@@ -62,14 +62,14 @@ data class HomeUiState(
 
     val fhsaRemainingRoom: BigDecimal? get() = fhsaCurrentYear?.let { it.yearRoom - it.deposits }
 
-    /** Part des room de l'year deja cotisee, pour l'anneau de l'home. */
+    /** Share of the year's room already contributed, for the home screen ring. */
     val tfsaUsedFraction: Float? get() = tfsaCurrentYear?.let { fraction(it.deposits, it.startRoom) }
 
     val fhsaUsedFraction: Float? get() = fhsaCurrentYear?.let { fraction(it.deposits, it.yearRoom) }
 }
 
 /**
- * Seul endroit ou un amount devient un Float: pour dessiner un cra, jamais
- * pour un calcul de room. Superieure a 1 en cas de sur-cotisation.
+ * Only place an amount becomes a Float: to draw an arc, never for a room
+ * calculation. Greater than 1 in case of overcontribution.
  */
 private fun fraction(part: BigDecimal, whole: BigDecimal): Float? = if (whole.signum() <= 0) null else part.divide(whole, 4, RoundingMode.HALF_UP).toFloat()

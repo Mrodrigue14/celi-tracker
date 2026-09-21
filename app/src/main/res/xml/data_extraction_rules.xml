@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  API 31 et plus. Meme perimetre que regles_sauvegarde.xml.
+  API 31 and above. Same scope as backup_rules.xml.
 
-  Le transfert d'appareil a appareil reste local aux deux telephones et ne passe
-  par aucun service tiers: il porte moins de risque que la sauvegarde
-  infonuagique tout en couvrant le cas du remplacement de telephone.
+  Device-to-device transfer stays local to the two phones and does not go
+  through any third-party service: it carries less risk than the cloud
+  backup while still covering the phone-replacement case.
 
-  Une liste d'inclusion est deja une liste blanche.
+  An inclusion list is already a whitelist.
 -->
 <data-extraction-rules>
     <cloud-backup>

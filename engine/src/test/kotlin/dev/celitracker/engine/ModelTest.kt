@@ -9,7 +9,7 @@ import kotlin.test.assertEquals
 class ModelTest {
 
     @Test
-    fun `un montant conserve sa precision decimale exacte`() {
+    fun `an amount keeps its exact decimal precision`() {
         val tx = Transaction(
             account = Account.TFSA,
             date = LocalDate.of(2026, 4, 6),
@@ -17,33 +17,33 @@ class ModelTest {
             amount = BigDecimal("1234.56"),
         )
 
-        // Si quelqu'un remplace BigDecimal par Double, cette egalite de chaine
-        // casse (1234.5600000000001) et le test devient rouge.
+        // If someone replaces BigDecimal with Double, this string equality
+        // breaks (1234.5600000000001) and the test goes red.
         assertEquals("1234.56", tx.amount.toPlainString())
     }
 
     @Test
-    fun `argent normalise l'echelle a deux decimales`() {
-        // BigDecimal.equals compare l'echelle: sans normalisation,
+    fun `money normalizes the scale to two decimals`() {
+        // BigDecimal.equals compares the scale: without normalization,
         // BigDecimal("6000") != BigDecimal("6000.00").
         assertEquals(BigDecimal("6000.00"), BigDecimal("6000").toMoney())
         assertEquals(BigDecimal("6000.00"), BigDecimal("6000.000").toMoney())
     }
 
     @Test
-    fun `argent arrondit au centime le plus proche`() {
+    fun `money rounds to the nearest cent`() {
         assertEquals(BigDecimal("10.01"), BigDecimal("10.005").toMoney())
         assertEquals(BigDecimal("10.00"), BigDecimal("10.004").toMoney())
     }
 
     @Test
-    fun `un plafond est confirme par defaut`() {
+    fun `a limit is confirmed by default`() {
         val limit = AnnualLimit(Account.TFSA, 2019, BigDecimal("6000.00"))
         assertEquals(true, limit.confirmed)
     }
 
     @Test
-    fun `un profil accepte l'absence de compte CELIAPP`() {
+    fun `a profile accepts having no FHSA account`() {
         val profile = Profile(
             birthYear = 2001,
             fhsaOpeningDate = null,
@@ -52,18 +52,18 @@ class ModelTest {
     }
 
     @Test
-    fun `l'annee d'admissibilite est celle des 18 ans`() {
+    fun `the eligibility year is the year of turning 18`() {
         assertEquals(2013, Profile(birthYear = 1995, fhsaOpeningDate = null).tfsaEligibilityYear)
     }
 
     @Test
-    fun `l'annee d'admissibilite ne precede jamais la creation du CELI`() {
-        // 18 ans en 1978, mais le TFSA n'existe qu'en 2009.
+    fun `the eligibility year never precedes the creation of the TFSA`() {
+        // 18 years old in 1978, but the TFSA did not exist until 2009.
         assertEquals(2009, Profile(birthYear = 1960, fhsaOpeningDate = null).tfsaEligibilityYear)
     }
 
     @Test
-    fun `un snapshot arc conserve le compte et les droits declares`() {
+    fun `a cra snapshot keeps the account and the declared room`() {
         val snapshot = CraSnapshot(
             id = 1,
             account = Account.FHSA,
@@ -75,8 +75,8 @@ class ModelTest {
     }
 
     @Test
-    fun `des reglages sans verification recente sont acceptes`() {
-        val settings = Settings(urlPageArc = "https://arc.gc.ca", lastCheckDate = null)
+    fun `settings without a recent check are accepted`() {
+        val settings = Settings(craPageUrl = "https://arc.gc.ca", lastCheckDate = null)
         assertEquals(null, settings.lastCheckDate)
         assertEquals(settings, settings.copy(lastCheckDate = null))
 

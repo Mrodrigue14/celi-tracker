@@ -34,12 +34,12 @@ class RepositoryTest {
     }
 
     private val tfsaProfile = Profile(
-        birthYear = 2002, // admissible au TFSA en 2020
+        birthYear = 2002, // eligible for the TFSA in 2020
         fhsaOpeningDate = LocalDate.of(2023, 6, 1),
     )
 
     @Test
-    fun `profil fait l'aller-retour sur une base reelle`() = runTest {
+    fun `profile round trips on a real database`() = runTest {
         assertNull(repository.profile())
 
         repository.saveProfile(tfsaProfile)
@@ -48,7 +48,7 @@ class RepositoryTest {
     }
 
     @Test
-    fun `plafond fait l'aller-retour`() = runTest {
+    fun `limit round trips`() = runTest {
         val limit = AnnualLimit(Account.TFSA, 2026, BigDecimal("7000.00"), confirmed = true)
 
         repository.saveLimit(limit)
@@ -57,7 +57,7 @@ class RepositoryTest {
     }
 
     @Test
-    fun `snapshot arc fait l'aller-retour`() = runTest {
+    fun `cra snapshot round trips`() = runTest {
         repository.saveCraSnapshot(CraSnapshot(0, Account.TFSA, LocalDate.of(2026, 1, 1), BigDecimal("1234.56")))
 
         val snapshots = repository.craSnapshots()
@@ -68,17 +68,17 @@ class RepositoryTest {
     }
 
     @Test
-    fun `reglages par defaut puis aller-retour`() = runTest {
-        assertEquals(Settings(urlPageArc = DEFAULT_CRA_PAGE_URL, lastCheckDate = null), repository.settings())
+    fun `default settings then round trip`() = runTest {
+        assertEquals(Settings(craPageUrl = DEFAULT_CRA_PAGE_URL, lastCheckDate = null), repository.settings())
 
-        val settings = Settings(urlPageArc = "https://arc.gc.ca", lastCheckDate = Instant.parse("2026-09-08T12:00:00Z"))
+        val settings = Settings(craPageUrl = "https://arc.gc.ca", lastCheckDate = Instant.parse("2026-09-08T12:00:00Z"))
         repository.saveSettings(settings)
 
         assertEquals(settings, repository.settings())
     }
 
     @Test
-    fun `transaction fait l'aller-retour et un montant a deux decimales reste exact`() = runTest {
+    fun `transaction round trips and an amount with two decimals stays exact`() = runTest {
         repository.saveProfile(tfsaProfile)
         val transaction = Transaction(Account.TFSA, LocalDate.of(2026, 1, 15), TransactionType.DEPOSIT, BigDecimal("1234.56"))
 
@@ -92,7 +92,7 @@ class RepositoryTest {
     }
 
     @Test
-    fun `la colonne montant de transactions est de type TEXT`() = runTest {
+    fun `the transactions amount column is of type TEXT`() = runTest {
         repository.saveProfile(tfsaProfile)
         repository.addTransaction(Transaction(Account.TFSA, LocalDate.of(2026, 1, 15), TransactionType.DEPOSIT, BigDecimal("100.00")))
         database.close()
@@ -110,7 +110,7 @@ class RepositoryTest {
     }
 
     @Test
-    fun `suppression d'une transaction`() = runTest {
+    fun `deleting a transaction`() = runTest {
         repository.saveProfile(tfsaProfile)
         repository.addTransaction(Transaction(Account.TFSA, LocalDate.of(2026, 1, 15), TransactionType.DEPOSIT, BigDecimal("50.00")))
         val id = repository.transactions().single().id
@@ -121,7 +121,7 @@ class RepositoryTest {
     }
 
     @Test
-    fun `modification d'une transaction`() = runTest {
+    fun `updating a transaction`() = runTest {
         repository.saveProfile(tfsaProfile)
         repository.addTransaction(Transaction(Account.TFSA, LocalDate.of(2026, 1, 15), TransactionType.DEPOSIT, BigDecimal("50.00")))
         val updated = repository.transactions().single().copy(type = TransactionType.WITHDRAWAL, amount = BigDecimal("75.25"))
@@ -132,7 +132,7 @@ class RepositoryTest {
     }
 
     @Test
-    fun `modifierTransaction applique la meme validation que l'ajout`() = runTest {
+    fun `updateTransaction applies the same validation as adding`() = runTest {
         repository.saveProfile(tfsaProfile)
         repository.addTransaction(Transaction(Account.TFSA, LocalDate.of(2026, 1, 15), TransactionType.DEPOSIT, BigDecimal("50.00")))
         val earlier = repository.transactions().single().copy(date = LocalDate.of(2019, 12, 31))
@@ -141,7 +141,7 @@ class RepositoryTest {
     }
 
     @Test
-    fun `modifierTransaction rejette une transaction inexistante`() = runTest {
+    fun `updateTransaction rejects a nonexistent transaction`() = runTest {
         repository.saveProfile(tfsaProfile)
 
         assertFailsWith<IllegalArgumentException> {
@@ -150,7 +150,7 @@ class RepositoryTest {
     }
 
     @Test
-    fun `ajouterTransaction rejette un montant nul ou negatif`() = runTest {
+    fun `addTransaction rejects a zero or negative amount`() = runTest {
         repository.saveProfile(tfsaProfile)
 
         assertFailsWith<IllegalArgumentException> {
@@ -162,7 +162,7 @@ class RepositoryTest {
     }
 
     @Test
-    fun `ajouterTransaction rejette une transaction CELI anterieure a l'annee d'admissibilite`() = runTest {
+    fun `addTransaction rejects a TFSA transaction before the eligibility year`() = runTest {
         repository.saveProfile(tfsaProfile)
 
         assertFailsWith<IllegalArgumentException> {
@@ -171,7 +171,7 @@ class RepositoryTest {
     }
 
     @Test
-    fun `ajouterTransaction rejette une transaction CELIAPP anterieure a l'ouverture du compte`() = runTest {
+    fun `addTransaction rejects an FHSA transaction before the account is opened`() = runTest {
         repository.saveProfile(tfsaProfile)
 
         assertFailsWith<IllegalArgumentException> {
@@ -180,7 +180,7 @@ class RepositoryTest {
     }
 
     @Test
-    fun `ajouterTransaction rejette une transaction CELIAPP sans date d'ouverture enregistree`() = runTest {
+    fun `addTransaction rejects an FHSA transaction with no opening date on record`() = runTest {
         repository.saveProfile(tfsaProfile.copy(fhsaOpeningDate = null))
 
         assertFailsWith<IllegalArgumentException> {

@@ -6,29 +6,29 @@ import java.time.Instant
 import java.time.LocalDate
 
 /**
- * Types de SAISIE du moteur. Rien ici n'est calcule: le profile, la table des
- * limits et le journal des transactions sont les trois seules entrees dont
- * les room de cotisation sont derives.
+ * Input types for the engine. Nothing here is computed: the profile,
+ * the limits table and the transaction log are the only three inputs
+ * from which contribution room is derived.
  */
 
 enum class Account { TFSA, FHSA }
 
 enum class TransactionType { DEPOSIT, WITHDRAWAL }
 
-/** Le amount est TOUJOURS positif; c'est [type] qui porte le sens. */
+/** The amount is ALWAYS positive; [type] is what carries the sign. */
 data class Transaction(
     val account: Account,
     val date: LocalDate,
     val type: TransactionType,
     val amount: BigDecimal,
-    /** 0 = labelStep encore persistee. Permet la suppression via [Repository]. */
+    /** 0 = not yet persisted. Enables deletion via [Repository]. */
     val id: Long = 0,
 )
 
 /**
- * [confirmed] a false = limit proposed par la lecture automatique du site de
- * l'ARC, labelStep encore valid par l'utilisateur. Un limit non confirmed n'entre
- * jamais dans le calcul des room.
+ * [confirmed] false means the limit was proposed by automatically
+ * reading the CRA site, not yet validated by the user. An unconfirmed
+ * limit never enters the room calculation.
  */
 data class AnnualLimit(
     val account: Account,
@@ -37,28 +37,28 @@ data class AnnualLimit(
     val confirmed: Boolean = true,
 )
 
-/** Le TFSA n'existe labelStep before 2009: personne n'accumule de room plus tot. */
+/** The TFSA did not exist before 2009: nobody accumulates room earlier than that. */
 const val FIRST_TFSA_YEAR = 2009
 
 const val TFSA_ELIGIBILITY_AGE = 18
 
 data class Profile(
-    /** Aussi la branche des 71 ans de la periode de participation FHSA. */
+    /** Also the age-71 branch of the FHSA participation period. */
     val birthYear: Int,
-    /** Demarre l'accumulation des room FHSA ET l'horloge des 15 ans. */
+    /** Starts both the FHSA room accumulation and the 15-year clock. */
     val fhsaOpeningDate: LocalDate?,
 ) {
     /**
-     * Derivee, jamais input: l'year des 18 ans, au plus tot 2009. Suppose la
-     * residence canadienne depuis cet age, ce qui est le cas de l'unique
-     * utilisateur de l'application. Une arrivee au pays plus tard reporterait
-     * cette year et demanderait une input separee.
+     * Derived, never entered directly: the year of turning 18, no
+     * earlier than 2009. Assumes Canadian residency since that age,
+     * which is true for the app's single user. A later arrival in the
+     * country would push this year back and require a separate input.
      */
     val tfsaEligibilityYear: Int
         get() = maxOf(birthYear + TFSA_ELIGIBILITY_AGE, FIRST_TFSA_YEAR)
 }
 
-/** Instantane des room declares sur le site de l'ARC, pour comparaison. */
+/** Snapshot of the room declared on the CRA site, for comparison. */
 data class CraSnapshot(
     val id: Long,
     val account: Account,
@@ -67,23 +67,23 @@ data class CraSnapshot(
 )
 
 data class Settings(
-    val urlPageArc: String,
+    val craPageUrl: String,
     val lastCheckDate: Instant?,
 )
 
 /**
- * Normalise un amount a 2 decimales.
+ * Normalizes an amount to 2 decimal places.
  *
- * BigDecimal.equals compare la value ET l'echelle, donc BigDecimal("6000")
- * n'est labelStep egal a BigDecimal("6000.00"). Toute value monetaire produite par
- * le moteur passe par cette fonction, sans quoi les assertions des tests
- * echouent sur des montants pourtant identiques.
+ * BigDecimal.equals compares both the value AND the scale, so
+ * BigDecimal("6000") is not equal to BigDecimal("6000.00"). Every
+ * monetary value the engine produces goes through this function,
+ * otherwise test assertions fail on amounts that are actually identical.
  */
 fun BigDecimal.toMoney(): BigDecimal = setScale(2, RoundingMode.HALF_UP)
 
 /**
- * Total des transactions de [type] faites en [year]. Une simple addition, labelStep
- * une regle de regime: les deux moteurs la partagent sans rien fusionner.
+ * Total of the [type] transactions made in [year]. A plain sum, not a
+ * regime rule: both engines share it without merging anything.
  */
 internal fun sumTransactions(transactions: List<Transaction>, year: Int, type: TransactionType): BigDecimal = transactions
     .filter { it.date.year == year && it.type == type }

@@ -5,12 +5,12 @@ import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/** Raccourci: whole litteral monetaire d'un test s'ecrit a 2 decimales. */
+/** Shortcut: every monetary literal in a test is written with 2 decimals. */
 private fun toMoney(value: String): BigDecimal = BigDecimal(value).toMoney()
 
 private fun tfsaLimits(vararg pairs: Pair<Int, String>): List<AnnualLimit> = pairs.map { (year, amount) -> AnnualLimit(Account.TFSA, year, toMoney(amount)) }
 
-private fun repository(date: String, amount: String) = Transaction(Account.TFSA, LocalDate.parse(date), TransactionType.DEPOSIT, toMoney(amount))
+private fun deposit(date: String, amount: String) = Transaction(Account.TFSA, LocalDate.parse(date), TransactionType.DEPOSIT, toMoney(amount))
 
 private fun withdrawal(date: String, amount: String) = Transaction(Account.TFSA, LocalDate.parse(date), TransactionType.WITHDRAWAL, toMoney(amount))
 
@@ -19,9 +19,10 @@ class TfsaEngineTest {
     /**
      * scenario_2019_eligible_three_deposits
      *
-     * Personne devenue admissible au TFSA en 2019, aucun withdrawal, trois deposits.
-     * Scenario synthetique, derive des limits annuels publies par l'ARC.
-     * Controle: cumul des limits 51 500 - deposits 9 700 = 41 800.
+     * Person who became TFSA-eligible in 2019, no withdrawals, three
+     * deposits. Synthetic scenario, derived from the annual limits
+     * published by the CRA. Check: sum of limits 51500 - deposits 9700
+     * = 41800.
      */
     @Test
     fun `scenario 2019 eligible three deposits`() {
@@ -40,9 +41,9 @@ class TfsaEngineTest {
             2026 to "7000.00",
         )
         val transactions = listOf(
-            repository("2021-03-10", "5000.00"),
-            repository("2023-06-15", "3500.00"),
-            repository("2024-11-02", "1200.00"),
+            deposit("2021-03-10", "5000.00"),
+            deposit("2023-06-15", "3500.00"),
+            deposit("2024-11-02", "1200.00"),
         )
 
         val room = TfsaEngine.roomByYear(profile, limits, transactions, upTo = 2026)
@@ -77,7 +78,7 @@ class TfsaEngineTest {
     }
 
     @Test
-    fun `les annees vont de l'admissibilite a l'annee demandee`() {
+    fun `the years go from eligibility to the requested year`() {
         val profile = Profile(2001, null)
         val room = TfsaEngine.roomByYear(
             profile,
@@ -90,7 +91,7 @@ class TfsaEngineTest {
     }
 
     @Test
-    fun `les transactions CELIAPP sont ignorees par le moteur CELI`() {
+    fun `FHSA transactions are ignored by the TFSA engine`() {
         val profile = Profile(2001, LocalDate.of(2023, 4, 1))
         val transactions = listOf(
             Transaction(Account.FHSA, LocalDate.of(2019, 5, 1), TransactionType.DEPOSIT, toMoney("5000.00")),
@@ -108,26 +109,26 @@ class TfsaEngineTest {
     }
 
     @Test
-    fun `un retrait ne redonne pas de droits dans l'annee du retrait`() {
+    fun `a withdrawal does not restore room in the year of the withdrawal`() {
         val profile = Profile(2001, null)
         val limits = tfsaLimits(2019 to "6000.00", 2020 to "6000.00")
         val transactions = listOf(
-            repository("2020-03-01", "6000.00"),
+            deposit("2020-03-01", "6000.00"),
             withdrawal("2020-08-01", "6000.00"),
         )
 
         val room = TfsaEngine.roomByYear(profile, limits, transactions, upTo = 2020)
             .associateBy { it.year }
 
-        // 6000 (end 2019) + 6000 (limit 2020) + 0 (withdrawals 2019) = 12000.
-        // Le withdrawal de 2020 n'ajoute RIEN aux room de 2020.
+        // 6000 (end 2019) + 6000 (limit 2020) + 0 (2019 withdrawals) = 12000.
+        // The 2020 withdrawal adds NOTHING to 2020's room.
         assertEquals(toMoney("12000.00"), room.getValue(2020).startRoom)
         assertEquals(toMoney("6000.00"), room.getValue(2020).withdrawals)
         assertEquals(toMoney("6000.00"), room.getValue(2020).endRoom)
     }
 
     @Test
-    fun `un retrait redonne des droits le 1er janvier suivant`() {
+    fun `a withdrawal restores room the following january 1`() {
         val profile = Profile(2001, null)
         val limits = tfsaLimits(
             2019 to "6000.00",
@@ -135,38 +136,38 @@ class TfsaEngineTest {
             2021 to "6000.00",
         )
         val transactions = listOf(
-            repository("2020-03-01", "6000.00"),
+            deposit("2020-03-01", "6000.00"),
             withdrawal("2020-08-01", "6000.00"),
         )
 
         val room = TfsaEngine.roomByYear(profile, limits, transactions, upTo = 2021)
             .associateBy { it.year }
 
-        // 6000 (end 2020) + 6000 (limit 2021) + 6000 (withdrawals 2020) = 18000.
+        // 6000 (end 2020) + 6000 (limit 2021) + 6000 (2020 withdrawals) = 18000.
         assertEquals(toMoney("18000.00"), room.getValue(2021).startRoom)
         assertEquals(toMoney("18000.00"), room.getValue(2021).endRoom)
     }
 
     @Test
-    fun `une sur-cotisation se propage a l'annee suivante sans etre effacee`() {
+    fun `an over-contribution carries to the next year without being erased`() {
         val profile = Profile(2001, null)
         val limits = tfsaLimits(2019 to "6000.00", 2020 to "6000.00")
-        val transactions = listOf(repository("2019-05-01", "10000.00"))
+        val transactions = listOf(deposit("2019-05-01", "10000.00"))
 
         val room = TfsaEngine.roomByYear(profile, limits, transactions, upTo = 2020)
             .associateBy { it.year }
 
-        // 6000 - 10000 = -4000. Un MAX(..., 0) ici donnerait 0 et masquerait
-        // la sur-cotisation, exactement le bug du classeur remplace.
+        // 6000 - 10000 = -4000. A MAX(..., 0) here would give 0 and hide
+        // the over-contribution, exactly the bug of the spreadsheet this replaces.
         assertEquals(toMoney("-4000.00"), room.getValue(2019).endRoom)
-        // -4000 + 6000 = 2000: l'excess est absorbed par le limit suivant.
+        // -4000 + 6000 = 2000: the excess is absorbed by the next limit.
         assertEquals(toMoney("2000.00"), room.getValue(2020).startRoom)
     }
 
     @Test
-    fun `une annee sans plafond est signalee et ne cree aucun droit`() {
+    fun `a year without a limit is flagged and creates no room`() {
         val profile = Profile(2001, null)
-        // 2020 absent de la table.
+        // 2020 absent from the table.
         val limits = tfsaLimits(2019 to "6000.00")
 
         val room = TfsaEngine.roomByYear(profile, limits, emptyList(), upTo = 2020)
@@ -175,17 +176,17 @@ class TfsaEngineTest {
         assertEquals(false, room.getValue(2019).limitMissing)
         assertEquals(true, room.getValue(2020).limitMissing)
         assertEquals(toMoney("0.00"), room.getValue(2020).limit)
-        // Les room stagnent: le moteur n'invente labelStep de limit.
+        // Room stays flat: the engine never invents a limit.
         assertEquals(toMoney("6000.00"), room.getValue(2020).endRoom)
     }
 
     @Test
-    fun `un plafond non confirme est traite comme absent`() {
+    fun `an unconfirmed limit is treated as absent`() {
         val profile = Profile(2001, null)
         val limits = listOf(
             AnnualLimit(Account.TFSA, 2019, toMoney("6000.00")),
-            // Proposed par la lecture automatique du site de l'ARC, labelStep encore
-            // valid par l'utilisateur: il ne doit labelStep entrer dans le calcul.
+            // Proposed by automatically reading the CRA site, not yet
+            // validated by the user: it must not enter the calculation.
             AnnualLimit(Account.TFSA, 2020, toMoney("6000.00"), confirmed = false),
         )
 

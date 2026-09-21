@@ -25,7 +25,7 @@ class DefaultLimitsTest {
     }
 
     @Test
-    fun `les plafonds publies sont inscrits et confirmes`() = runTest {
+    fun `published limits are recorded and confirmed`() = runTest {
         repository.seedPublishedLimits()
 
         val saved = repository.limits().filter { it.account == Account.TFSA }
@@ -36,7 +36,7 @@ class DefaultLimitsTest {
     }
 
     @Test
-    fun `un plafond deja saisi n'est pas ecrase`() = runTest {
+    fun `a limit already entered is not overwritten`() = runTest {
         repository.saveLimit(AnnualLimit(Account.TFSA, 2026, BigDecimal("6500.00"), confirmed = true))
 
         repository.seedPublishedLimits()

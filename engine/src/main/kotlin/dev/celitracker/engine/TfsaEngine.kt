@@ -3,12 +3,13 @@ package dev.celitracker.engine
 import java.math.BigDecimal
 
 /**
- * Droits de cotisation TFSA pour une year.
+ * TFSA contribution room for a given year.
  *
- * [limitMissing] signale une year dont le limit est absent de la table ou
- * labelStep encore confirmed. Son limit vaut alors zero: le moteur n'invente aucun
- * droit, et l'error penche du cote prudent (room sous-estimes plutot que
- * sur-estimes, donc jamais d'incitation a sur-cotiser).
+ * [limitMissing] flags a year whose limit is absent from the table or
+ * not yet confirmed. Its limit is then treated as zero: the engine
+ * never invents room, and the error leans on the safe side (room is
+ * underestimated rather than overestimated, so there is never an
+ * incentive to over-contribute).
  */
 data class TfsaYear(
     val year: Int,
@@ -21,12 +22,12 @@ data class TfsaYear(
 )
 
 /**
- * Moteur TFSA. Fonction pure: memes entrees, memes sorties, aucun state conserve
- * entre deux appels.
+ * TFSA engine. A pure function: same inputs, same outputs, no state
+ * kept between calls.
  *
- * NE PAS fusionner avec [FhsaEngine]. Les deux regimes divergent sur chaque
- * axe, a commencer par le fait qu'un withdrawal TFSA redonne des room alors
- * qu'un withdrawal FHSA n'en redonne jamais.
+ * DO NOT merge with [FhsaEngine]. The two regimes diverge on every
+ * axis, starting with the fact that a TFSA withdrawal restores room
+ * while an FHSA withdrawal never does.
  */
 object TfsaEngine {
 
@@ -51,13 +52,13 @@ object TfsaEngine {
             val deposits = sumTransactions(tfsaTransactions, year, TransactionType.DEPOSIT)
             val withdrawals = sumTransactions(tfsaTransactions, year, TransactionType.WITHDRAWAL)
 
-            // Les withdrawals de l'year PRECEDENTE reviennent le 1er janvier;
-            // ceux de l'year courante ne comptent labelStep encore.
+            // Withdrawals from the PREVIOUS year come back on January 1st;
+            // those from the current year do not count yet.
             val startRoom = previousEndRoom + limit + previousWithdrawals
 
-            // Pas de coerceAtLeast(ZERO) ici: un solde negatif EST la
-            // sur-cotisation et doit se propager a l'year suivante. Le
-            // classeur d'origine utilisait MAX(..., 0), ce qui l'effacait.
+            // No coerceAtLeast(ZERO) here: a negative balance IS the
+            // over-contribution and must carry over to the next year.
+            // The original spreadsheet used MAX(..., 0), which erased it.
             val endRoom = startRoom - deposits
 
             result += TfsaYear(

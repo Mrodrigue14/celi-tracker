@@ -6,7 +6,7 @@ import kotlin.test.assertEquals
 class ThousandsGrouperTest {
 
     @Test
-    fun `regroupe par milliers en partant de la droite`() {
+    fun `groups by thousands starting from the right`() {
         assertEquals("1,234,567", ThousandsGrouper("1234567", ',').text)
         assertEquals("1,234", ThousandsGrouper("1234", ',').text)
         assertEquals("123", ThousandsGrouper("123", ',').text)
@@ -14,15 +14,15 @@ class ThousandsGrouperTest {
     }
 
     @Test
-    fun `n'importe quel caractere separateur est accepte, ex l'espace insecable du francais`() {
+    fun `any separator character is accepted, eg the French non-breaking space`() {
         assertEquals("1 234 567", ThousandsGrouper("1234567", ' ').text)
     }
 
     @Test
-    fun `une position d'origine devient sa position apres regroupement`() {
+    fun `an original position becomes its position after grouping`() {
         val grouper = ThousandsGrouper("1234567", ',')
 
-        // "1,234,567": positions des tabularFigures d'origine 1 2 3 4 5 6 7 -> 0 2 3 4 6 7 8, end a 9.
+        // "1,234,567": positions of the original digits 1 2 3 4 5 6 7 -> 0 2 3 4 6 7 8, ending at 9.
         assertEquals(0, grouper.toGrouped(0))
         assertEquals(2, grouper.toGrouped(1))
         assertEquals(6, grouper.toGrouped(4))
@@ -30,17 +30,17 @@ class ThousandsGrouperTest {
     }
 
     @Test
-    fun `un curseur pose sur un separateur retombe sur le dernier chiffre deja tape`() {
+    fun `a cursor placed on a separator falls back onto the last digit already typed`() {
         val grouper = ThousandsGrouper("1234567", ',')
 
-        // Position 1 est la virgule elle-meme ("1,234,567"[1] == ','), entre
-        // le earliest chiffre et le second: elle retombe before ce dernier plutot
-        // que de faire sauter le curseur en before d'un chiffre non tape.
+        // Position 1 is the comma itself ("1,234,567"[1] == ','), between
+        // the first digit and the second: it falls back before the second
+        // rather than jumping the cursor ahead of a digit not yet typed.
         assertEquals(0, grouper.toOriginal(1))
     }
 
     @Test
-    fun `aller-retour original vers regroupe vers original redonne la position de depart`() {
+    fun `round trip from original to grouped to original returns the starting position`() {
         val grouper = ThousandsGrouper("1234567", ',')
 
         for (i in 0..7) {
@@ -52,25 +52,25 @@ class ThousandsGrouperTest {
 class LimitToTwoDecimalsTest {
 
     @Test
-    fun `sans separateur, rien ne change`() {
+    fun `with no separator, nothing changes`() {
         assertEquals("1234", "1234".limitToTwoDecimals())
         assertEquals("", "".limitToTwoDecimals())
     }
 
     @Test
-    fun `une troisieme decimale et tout ce qui suit sont ignores`() {
+    fun `a third decimal and everything after it are ignored`() {
         assertEquals("12.34", "12.345".limitToTwoDecimals())
         assertEquals("12,34", "12,3456789".limitToTwoDecimals())
     }
 
     @Test
-    fun `une decimale unique est conservee telle quelle`() {
+    fun `a single decimal is kept as is`() {
         assertEquals("12.3", "12.3".limitToTwoDecimals())
         assertEquals("12.", "12.".limitToTwoDecimals())
     }
 
     @Test
-    fun `un second separateur tape par erreur disparait avec ce qui suit`() {
+    fun `a second separator typed by mistake disappears along with what follows`() {
         assertEquals("12.34", "12.34.56".limitToTwoDecimals())
     }
 }

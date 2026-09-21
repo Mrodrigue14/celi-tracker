@@ -18,10 +18,10 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 /**
- * Un text sans langue: une ressource et ses arguments. Les ViewModels en
- * produisent, l'ecran le met dans la langue de l'appareil au moment de
- * l'afficher. Un amount, un account ou une date passe tel quel en argument et
- * se formate a la resolution, dans la meme langue que la phrase.
+ * A text with no language: a resource and its arguments. ViewModels
+ * produce them, the screen puts it in the device's language at the
+ * moment it is displayed. An amount, an account, or a date passes through as an argument and
+ * is formatted at resolution time, in the same language as the sentence.
  */
 data class UiText(@StringRes val id: Int, val arguments: List<Any> = emptyList())
 
@@ -43,7 +43,7 @@ fun UiText.resolve(context: Context): String {
 
 @Composable
 fun UiText.resolve(): String {
-    // Lire la configuration abonne l'appel a un changement de langue.
+    // Reading the configuration subscribes the call to a language change.
     LocalConfiguration.current
     return resolve(LocalContext.current)
 }

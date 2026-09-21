@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Fond de la fenetre avant que Compose dessine: sans lui, l'ouverture
-         flashe en blanc sur un telephone en mode sombre. -->
+    <!-- Window background before Compose draws: without it, the launch
+         flashes white on a phone in dark mode. -->
     <style name="Theme.CeliTracker" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/window_background</item>
     </style>

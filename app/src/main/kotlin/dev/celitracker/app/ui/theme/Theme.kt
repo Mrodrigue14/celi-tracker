@@ -9,13 +9,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 
 /*
- * Palette de l'application. Le bleu (confiance) porte le TFSA et l'identite;
- * le vert-bleu porte le FHSA, pour que chaque account se reconnaisse a sa
- * color. Le rouge est reserve aux alerts: l'utiliser ailleurs lui ferait
- * perdre son sens.
+ * Application palette. Blue (trust) carries the TFSA and the app identity;
+ * teal carries the FHSA, so each account is recognizable by its
+ * color. Red is reserved for alerts: using it elsewhere would make it
+ * lose its meaning.
  *
- * En dark, la barHeight d'une surface se lit a sa clarte, labelStep a son ombre,
- * qui disparait sur un backgroundColor presque noir.
+ * In dark mode, a surface's elevation reads from its brightness, not from its shadow,
+ * which disappears against a near-black background.
  */
 
 private val LightColors = lightColorScheme(
@@ -82,7 +82,7 @@ private val DarkColors = darkColorScheme(
     surfaceContainerHighest = Color(0xFF262C38),
 )
 
-/** Suit le telephone par defaut; les settings peuvent forcer le clair ou le dark. */
+/** Follows the phone by default; settings can force light or dark mode. */
 @Composable
 fun CeliTrackerTheme(mode: ThemeMode = ThemeMode.SYSTEM, content: @Composable () -> Unit) {
     val dark = when (mode) {
@@ -94,7 +94,7 @@ fun CeliTrackerTheme(mode: ThemeMode = ThemeMode.SYSTEM, content: @Composable ()
 }
 
 /**
- * Chiffres tabulaires de la police normale: les montants s'alignent d'une
- * row a l'other sans l'aspect machine a write d'une police a chasse fixe.
+ * Tabular figures from the regular typeface: amounts line up from one
+ * row to the next without the typewriter look of a monospace font.
  */
 fun TextStyle.tabularFigures(): TextStyle = copy(fontFeatureSettings = "tnum")

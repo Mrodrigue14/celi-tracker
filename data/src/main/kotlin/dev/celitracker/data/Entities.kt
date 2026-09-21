@@ -11,8 +11,8 @@ import java.time.Instant
 import java.time.LocalDate
 
 /**
- * Entites Room. Elles ne sortent jamais de ce module: [dev.celitracker.data.Repository]
- * expose uniquement les types de `:engine`.
+ * Room entities. They never leave this module: [dev.celitracker.data.Repository]
+ * only exposes the types from `:engine`.
  */
 
 @Entity(tableName = "profil")
@@ -50,13 +50,13 @@ data class CraSnapshotEntity(
 @Entity(tableName = "reglages")
 data class SettingsEntity(
     @PrimaryKey val id: Int = 0,
-    @ColumnInfo(name = "urlPageArc") val urlPageArc: String,
+    @ColumnInfo(name = "urlPageArc") val craPageUrl: String,
     @ColumnInfo(name = "dateDerniereVerification") val lastCheckDate: Instant?,
 )
 
 /**
- * Conversions vers TEXT: SQLite n'a labelStep de type decimal exact, un REAL
- * reintroduirait la derive de virgule flottante que BigDecimal elimine.
+ * Conversions to TEXT: SQLite has no exact decimal type, and a REAL would
+ * reintroduce the floating-point drift that BigDecimal eliminates.
  */
 class Converters {
     @TypeConverter
@@ -90,7 +90,7 @@ class Converters {
     fun textToNullableDate(text: String?): LocalDate? = text?.let { LocalDate.parse(it) }
 
     @TypeConverter
-    fun instantVersTexte(instant: Instant?): String? = instant?.toString()
+    fun instantToText(instant: Instant?): String? = instant?.toString()
 
     @TypeConverter
     fun textToInstant(text: String?): Instant? = text?.let { Instant.parse(it) }

@@ -109,8 +109,8 @@ fun HomeScreen(
 }
 
 /**
- * Pur: recoit l'state et des lambdas, jamais le ViewModel. Previewable sans
- * dependance a Android.
+ * Pure: receives state and lambdas, never the ViewModel. Previewable without
+ * an Android dependency.
  */
 @Composable
 fun HomeContent(
@@ -157,8 +157,8 @@ fun HomeContent(
             if (state.tfsaCurrentYear?.limitMissing == true) {
                 AlertBanner(stringResource(R.string.alert_limit_unconfirmed), Icons.Filled.Info)
             }
-            // La penalty calculee au month pres dit deja whole d'une sur-cotisation:
-            // le bandeau d'usage ne s'ajoute que s'il n'y en a labelStep.
+            // The penalty computed to the month already fully captures an overcontribution:
+            // the usage banner is added only when there isn't one already.
             val excess = state.currentTfsaExcess
             if (excess != null) {
                 AlertBanner(stringResource(R.string.alert_overcontribution, excess.penalty.formatAmount()), Icons.Filled.Warning)
@@ -196,8 +196,8 @@ fun HomeContent(
         }
     }
 
-    // Sur un ecran large, les deux comptes cote a cote profitent de la largeur
-    // plutot que d'empiler deux cartes etroites au-dessus d'un grand vide.
+    // On a wide screen, the two accounts side by side make use of the width
+    // instead of stacking two narrow cards above a lot of empty space.
     if (isWideScreen()) {
         Row(
             modifier = modifier
@@ -223,7 +223,7 @@ fun HomeContent(
     }
 }
 
-/** 80 % previent sur backgroundColor neutre; 95 % et plus passe a la color d'error. */
+/** 80% warns on a neutral background color; 95% and above switches to the error color. */
 @Composable
 private fun UsageAlert(usage: Usage?, year: Int) {
     val u = usage ?: return
@@ -248,7 +248,7 @@ private fun UsageAlert(usage: Usage?, year: Int) {
     }
 }
 
-/** Pas de account, labelStep de card pleine de dashes: une invitation a l'add. */
+/** No account, so no card full of dashes: an invitation to add one. */
 @Composable
 private fun NoFhsa(onOpenSettings: () -> Unit, modifier: Modifier = Modifier) {
     Row(
@@ -283,9 +283,9 @@ private fun NoFhsa(onOpenSettings: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 /**
- * Une card par account: bande de sa color en top, le amount qui account en
- * grand, l'anneau d'usage a cote, les values secondaires en tiles.
- * [alerts] vient en dernier: elle n'apparait que s'il y a quelque chose a dire.
+ * One card per account: a strip of its color on top, the amount that matters
+ * shown large, the usage ring beside it, secondary values as tiles.
+ * [alerts] comes last: it only appears when there's something to say.
  */
 @Composable
 private fun AccountCard(
@@ -339,8 +339,8 @@ private fun AccountCard(
             }
             TileGrid(tiles)
             alerts()
-            // Les deux gestes les plus frequents, visibles sur la card plutot
-            // que caches derriere l'ecran de detail.
+            // The two most frequent actions, visible on the card rather
+            // than hidden behind the detail screen.
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 FilledTonalButton(
                     onClick = onAdd,

@@ -55,7 +55,7 @@ fun TfsaDetailScreen(onBack: () -> Unit, onSeeTransactions: (Int) -> Unit) {
     }
 }
 
-/** Du plus general au plus detaille: l'evolution, puis chaque year, la plus recente d'abord. */
+/** From most general to most detailed: the trend, then each year, most recent first. */
 @Composable
 fun TfsaDetailContent(state: TfsaDetailUiState, onSeeTransactions: (Int) -> Unit, modifier: Modifier = Modifier) {
     YearDetailList(
@@ -88,7 +88,7 @@ private fun TfsaYearCard(row: TfsaYear, inProgress: Boolean, onSeeTransactions: 
             row.deposits.formatAmount() to stringResource(R.string.detail_deposits),
             row.withdrawals.formatAmount() to stringResource(R.string.detail_withdrawals),
         ),
-        // Un limit absent est account a zero: les room sont sous-estimes, labelStep inventes.
+        // A missing limit is counted as zero: the room is underestimated, not made up.
         note = if (row.limitMissing) stringResource(R.string.detail_limit_unconfirmed, row.year) else null,
     )
 }

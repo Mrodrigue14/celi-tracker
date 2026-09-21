@@ -22,12 +22,12 @@ internal fun ThemeMode.storedValue(): String = when (this) {
 internal fun storedThemeMode(value: String?): ThemeMode = ThemeMode.entries.find { it.storedValue() == value } ?: ThemeMode.SYSTEM
 
 /**
- * Choix clair, dark ou systeme, garde sur l'appareil. C'est une preference
- * d'affichage, labelStep une donnee financiere: elle vit hors de la database, donc hors
- * de l'export JSON et de la backup.
+ * Light, dark, or system choice, kept on the device. This is a display
+ * preference, not financial data: it lives outside the database, so outside
+ * the JSON export and the backup.
  *
- * SharedPreferences plutot que DataStore: la lecture est synchrone, et le
- * theme doit etre connu before la premiere image pour ne labelStep clignoter.
+ * SharedPreferences rather than DataStore: the read is synchronous, and the
+ * theme must be known before the first frame so it does not flash.
  */
 class ThemePreference(private val context: Context) {
     private val preferences = context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
@@ -46,9 +46,9 @@ class ThemePreference(private val context: Context) {
     }
 
     /**
-     * Depuis Android 12, le systeme connait le mode propre a l'application: la
-     * fenetre de demarrage et les barres systeme suivent le choix, labelStep seulement
-     * l'interface Compose.
+     * Since Android 12, the system knows the app's own mode: the
+     * splash screen and system bars follow the choice, not just
+     * the Compose UI.
      */
     private fun applyToSystem(mode: ThemeMode) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return

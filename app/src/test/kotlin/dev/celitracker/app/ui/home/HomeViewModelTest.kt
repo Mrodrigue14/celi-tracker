@@ -32,7 +32,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `sans profil, l'etat reste vide une fois la base lue`() = runTest {
+    fun `without a profile, the state stays empty once the database has loaded`() = runTest {
         val viewModel = HomeViewModel(repository).also { it.load() }
 
         val state = viewModel.uiState.first { it.loaded }
@@ -41,7 +41,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `avec profil et plafond, les droits proviennent du moteur`() = runTest {
+    fun `with a profile and limit, the room comes from the engine`() = runTest {
         val profile = Profile(
             birthYear = 1990,
             fhsaOpeningDate = null,

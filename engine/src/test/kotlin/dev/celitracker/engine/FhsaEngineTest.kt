@@ -22,9 +22,10 @@ class FhsaEngineTest {
     /**
      * scenario_fhsa_opened_2023_no_contributions
      *
-     * Garde-fou contre l'error la plus tentante du regime: croire que trois
-     * years sans cotiser accumulent 32000$. Le report est plafonne a 8000$
-     * PAR ANNEE D'ARRIVEE, donc le limit annuel se stabilise a 16000$.
+     * Guard against the regime's most tempting mistake: believing that
+     * three years without contributing accumulate $32000. The
+     * carry-forward is capped at $8000 PER YEAR OF ARRIVAL, so the
+     * annual limit stabilizes at $16000.
      */
     @Test
     fun `scenario fhsa opened 2023 no contributions`() {
@@ -38,7 +39,7 @@ class FhsaEngineTest {
 
         assertEquals(toMoney("8000.00"), room.getValue(2024).carryForwardIn)
         assertEquals(toMoney("16000.00"), room.getValue(2024).yearRoom)
-        // Le point critique: 8000, PAS 16000. Le report ne se cumule labelStep.
+        // The critical point: 8000, NOT 16000. The carry-forward does not accumulate.
         assertEquals(toMoney("8000.00"), room.getValue(2024).carryForwardOut)
 
         assertEquals(toMoney("16000.00"), room.getValue(2025).yearRoom)
@@ -49,21 +50,21 @@ class FhsaEngineTest {
     }
 
     @Test
-    fun `l'accumulation demarre a l'annee d'ouverture du compte`() {
+    fun `accumulation starts in the year the account opens`() {
         val room = FhsaEngine.roomByYear(profileOpened2023, emptyList(), upTo = 2026)
 
         assertEquals(2023, room.first().year)
     }
 
     @Test
-    fun `aucun droit sans compte ouvert`() {
+    fun `no room without an open account`() {
         val profileWithoutFhsa = Profile(2001, fhsaOpeningDate = null)
 
         assertTrue(FhsaEngine.roomByYear(profileWithoutFhsa, emptyList(), 2026).isEmpty())
     }
 
     @Test
-    fun `un retrait ne redonne jamais de droits`() {
+    fun `a withdrawal never restores room`() {
         val transactions = listOf(
             fhsaDeposit("2023-10-01", "8000.00"),
             fhsaWithdrawal("2023-11-01", "8000.00"),
@@ -73,30 +74,30 @@ class FhsaEngineTest {
             .roomByYear(profileOpened2023, transactions, upTo = 2024)
             .associateBy { it.year }
 
-        // Le withdrawal est enregistre...
+        // The withdrawal is recorded...
         assertEquals(toMoney("8000.00"), room.getValue(2023).withdrawals)
-        // ...mais les 8000 cotises restent consommes a vie: 40000 - 8000.
+        // ...but the 8000 contributed remain consumed for life: 40000 - 8000.
         assertEquals(toMoney("32000.00"), room.getValue(2023).lifetimeLimitLeft)
-        // 2023 entierement utilise -> aucun report vers 2024.
+        // 2023 fully used -> no carry-forward to 2024.
         assertEquals(toMoney("0.00"), room.getValue(2024).carryForwardIn)
         assertEquals(toMoney("8000.00"), room.getValue(2024).yearRoom)
     }
 
     @Test
-    fun `une cotisation partielle reporte le solde inutilise`() {
+    fun `a partial contribution carries forward the unused balance`() {
         val transactions = listOf(fhsaDeposit("2023-10-01", "3000.00"))
 
         val room = FhsaEngine
             .roomByYear(profileOpened2023, transactions, upTo = 2024)
             .associateBy { it.year }
 
-        // 8000 - 3000 = 5000 inutilises, sous le limit de report.
+        // 8000 - 3000 = 5000 unused, under the carry-forward limit.
         assertEquals(toMoney("5000.00"), room.getValue(2023).carryForwardOut)
         assertEquals(toMoney("13000.00"), room.getValue(2024).yearRoom)
     }
 
     @Test
-    fun `le plafond a vie de 40000 borne les droits annuels`() {
+    fun `the 40000 lifetime limit caps the annual room`() {
         val transactions = listOf(
             fhsaDeposit("2023-10-01", "8000.00"),
             fhsaDeposit("2024-10-01", "16000.00"),
@@ -107,16 +108,16 @@ class FhsaEngineTest {
             .roomByYear(profileOpened2023, transactions, upTo = 2026)
             .associateBy { it.year }
 
-        // 8000 + 16000 + 16000 = 40000 cotises: le limit a vie est atteint.
+        // 8000 + 16000 + 16000 = 40000 contributed: the lifetime limit is reached.
         assertEquals(toMoney("0.00"), room.getValue(2025).lifetimeLimitLeft)
-        // Meme si le report autoriserait davantage, il ne reste rien a vie.
+        // Even though the carry-forward would allow more, nothing is left for life.
         assertEquals(toMoney("0.00"), room.getValue(2026).yearRoom)
     }
 
     @Test
-    fun `l'echeance est le 31 decembre de l'annee du 15e anniversaire`() {
-        // Ouvert en avril 2023 -> 15e anniversaire en avril 2038.
-        // La periode se termine le 31 decembre de CETTE year-la.
+    fun `the deadline is december 31 of the 15th anniversary year`() {
+        // Opened in April 2023 -> 15th anniversary in April 2038.
+        // The period ends december 31 of THAT year.
         assertEquals(
             LocalDate.of(2038, 12, 31),
             FhsaEngine.participationPeriodEnd(profileOpened2023),
@@ -124,10 +125,10 @@ class FhsaEngineTest {
     }
 
     @Test
-    fun `la branche des 71 ans l'emporte quand elle est plus rapprochee`() {
+    fun `the age 71 branch wins when it comes sooner`() {
         val olderProfile = Profile(
-            birthYear = 1960, // 71 ans en 2031
-            fhsaOpeningDate = LocalDate.of(2023, 4, 1), // 15 ans -> 2038
+            birthYear = 1960, // 71 years old in 2031
+            fhsaOpeningDate = LocalDate.of(2023, 4, 1), // 15 years -> 2038
         )
 
         assertEquals(
@@ -137,7 +138,7 @@ class FhsaEngineTest {
     }
 
     @Test
-    fun `aucune echeance sans compte ouvert`() {
+    fun `no deadline without an open account`() {
         val profileWithoutFhsa = Profile(2001, fhsaOpeningDate = null)
 
         assertEquals(null, FhsaEngine.participationPeriodEnd(profileWithoutFhsa))

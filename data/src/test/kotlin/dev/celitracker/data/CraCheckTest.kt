@@ -34,7 +34,7 @@ class CraCheckTest {
     """.trimIndent()
 
     @Test
-    fun `le plafond lu est enregistre comme proposition`() = runTest {
+    fun `the limit read is saved as a proposal`() = runTest {
         repository.saveLimit(AnnualLimit(Account.TFSA, 2026, BigDecimal("7000.00"), confirmed = true))
 
         val result = repository.checkCraLimits({ craPage }, today)
@@ -46,7 +46,7 @@ class CraCheckTest {
     }
 
     @Test
-    fun `aucune lecture quand l'annee courante et la suivante sont connues`() = runTest {
+    fun `no read when the current and next year are already known`() = runTest {
         repository.saveLimit(AnnualLimit(Account.TFSA, 2026, BigDecimal("7000.00"), confirmed = true))
         repository.saveLimit(AnnualLimit(Account.TFSA, 2027, BigDecimal("7500.00"), confirmed = true))
 
@@ -56,10 +56,10 @@ class CraCheckTest {
     }
 
     @Test
-    fun `une verification de moins d'un mois n'est pas refaite`() = runTest {
+    fun `a check less than a month old is not redone`() = runTest {
         repository.saveSettings(
             Settings(
-                urlPageArc = DEFAULT_CRA_PAGE_URL,
+                craPageUrl = DEFAULT_CRA_PAGE_URL,
                 lastCheckDate = today.minusDays(5).atStartOfDay(ZoneOffset.UTC).toInstant(),
             ),
         )
@@ -70,7 +70,7 @@ class CraCheckTest {
     }
 
     @Test
-    fun `une page injoignable est un echec, et la date est quand meme notee`() = runTest {
+    fun `an unreachable page is a failure, and the date is still recorded`() = runTest {
         val result = repository.checkCraLimits({ throw java.io.IOException("network unavailable") }, today)
 
         assertIs<CraCheckResult.Failed>(result)
@@ -81,7 +81,7 @@ class CraCheckTest {
     }
 
     @Test
-    fun `une page illisible est un echec et n'ecrit aucun plafond`() = runTest {
+    fun `an unreadable page is a failure and writes no limit`() = runTest {
         val result = repository.checkCraLimits({ "<h1>Page non trouvée</h1>" }, today)
 
         assertIs<CraCheckResult.Failed>(result)
@@ -89,7 +89,7 @@ class CraCheckTest {
     }
 
     @Test
-    fun `un plafond deja saisi pour l'annee lue n'est pas remplace`() = runTest {
+    fun `a limit already entered for the read year is not replaced`() = runTest {
         repository.saveLimit(AnnualLimit(Account.TFSA, 2027, BigDecimal("7000.00"), confirmed = true))
 
         val result = repository.checkCraLimits({ craPage }, today)
@@ -99,36 +99,36 @@ class CraCheckTest {
     }
 
     @Test
-    fun `une adresse dont la page donne le plafond est enregistree`() = runTest {
+    fun `an address whose page gives the limit is saved`() = runTest {
         val other = "https://www.canada.ca/fr/agence-revenu/autre-page.html"
 
         val result = repository.changeCraPageUrl(other) { craPage }
 
         assertEquals(CraAddressResult.Saved, result)
-        assertEquals(other, repository.settings().urlPageArc)
+        assertEquals(other, repository.settings().craPageUrl)
     }
 
     @Test
-    fun `une page de canada point ca sans le plafond garde l'adresse precedente`() = runTest {
+    fun `a canada dot ca page without the limit keeps the previous address`() = runTest {
         val result = repository.changeCraPageUrl("https://www.canada.ca/fr/autre.html") { "<h1>Page non trouvée</h1>" }
 
         assertIs<CraAddressResult.Rejected>(result)
-        assertEquals(DEFAULT_CRA_PAGE_URL, repository.settings().urlPageArc)
+        assertEquals(DEFAULT_CRA_PAGE_URL, repository.settings().craPageUrl)
     }
 
     @Test
-    fun `une page injoignable garde l'adresse precedente`() = runTest {
+    fun `an unreachable page keeps the previous address`() = runTest {
         val result = repository.changeCraPageUrl("https://www.canada.ca/fr/autre.html") { throw java.io.IOException("hors ligne") }
 
         assertIs<CraAddressResult.Rejected>(result)
-        assertEquals(DEFAULT_CRA_PAGE_URL, repository.settings().urlPageArc)
+        assertEquals(DEFAULT_CRA_PAGE_URL, repository.settings().craPageUrl)
     }
 
     @Test
-    fun `une adresse hors canada point ca n'est meme pas telechargee`() = runTest {
+    fun `an address outside canada dot ca is not even downloaded`() = runTest {
         val result = repository.changeCraPageUrl("https://example.com/limits") { error("must not be downloaded") }
 
         assertIs<CraAddressResult.Rejected>(result)
-        assertEquals(DEFAULT_CRA_PAGE_URL, repository.settings().urlPageArc)
+        assertEquals(DEFAULT_CRA_PAGE_URL, repository.settings().craPageUrl)
     }
 }

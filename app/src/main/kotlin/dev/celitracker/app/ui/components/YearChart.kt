@@ -47,23 +47,23 @@ import kotlin.math.floor
 import kotlin.math.log10
 import kotlin.math.pow
 
-/** Au-dela, une label par barre deborderait: on n'en garde qu'une sur deux. */
+/** Beyond this, a label per bar would overflow: only every other one is kept. */
 private const val MAX_BARS_ALL_LABELLED = 8
 
 private val CHART_HEIGHT = 150.dp
 
 private val AXIS_WIDTH = 44.dp
 
-/** Place laissee au-dessus de la plus haute barre pour y write sa value. */
+/** Space left above the tallest bar to write its value. */
 private val TOP_MARGIN = 20.dp
 
 /**
- * Une barre par year, la plus recente accentuee et chiffree. Trois rows de
- * repere (zero, moitie, axisMax) et leurs montants arrondis situent l'ordre de
- * grandeur sans load le chart: les montants exacts sont dans les cartes.
+ * One bar per year, the most recent one highlighted and labeled with its value.
+ * Three reference lines (zero, half, axisMax) and their rounded amounts give a sense of
+ * scale without cluttering the chart: the exact amounts are on the cards.
  *
- * Les montants ne deviennent des nombres a virgule que pour placer les barres
- * et les reperes, jamais pour un calcul de room.
+ * Amounts only become floating-point numbers to place the bars
+ * and reference lines, never for a room calculation.
  */
 @Composable
 fun YearChart(
@@ -88,7 +88,7 @@ fun YearChart(
 
     Column(modifier = modifier.semantics { contentDescription = summary }) {
         Row {
-            // Axe: les montants des reperes, alignes sur leurs rows.
+            // Axis: the reference amounts, aligned with their lines.
             Canvas(modifier = Modifier.width(AXIS_WIDTH).height(CHART_HEIGHT)) {
                 val top = TOP_MARGIN.toPx()
                 listOf(1.0, 0.5, 0.0).forEach { part ->
@@ -136,8 +136,8 @@ fun YearChart(
                         }
                     }
                 }
-                // Une zone touchable par barre, sur toute la barHeight: une petite barre
-                // doit rester aussi facile a toucher qu'une grande.
+                // A touchable zone per bar, spanning the full height: a small bar
+                // must stay as easy to tap as a large one.
                 if (onYearClick != null) {
                     Row(modifier = Modifier.matchParentSize()) {
                         values.forEach { (year, amount) ->
@@ -171,9 +171,9 @@ fun YearChart(
 }
 
 /**
- * Sommet de l'axe: le plus top amount arrondi vers le top au palier suivant
- * d'une power de dix. Des paliers serres evitent un grand vide au-dessus des
- * barres, et chacun se divise en deux pour que le repere du milieu reste rond.
+ * Top of the axis: the highest amount rounded up to the next step
+ * of a power of ten. Tight steps avoid a large gap above the
+ * bars, and each one splits in two so the middle reference stays a round number.
  */
 private val STEPS = listOf(1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0)
 
@@ -185,8 +185,8 @@ internal fun roundedAxisMax(maximum: Double): Double {
 }
 
 /**
- * Une year du detail: le result de l'year en evidence, ce qui l'a produit
- * en tiles dessous.
+ * A year of detail: the year's result highlighted, what produced it
+ * in tiles below.
  */
 @Composable
 fun YearCard(
@@ -197,7 +197,7 @@ fun YearCard(
     modifier: Modifier = Modifier,
     inProgress: Boolean = false,
     note: String? = null,
-    /** `null` quand l'year n'a aucune transaction: labelStep de lien vers une list vide. */
+    /** `null` when the year has no transaction: no link to an empty list. */
     onSeeTransactions: (() -> Unit)? = null,
 ) {
     Column(

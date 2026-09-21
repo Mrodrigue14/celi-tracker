@@ -14,21 +14,22 @@ data class FhsaYear(
 )
 
 /**
- * Moteur FHSA. Deliberement separe de [TfsaEngine]: les deux regimes
- * divergent sur chaque axe, et reutiliser le chemin de restitution du TFSA
- * pour le FHSA est le bug de correctness le plus probable de ce projet.
+ * FHSA engine. Deliberately kept separate from [TfsaEngine]: the two
+ * regimes diverge on every axis, and reusing the TFSA's room-restoration
+ * path for the FHSA is the most likely correctness bug in this project.
  *
- * Les trois limits sont fixes par la loi et ne sont PAS indexes: contrairement
- * au TFSA, il n'y a rien a recuperer sur le site de l'ARC.
+ * The three limits are fixed by law and are NOT indexed: unlike the
+ * TFSA, there is nothing to fetch from the CRA site.
  */
 object FhsaEngine {
 
     val ANNUAL_LIMIT: BigDecimal = BigDecimal("8000").toMoney()
 
     /**
-     * Plafond du report, PAR ANNEE D'ARRIVEE. Le report ne se cumule labelStep:
-     * une personne qui ne contributed jamais voit son limit annuel se stabiliser
-     * a 16000 (8000 + 8000), labelStep croitre de 8000 chaque year.
+     * Carry-forward limit, PER YEAR OF ARRIVAL. The carry-forward does
+     * not accumulate: someone who never contributes sees their annual
+     * limit stabilize at 16000 (8000 + 8000), not grow by 8000 every
+     * year.
      */
     val MAX_CARRY_FORWARD: BigDecimal = BigDecimal("8000").toMoney()
 
@@ -39,7 +40,7 @@ object FhsaEngine {
         transactions: List<Transaction>,
         upTo: Int,
     ): List<FhsaYear> {
-        // L'accumulation demarre a l'OUVERTURE du account, labelStep aux 18 ans.
+        // Accumulation starts when the account is OPENED, not at age 18.
         val opening = profile.fhsaOpeningDate ?: return emptyList()
         val fhsaTransactions = transactions.filter { it.account == Account.FHSA }
 
@@ -53,14 +54,15 @@ object FhsaEngine {
 
             val lifetimeLeftBefore = (LIFETIME_LIMIT - cumulativeContributions)
                 .coerceAtLeast(BigDecimal.ZERO)
-            // Le min() interne est redondant tant que carryForwardIn est borne
-            // en amont, mais il rend l'invariant explicite plutot qu'implicite:
-            // le report ne se cumule labelStep, et c'est le piege du regime.
+            // The inner min() is redundant as long as carryForwardIn is
+            // already bounded upstream, but it makes the invariant explicit
+            // rather than implicit: the carry-forward does not accumulate,
+            // and that is the regime's trap.
             val usableCarryForward = minOf(carryForwardIn, MAX_CARRY_FORWARD)
             val yearRoom = minOf(ANNUAL_LIMIT + usableCarryForward, lifetimeLeftBefore)
 
-            // min(..., MAX_CARRY_FORWARD) et NON une accumulation: c'est toute la
-            // difference avec le TFSA et le REER.
+            // min(..., MAX_CARRY_FORWARD), NOT an accumulation: that is the
+            // whole difference with the TFSA and the RRSP.
             val carryForwardOut = minOf(
                 (yearRoom - deposits).coerceAtLeast(BigDecimal.ZERO),
                 MAX_CARRY_FORWARD,
@@ -73,8 +75,8 @@ object FhsaEngine {
                 carryForwardIn = carryForwardIn.toMoney(),
                 yearRoom = yearRoom.toMoney(),
                 deposits = deposits.toMoney(),
-                // Enregistre pour l'affichage du solde, mais n'entre dans AUCUN
-                // calcul de room: un withdrawal FHSA ne redonne jamais rien.
+                // Recorded for balance display, but never enters any room
+                // calculation: an FHSA withdrawal never restores anything.
                 withdrawals = withdrawals.toMoney(),
                 carryForwardOut = carryForwardOut.toMoney(),
                 lifetimeLimitLeft = (LIFETIME_LIMIT - cumulativeContributions)
@@ -87,17 +89,18 @@ object FhsaEngine {
     }
 
     /**
-     * Fin de la periode de participation maximale: le 31 decembre de l'year ou
-     * survient le PREMIER des trois evenements suivants.
+     * End of the maximum participation period: December 31 of the year
+     * in which the FIRST of the following three events occurs.
      *
-     *   1. le 15e anniversaire de l'opening du earliest FHSA
-     *   2. les 71 ans du titulaire
-     *   3. l'year suivant le earliest withdrawal admissible
+     *   1. the 15th anniversary of the earliest FHSA's opening
+     *   2. the holder's 71st birthday
+     *   3. the year following the earliest qualifying withdrawal
      *
-     * La branche 3 n'est PAS implementee: elle exige de distinguer un withdrawal
-     * admissible (achat d'une premiere propriete) d'un withdrawal ordinaire, ce que
-     * le modele ne suit labelStep. L'echeance reelle peut donc etre plus rapprochee
-     * que celle retournee ici. Exclusion assumee, documentee dans la spec.
+     * Branch 3 is NOT implemented: it requires distinguishing a
+     * qualifying withdrawal (a first home purchase) from an ordinary
+     * one, which the model does not track. The real deadline can
+     * therefore be earlier than the one returned here. This exclusion
+     * is deliberate and documented in the spec.
      */
     fun participationPeriodEnd(profile: Profile): LocalDate? {
         val opening = profile.fhsaOpeningDate ?: return null

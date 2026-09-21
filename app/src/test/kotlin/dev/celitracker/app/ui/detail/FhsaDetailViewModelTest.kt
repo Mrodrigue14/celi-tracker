@@ -26,7 +26,7 @@ class FhsaDetailViewModelTest {
     }
 
     @Test
-    fun `sans CELIAPP ouvert, aucune ligne`() = runTest {
+    fun `without an FHSA open, no rows`() = runTest {
         repository.saveProfile(Profile(1990, fhsaOpeningDate = null))
 
         val viewModel = FhsaDetailViewModel(repository).also { it.load() }
@@ -35,7 +35,7 @@ class FhsaDetailViewModelTest {
     }
 
     @Test
-    fun `avec CELIAPP ouvert, les lignes proviennent du moteur`() = runTest {
+    fun `with an FHSA open, the rows come from the engine`() = runTest {
         val opening = LocalDate.of(currentYear, 3, 1)
         val profile = Profile(1990, fhsaOpeningDate = opening)
         repository.saveProfile(profile)

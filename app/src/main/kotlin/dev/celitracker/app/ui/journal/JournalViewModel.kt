@@ -24,8 +24,8 @@ import java.math.RoundingMode
 import java.time.LocalDate
 
 /**
- * [openAdd] vient du bouton « Ajouter » de l'home: l'ecran s'ouvre
- * directement sur la feuille de input au lieu de demander un second geste.
+ * [openAdd] comes from the "Add" button on the home screen: the screen
+ * opens directly on the input sheet instead of requiring a second gesture.
  */
 class JournalViewModel(
     private val repository: Repository,
@@ -51,7 +51,7 @@ class JournalViewModel(
         }
     }
 
-    /** Passer du TFSA au FHSA reste sur le meme ecran: c'est un filtre, labelStep une destination. */
+    /** Switching from TFSA to FHSA stays on the same screen: it's a filter, not a destination. */
     fun changeAccount(choice: Account) {
         if (choice == account) return
         _uiState.update { it.copy(account = choice, transactions = emptyList(), form = null) }
@@ -74,7 +74,7 @@ class JournalViewModel(
         )
     }
 
-    /** L'ecran a defile jusqu'a l'year demandee: ne labelStep y revenir a chaque rechargement. */
+    /** The screen has scrolled to the requested year: don't return to it on every reload. */
     fun targetYearReached() = _uiState.update { it.copy(targetYear = null) }
 
     fun messageShown() = _uiState.update { it.copy(message = null) }
@@ -109,9 +109,9 @@ class JournalViewModel(
     }
 
     /**
-     * Usage de l'year de [transaction], celle-ci comprise (a la place de
-     * son ancienne version si c'est une modification). Sert a la fois a
-     * l'warning before l'enregistrement et au message after.
+     * Usage for [transaction]'s year, including this transaction itself
+     * (replacing its previous version if this is an edit). Used both for
+     * the warning before saving and for the message afterward.
      */
     private suspend fun usageAfter(transaction: Transaction): Usage? {
         val profile = repository.profile() ?: return null
@@ -124,8 +124,8 @@ class JournalViewModel(
     }
 
     /**
-     * Texte a confirmer si ce repository porte l'usage de l'year a 95 % ou
-     * au-dela. Un withdrawal n'en demande jamais: il ne consomme labelStep de room.
+     * Text to confirm if this deposit pushes the year's usage to 95% or
+     * beyond. A withdrawal never asks for it: it doesn't consume any room.
      */
     private fun warning(transaction: Transaction, after: Usage?): UiText? {
         if (transaction.type != TransactionType.DEPOSIT || after == null) return null
@@ -158,8 +158,8 @@ class JournalViewModel(
         _uiState.update { it.copy(transactions = transactions, form = null, message = message) }
     }
 
-    // Toute input efface l'error et l'warning precedents: ils portaient
-    // sur l'ancienne value.
+    // Any input clears the previous error and warning: they applied to
+    // the old value.
     private fun updateForm(modification: TransactionForm.() -> TransactionForm) = _uiState.update { state ->
         state.copy(form = state.form?.modification()?.copy(error = null, warning = null))
     }

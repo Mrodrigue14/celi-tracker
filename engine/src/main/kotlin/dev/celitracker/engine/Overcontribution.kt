@@ -4,10 +4,10 @@ import java.math.BigDecimal
 import java.time.YearMonth
 
 /**
- * Excedent d'un month et penalty correspondante.
+ * A month's excess and its corresponding penalty.
  *
- * [maxExcess] est l'excess le PLUS ELEVE atteint pendant le month, labelStep celui
- * de la end du month: c'est sur cette database que l'ARC calcule la penalty.
+ * [maxExcess] is the HIGHEST excess reached during the month, not the
+ * one at month end: this is the figure the CRA bases the penalty on.
  */
 data class MonthlyExcess(
     val year: Int,
@@ -18,7 +18,7 @@ data class MonthlyExcess(
 
 object Overcontribution {
 
-    /** 1 % par month de l'excess le plus eleve du month. */
+    /** 1% per month of the month's highest excess. */
     private val MONTHLY_PENALTY_RATE = BigDecimal("0.01")
 
     fun tfsaExcesses(
@@ -27,14 +27,14 @@ object Overcontribution {
         transactions: List<Transaction>,
         upTo: YearMonth,
     ): List<MonthlyExcess> {
-        // Même borne que TfsaEngine, qui itère a partir de l'year
-        // d'admissibilite: une transaction earlier lui est invisible. Sans
-        // ce filtre, une telle transaction n'aurait aucun effet sur les room
-        // mais deviendrait ici un excess integralement facture -- deux
-        // semantiques pour une meme input.
+        // Same bound as TfsaEngine, which iterates from the eligibility
+        // year: an earlier transaction is invisible to it. Without this
+        // filter, such a transaction would have no effect on room but
+        // would become a fully billed excess here -- two semantics for
+        // the same input.
         //
-        // Le rejet d'une telle input appartient a la couche de input, labelStep au
-        // moteur: ici on se contente de ne labelStep inventer d'excess.
+        // Rejecting such input belongs to the input layer, not the
+        // engine: here we just avoid inventing an excess.
         val tfsaTransactions = transactions
             .filter { it.account == Account.TFSA && it.date.year >= profile.tfsaEligibilityYear }
             .sortedBy { it.date }
@@ -44,22 +44,22 @@ object Overcontribution {
             .roomByYear(profile, limits, transactions, upTo.year)
             .associate { it.year to it.startRoom }
 
-        // Un seul passage au lieu d'un refiltrage par month (O(N) au lieu de
-        // O(month x N)). Utiliser YearMonth comme cle passe par hashCode/equals
-        // et evite l'operateur `==` sur un type value-based, qui declenche un
-        // warning du compilateur.
+        // A single pass instead of re-filtering per month (O(N) instead
+        // of O(month x N)). Using YearMonth as the key goes through
+        // hashCode/equals and avoids the `==` operator on a value-based
+        // type, which triggers a compiler warning.
         val transactionsByMonth = tfsaTransactions.groupBy { YearMonth.from(it.date) }
 
         val result = mutableListOf<MonthlyExcess>()
         var month = YearMonth.from(earliest.date)
 
-        // DEUX variables, et non un cumul net. Un cumul net rendrait une
-        // re-cotisation gratuite, alors que c'est exactement le piege du regime:
-        //   - un DEPOSIT consomme d'abord les room restants, le reste devient
-        //     de l'excess;
-        //   - un WITHDRAWAL annule l'excess existant, mais ne restitue AUCUN
-        //     droit -- ceux-ci ne reviennent que le 1er janvier suivant, via
-        //     startRoom de l'year suivante.
+        // TWO variables, not a net running total. A net total would make
+        // re-contributing free, when that is exactly the regime's trap:
+        //   - a DEPOSIT first consumes the remaining room, the rest
+        //     becomes excess;
+        //   - a WITHDRAWAL cancels the existing excess, but restores NO
+        //     room -- that only comes back the following January 1st,
+        //     via the next year's startRoom.
         var currentYear = Int.MIN_VALUE
         var remainingRoom = BigDecimal.ZERO
         var excess = BigDecimal.ZERO
@@ -67,9 +67,10 @@ object Overcontribution {
         while (!month.isAfter(upTo)) {
             if (month.year != currentYear) {
                 currentYear = month.year
-                // startRoom inclut deja le report, le limit de l'year et
-                // les withdrawals de l'year precedente. S'il est negatif, la
-                // sur-cotisation n'a labelStep ete absorbee et se poursuit.
+                // startRoom already includes the carry-forward, the
+                // year's limit and the previous year's withdrawals. If
+                // it is negative, the over-contribution has not been
+                // absorbed and continues.
                 val yearStart = startRoomByYear[currentYear] ?: BigDecimal.ZERO
                 if (yearStart.signum() < 0) {
                     excess = yearStart.negate()
@@ -80,7 +81,7 @@ object Overcontribution {
                 }
             }
 
-            // L'excess reporte du month precedent est deja facturable.
+            // The excess carried over from the previous month is already billable.
             var maxExcess = excess
 
             for (tx in transactionsByMonth[month].orEmpty()) {
@@ -90,7 +91,7 @@ object Overcontribution {
                     excess += tx.amount - absorbed
                 } else {
                     excess = (excess - tx.amount).coerceAtLeast(BigDecimal.ZERO)
-                    // remainingRoom est volontairement inchange.
+                    // remainingRoom is deliberately left unchanged.
                 }
                 maxExcess = maxOf(maxExcess, excess)
             }

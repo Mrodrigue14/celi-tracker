@@ -5,13 +5,13 @@ import dev.celitracker.engine.AnnualLimit
 import dev.celitracker.engine.PUBLISHED_TFSA_LIMITS
 
 /**
- * Inscrit les limits TFSA publies par l'ARC qui manquent encore en database.
- * Une year deja enregistree n'est jamais ecrasee: une correction faite a la
- * main reste la verite pour l'utilisateur.
+ * Writes the TFSA limits published by the CRA that are still missing from
+ * the database. A year already saved is never overwritten: a manual
+ * correction remains the source of truth for the user.
  *
- * Ils sont saved confirmes: ils viennent d'une table officielle
- * transcrite dans le repository, labelStep d'une lecture automatique dont le result
- * reste a validate.
+ * They are saved confirmed: they come from an official table transcribed
+ * into the repository, not from an automatic read whose result still needs
+ * validation.
  */
 suspend fun Repository.seedPublishedLimits() {
     val knownYears = limits().filter { it.account == Account.TFSA }.map { it.year }.toSet()

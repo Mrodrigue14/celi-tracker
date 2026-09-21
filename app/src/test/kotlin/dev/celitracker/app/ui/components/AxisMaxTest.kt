@@ -6,7 +6,7 @@ import kotlin.test.assertEquals
 class AxisMaxTest {
 
     @Test
-    fun `le sommet de l'axe est un montant rond au-dessus du maximum`() {
+    fun `the top of the axis is a round amount above the maximum`() {
         assertEquals(40_000.0, roundedAxisMax(33_500.0))
         assertEquals(25_000.0, roundedAxisMax(24_612.0))
         assertEquals(8_000.0, roundedAxisMax(7_000.0))
@@ -14,7 +14,7 @@ class AxisMaxTest {
     }
 
     @Test
-    fun `sans montant positif, l'axe garde une hauteur`() {
+    fun `with no positive amount, the axis keeps a height`() {
         assertEquals(1.0, roundedAxisMax(0.0))
     }
 }

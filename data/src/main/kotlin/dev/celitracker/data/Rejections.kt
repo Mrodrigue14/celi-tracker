@@ -1,9 +1,9 @@
 package dev.celitracker.data
 
 /*
- * Les refus de ce module sont des values, jamais des phrases: `:data` n'a labelStep
- * acces aux ressources Android, et une phrase ecrite ici resterait en francais
- * sur un appareil en anglais. C'est `:app` qui traduit chaque reason.
+ * The rejections in this module are values, never sentences: `:data` has no
+ * access to Android resources, and a sentence written here would stay in
+ * French on a device set to English. `:app` translates each reason.
  */
 
 enum class InputRejectionReason {
@@ -15,7 +15,7 @@ enum class InputRejectionReason {
     TRANSACTION_NOT_FOUND,
 }
 
-/** Sous-classe d'IllegalArgumentException: un `require` echoue reste attrape pareil. */
+/** Subclass of IllegalArgumentException: a failed `require` is still caught the same way. */
 class InvalidInput(val reason: InputRejectionReason) : IllegalArgumentException(reason.name)
 
 enum class ImportFailureReason { UNKNOWN_VERSION, MALFORMED_JSON }

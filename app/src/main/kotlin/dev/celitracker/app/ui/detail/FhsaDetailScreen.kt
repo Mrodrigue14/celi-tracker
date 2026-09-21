@@ -55,7 +55,7 @@ fun FhsaDetailScreen(onBack: () -> Unit, onSeeTransactions: (Int) -> Unit) {
     }
 }
 
-/** Du plus general au plus detaille: l'evolution, puis chaque year, la plus recente d'abord. */
+/** From most general to most detailed: the trend, then each year, most recent first. */
 @Composable
 fun FhsaDetailContent(state: FhsaDetailUiState, onSeeTransactions: (Int) -> Unit, modifier: Modifier = Modifier) {
     YearDetailList(

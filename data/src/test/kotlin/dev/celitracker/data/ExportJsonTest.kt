@@ -44,29 +44,29 @@ class ExportJsonTest {
 
     private suspend fun populateTestData() {
         repository.saveProfile(tfsaProfile)
-        // Insere en ordre volontairement melange pour verifier le tri au moment de l'export.
+        // Inserted in deliberately shuffled order to verify sorting at export time.
         repository.saveLimit(AnnualLimit(Account.FHSA, 2026, BigDecimal("8000.00"), confirmed = true))
         repository.saveLimit(AnnualLimit(Account.TFSA, 2026, BigDecimal("7000.00"), confirmed = true))
         repository.saveLimit(AnnualLimit(Account.TFSA, 2020, BigDecimal("6000.00"), confirmed = false))
         repository.addTransaction(Transaction(Account.TFSA, LocalDate.of(2026, 1, 15), TransactionType.DEPOSIT, BigDecimal("1234.56")))
         repository.addTransaction(Transaction(Account.FHSA, LocalDate.of(2023, 7, 1), TransactionType.DEPOSIT, BigDecimal("1000.00")))
         repository.saveCraSnapshot(CraSnapshot(0, Account.TFSA, LocalDate.of(2026, 1, 1), BigDecimal("1234.56")))
-        repository.saveSettings(Settings(urlPageArc = "https://arc.gc.ca", lastCheckDate = Instant.parse("2026-09-08T12:00:00Z")))
+        repository.saveSettings(Settings(craPageUrl = "https://arc.gc.ca", lastCheckDate = Instant.parse("2026-09-08T12:00:00Z")))
     }
 
     @Test
-    fun `aller-retour sans perte - reexporter apres import donne une chaine identique`() = runTest {
+    fun `round trip without loss - reexporting after import gives an identical string`() = runTest {
         populateTestData()
         val exportOriginal = repository.exportJson()
 
         emptyRepository.importJson(exportOriginal)
-        val exportReimporte = emptyRepository.exportJson()
+        val reimportedExport = emptyRepository.exportJson()
 
-        assertEquals(exportOriginal, exportReimporte)
+        assertEquals(exportOriginal, reimportedExport)
     }
 
     @Test
-    fun `un montant a deux decimales survit a l'export et a l'import`() = runTest {
+    fun `an amount with two decimals survives export and import`() = runTest {
         repository.saveProfile(tfsaProfile)
         repository.addTransaction(Transaction(Account.TFSA, LocalDate.of(2026, 1, 15), TransactionType.DEPOSIT, BigDecimal("1234.56")))
 
@@ -80,19 +80,19 @@ class ExportJsonTest {
     }
 
     @Test
-    fun `une version inconnue est refusee`() = runTest {
-        val exportVersionInconnue = """
+    fun `an unknown version is rejected`() = runTest {
+        val unknownVersionExport = """
             {"version":99,"profil":null,"plafonds":[],"transactions":[],"snapshotsArc":[],
              "reglages":{"urlPageArc":"","dateDerniereVerification":null}}
         """.trimIndent()
 
         assertFailsWith<IllegalArgumentException> {
-            emptyRepository.importJson(exportVersionInconnue)
+            emptyRepository.importJson(unknownVersionExport)
         }
     }
 
     @Test
-    fun `un JSON malforme est refuse sans ecraser la base existante`() = runTest {
+    fun `malformed JSON is rejected without overwriting the existing database`() = runTest {
         populateTestData()
         val before = repository.exportJson()
 
@@ -106,7 +106,7 @@ class ExportJsonTest {
     }
 
     @Test
-    fun `un export de version 1 reste importable, son annee d'admissibilite ignoree`() = runTest {
+    fun `a version 1 export stays importable, its eligibility year ignored`() = runTest {
         val exportV1 = """
             {"version":1,
              "profil":{"anneeAdmissibiliteCeli":1999,"anneeNaissance":2002,"dateOuvertureCeliapp":"2023-06-01"},
@@ -116,19 +116,20 @@ class ExportJsonTest {
 
         repository.importJson(exportV1)
 
-        // 2002 + 18, labelStep le 1999 ecrit dans le file.
+        // 2002 + 18, not the 1999 written in the file.
         assertEquals(2020, repository.profile()?.tfsaEligibilityYear)
     }
 
     @Test
-    fun `un echec en cours d'ecriture ne laisse pas la base a moitie videe`() = runTest {
+    fun `a failure mid write does not leave the database half emptied`() = runTest {
         populateTestData()
         val before = repository.exportJson()
 
-        // Version et JSON valides, mais deux transactions partagent le meme id :
-        // la deuxieme insertion viole la cle primaire after que les tables aient
-        // deja ete videes et qu'une part (profile, limits) ait deja ete ecrite.
-        val exportEcritureEchoue = """
+        // Valid version and JSON, but two transactions share the same id: the
+        // second insert violates the primary key after the tables have
+        // already been cleared and part of the data (profile, limits) has
+        // already been written.
+        val exportFailingWrite = """
             {"version":1,
              "profil":{"anneeAdmissibiliteCeli":2020,"anneeNaissance":2000,"dateOuvertureCeliapp":"2023-06-01"},
              "plafonds":[{"compte":"CELI","annee":2026,"montant":"7000.00","confirme":true}],
@@ -141,7 +142,7 @@ class ExportJsonTest {
         """.trimIndent()
 
         assertFailsWith<Throwable> {
-            repository.importJson(exportEcritureEchoue)
+            repository.importJson(exportFailingWrite)
         }
 
         assertEquals(before, repository.exportJson())
@@ -150,13 +151,13 @@ class ExportJsonTest {
         assertEquals(2, repository.transactions().size)
         assertEquals(1, repository.craSnapshots().size)
         assertEquals(
-            Settings(urlPageArc = "https://arc.gc.ca", lastCheckDate = Instant.parse("2026-09-08T12:00:00Z")),
+            Settings(craPageUrl = "https://arc.gc.ca", lastCheckDate = Instant.parse("2026-09-08T12:00:00Z")),
             repository.settings(),
         )
     }
 
     @Test
-    fun `l'export est deterministe`() = runTest {
+    fun `the export is deterministic`() = runTest {
         populateTestData()
 
         val firstExport = repository.exportJson()

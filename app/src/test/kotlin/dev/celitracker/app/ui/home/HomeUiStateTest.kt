@@ -19,7 +19,7 @@ class HomeUiStateTest {
     )
 
     @Test
-    fun `etat sans profil est un etat vide`() {
+    fun `state without a profile is an empty state`() {
         val state = HomeUiState(profile = null, currentYear = 2026, currentMonth = 9)
 
         assertFalse(state.hasProfile)
@@ -29,7 +29,7 @@ class HomeUiStateTest {
     }
 
     @Test
-    fun `celiAnneeCourante isole la ligne de l'annee courante`() {
+    fun `tfsaCurrentYear isolates the current year's row`() {
         val row2025 = tfsaRow(2025)
         val row2026 = tfsaRow(2026)
         val state = HomeUiState(
@@ -43,7 +43,7 @@ class HomeUiStateTest {
     }
 
     @Test
-    fun `excedentCeliCourant filtre sur annee ET mois`() {
+    fun `currentTfsaExcess filters by year AND month`() {
         val augustExcess = MonthlyExcess(2026, 8, BigDecimal("100.00"), BigDecimal("1.00"))
         val septemberExcess = MonthlyExcess(2026, 9, BigDecimal("200.00"), BigDecimal("2.00"))
         val state = HomeUiState(
@@ -57,16 +57,16 @@ class HomeUiStateTest {
     }
 
     @Test
-    fun `echeanceParticipationCeliapp derive du profil, pas d'un champ stocke`() {
+    fun `fhsaParticipationDeadline is derived from the profile, not a stored field`() {
         val state = HomeUiState(profile = profile, currentYear = 2026, currentMonth = 9)
 
-        // Ouverture en 2023: 15 ans -> 2038; birth 1995: 71 ans -> 2066.
-        // Le earliest des deux l'emporte.
+        // Opened in 2023: 15 years -> 2038; birth 1995: 71 years -> 2066.
+        // The earliest of the two wins.
         assertEquals(LocalDate.of(2038, 12, 31), state.fhsaParticipationDeadline)
     }
 
     @Test
-    fun `l'anneau montre la part des droits de l'annee deja cotisee`() {
+    fun `the ring shows the share of the year's room already contributed`() {
         val row = tfsaRow(2026).copy(startRoom = BigDecimal("8000.00"), deposits = BigDecimal("2000.00"))
         val state = HomeUiState(profile = profile, currentYear = 2026, currentMonth = 9, tfsaRoom = listOf(row))
 
@@ -74,7 +74,7 @@ class HomeUiStateTest {
     }
 
     @Test
-    fun `une sur-cotisation depasse 100 pour cent au lieu d'etre ecretee`() {
+    fun `an overcontribution exceeds 100 percent instead of being capped`() {
         val row = tfsaRow(2026).copy(startRoom = BigDecimal("1000.00"), deposits = BigDecimal("1500.00"))
         val state = HomeUiState(profile = profile, currentYear = 2026, currentMonth = 9, tfsaRoom = listOf(row))
 
@@ -82,7 +82,7 @@ class HomeUiStateTest {
     }
 
     @Test
-    fun `sans droits cette annee, pas d'anneau plutot qu'une division par zero`() {
+    fun `with no room this year, no ring rather than a division by zero`() {
         val row = tfsaRow(2026).copy(startRoom = BigDecimal.ZERO)
         val state = HomeUiState(profile = profile, currentYear = 2026, currentMonth = 9, tfsaRoom = listOf(row))
 
@@ -90,7 +90,7 @@ class HomeUiStateTest {
     }
 
     @Test
-    fun `un plafond manquant rend l'utilisation inconnue plutot qu'alarmante`() {
+    fun `a missing limit makes usage unknown rather than alarming`() {
         val row = tfsaRow(2026).copy(startRoom = BigDecimal.ZERO, deposits = BigDecimal("100.00"), limitMissing = true)
         val state = HomeUiState(profile = profile, currentYear = 2026, currentMonth = 9, tfsaRoom = listOf(row))
 

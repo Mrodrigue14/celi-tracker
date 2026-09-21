@@ -11,10 +11,10 @@ import java.time.LocalDate
 private const val MIN_BIRTH_YEAR = 1900
 
 /**
- * Champs de input en String (source de verite des TextField) plutot qu'en
- * Int/BigDecimal deja parses: sans ca, une input partielle ("202") serait
- * perdue a chaque frappe le temps qu'elle devienne un entier valid.
- * La validite est une propriete calculee, jamais un champ separe.
+ * Input fields as String (the TextFields' source of truth) rather than
+ * already-parsed Int/BigDecimal: without this, partial input ("202")
+ * would be lost on every keystroke until it became a valid integer.
+ * Validity is a computed property, never a separate field.
  */
 data class SettingsUiState(
     val birthYear: String = "",
@@ -22,21 +22,21 @@ data class SettingsUiState(
     val limits: List<AnnualLimit> = emptyList(),
     val newLimitYear: String = "",
     val newLimitAmount: String = "",
-    val urlPageArc: String = "",
+    val craPageUrl: String = "",
     val lastCraCheck: Instant? = null,
     val checkInProgress: Boolean = false,
     val craError: UiText? = null,
     val message: UiText? = null,
 ) {
-    /** Lues sur le site de l'ARC, en attente de confirmation. */
+    /** Read from the CRA website, awaiting confirmation. */
     val proposals: List<AnnualLimit> get() = limits.filter { !it.confirmed }
 
     val confirmedLimits: List<AnnualLimit> get() = limits.filter { it.confirmed }
 
     /**
-     * Les limits d'before l'admissibilite n'entrent labelStep dans les room: ils
-     * restent en database, mais replies a l'ecran. Sans year de birth, whole
-     * est pertinent.
+     * Limits from before eligibility don't count toward room: they stay
+     * in the database, but collapsed on screen. Without a birth year,
+     * everything is relevant.
      */
     val relevantLimits: List<AnnualLimit> get() =
         confirmedLimits.filter { limit -> tfsaEligibilityYear?.let { limit.year >= it } ?: true }
@@ -47,8 +47,8 @@ data class SettingsUiState(
         birthYear.toIntOrNull()?.takeIf { it in MIN_BIRTH_YEAR..LocalDate.now().year }
 
     /**
-     * Se deduit de l'year de birth, jamais input. Le calcul vient de
-     * [Profile] pour qu'il n'existe qu'a un seul endroit.
+     * Derived from the birth year, never entered directly. The
+     * calculation comes from [Profile] so it exists in only one place.
      */
     val tfsaEligibilityYear: Int? get() =
         validBirthYear?.let { Profile(birthYear = it, fhsaOpeningDate = null).tfsaEligibilityYear }
@@ -56,7 +56,7 @@ data class SettingsUiState(
     val validOpeningDate: LocalDate? get() =
         if (fhsaOpeningDate.isBlank()) null else runCatching { LocalDate.parse(fhsaOpeningDate) }.getOrNull()
 
-    /** Vide = labelStep de FHSA, valid. Non vide et non parsable = error de input. */
+    /** Empty = no FHSA, valid. Non-empty and unparsable = input error. */
     val invalidOpeningDate: Boolean get() =
         fhsaOpeningDate.isNotBlank() && validOpeningDate == null
 

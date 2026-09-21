@@ -27,7 +27,7 @@ class JournalViewModelTest {
     private val fixture = TestRepository()
     private val repository = fixture.repository
 
-    /** Naissance en 2002: admissible au TFSA en 2020. */
+    /** Born in 2002: eligible for the TFSA in 2020. */
     private val profile = Profile(birthYear = 2002, fhsaOpeningDate = LocalDate.of(2023, 6, 1))
 
     companion object {
@@ -39,7 +39,7 @@ class JournalViewModelTest {
     private fun tfsaDeposit(date: LocalDate, amount: String) = Transaction(Account.TFSA, date, TransactionType.DEPOSIT, BigDecimal(amount))
 
     @Test
-    fun `n'affiche que les transactions du compte, la plus recente d'abord`() = runTest {
+    fun `shows only the account's transactions, most recent first`() = runTest {
         repository.saveProfile(profile)
         repository.addTransaction(tfsaDeposit(LocalDate.of(2024, 1, 10), "100.00"))
         repository.addTransaction(tfsaDeposit(LocalDate.of(2025, 1, 10), "200.00"))
@@ -52,7 +52,7 @@ class JournalViewModelTest {
     }
 
     @Test
-    fun `une nouvelle transaction valide est enregistree et le formulaire se ferme`() = runTest {
+    fun `a valid new transaction is saved and the form closes`() = runTest {
         repository.saveProfile(profile)
         val viewModel = JournalViewModel(repository, Account.TFSA)
 
@@ -66,7 +66,7 @@ class JournalViewModelTest {
     }
 
     @Test
-    fun `le message est efface une fois affiche`() = runTest {
+    fun `the message is cleared once shown`() = runTest {
         repository.saveProfile(profile)
         val viewModel = JournalViewModel(repository, Account.TFSA)
 
@@ -81,7 +81,7 @@ class JournalViewModelTest {
     }
 
     @Test
-    fun `un refus du depot garde le formulaire ouvert avec l'erreur`() = runTest {
+    fun `a rejected deposit keeps the form open with the error`() = runTest {
         repository.saveProfile(profile)
         val viewModel = JournalViewModel(repository, Account.TFSA)
 
@@ -96,7 +96,7 @@ class JournalViewModelTest {
     }
 
     @Test
-    fun `une modification remplace la transaction existante`() = runTest {
+    fun `an edit replaces the existing transaction`() = runTest {
         repository.saveProfile(profile)
         repository.addTransaction(tfsaDeposit(LocalDate.of(2024, 1, 10), "100.00"))
         val viewModel = JournalViewModel(repository, Account.TFSA)
@@ -111,7 +111,7 @@ class JournalViewModelTest {
     }
 
     @Test
-    fun `la suppression retire la transaction`() = runTest {
+    fun `deletion removes the transaction`() = runTest {
         repository.saveProfile(profile)
         repository.addTransaction(tfsaDeposit(LocalDate.of(2024, 1, 10), "100.00"))
         val viewModel = JournalViewModel(repository, Account.TFSA)
@@ -125,7 +125,7 @@ class JournalViewModelTest {
     }
 
     @Test
-    fun `ouvrir une modification affiche toujours deux decimales, meme sur un montant entier`() = runTest {
+    fun `opening an edit always shows two decimals, even for a whole amount`() = runTest {
         repository.saveProfile(profile)
         repository.addTransaction(tfsaDeposit(LocalDate.of(2024, 1, 10), "8000"))
         val viewModel = JournalViewModel(repository, Account.TFSA)
@@ -137,7 +137,7 @@ class JournalViewModelTest {
         assertEquals("8000.00", form?.amount)
     }
 
-    /** 2020 est la premiere year d'admissibilite du profile: ses room valent son limit. */
+    /** 2020 is the profile's first eligibility year: its room equals its limit. */
     private suspend fun room2020(limit: String = "6000.00") {
         repository.saveProfile(profile)
         repository.saveLimit(AnnualLimit(Account.TFSA, 2020, BigDecimal(limit)))
@@ -151,7 +151,7 @@ class JournalViewModelTest {
     }
 
     @Test
-    fun `un depot qui porte l'utilisation a 95 pour cent ou plus demande une confirmation`() = runTest {
+    fun `a deposit that pushes usage to 95 percent or more asks for confirmation`() = runTest {
         room2020()
         val viewModel = JournalViewModel(repository, Account.TFSA)
 
@@ -163,7 +163,7 @@ class JournalViewModelTest {
     }
 
     @Test
-    fun `confirmer l'avertissement enregistre le depot`() = runTest {
+    fun `confirming the warning saves the deposit`() = runTest {
         room2020()
         val viewModel = JournalViewModel(repository, Account.TFSA)
         viewModel.enterDeposit("2020-06-01", "5820")
@@ -176,7 +176,7 @@ class JournalViewModelTest {
     }
 
     @Test
-    fun `un depot au-dela des droits annonce l'excedent`() = runTest {
+    fun `a deposit beyond the room announces the excess`() = runTest {
         room2020()
         val viewModel = JournalViewModel(repository, Account.TFSA)
 
@@ -187,7 +187,7 @@ class JournalViewModelTest {
     }
 
     @Test
-    fun `entre 80 et 95 pour cent, le depot passe et le message donne l'utilisation`() = runTest {
+    fun `between 80 and 95 percent, the deposit goes through and the message states usage`() = runTest {
         room2020()
         val viewModel = JournalViewModel(repository, Account.TFSA)
 
@@ -199,7 +199,7 @@ class JournalViewModelTest {
     }
 
     @Test
-    fun `un retrait ne demande jamais de confirmation`() = runTest {
+    fun `a withdrawal never asks for confirmation`() = runTest {
         room2020()
         repository.addTransaction(Transaction(Account.TFSA, LocalDate.of(2020, 3, 1), TransactionType.DEPOSIT, BigDecimal("5900.00")))
         val viewModel = JournalViewModel(repository, Account.TFSA)
@@ -215,7 +215,7 @@ class JournalViewModelTest {
     }
 
     @Test
-    fun `venir du bouton Ajouter ouvre directement la feuille de saisie`() = runTest {
+    fun `coming from the Add button opens the input sheet directly`() = runTest {
         repository.saveProfile(profile)
 
         val viewModel = JournalViewModel(repository, Account.TFSA, openAdd = true)
@@ -224,14 +224,14 @@ class JournalViewModelTest {
     }
 
     @Test
-    fun `ouvrir le journal normalement n'ouvre pas de feuille`() = runTest {
+    fun `opening the journal normally does not open a sheet`() = runTest {
         val viewModel = JournalViewModel(repository, Account.TFSA)
 
         assertNull(viewModel.uiState.value.form)
     }
 
     @Test
-    fun `changer de compte affiche le journal de l'autre compte sans quitter l'ecran`() = runTest {
+    fun `switching accounts shows the other account's journal without leaving the screen`() = runTest {
         repository.saveProfile(profile)
         repository.addTransaction(tfsaDeposit(LocalDate.of(2024, 1, 10), "100.00"))
         repository.addTransaction(Transaction(Account.FHSA, LocalDate.of(2024, 5, 1), TransactionType.DEPOSIT, BigDecimal("300.00")))
@@ -245,7 +245,7 @@ class JournalViewModelTest {
     }
 
     @Test
-    fun `l'annee demandee depuis le detail n'est visee qu'une fois`() = runTest {
+    fun `the year requested from the detail screen is targeted only once`() = runTest {
         val viewModel = JournalViewModel(repository, Account.TFSA, targetYear = 2024)
         assertEquals(2024, viewModel.uiState.value.targetYear)
 

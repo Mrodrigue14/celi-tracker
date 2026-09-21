@@ -11,27 +11,27 @@ class UsageTest {
     private fun usage(contributed: String) = Usage(room = BigDecimal("10000.00"), contributed = BigDecimal(contributed))
 
     @Test
-    fun `sous 80 pour cent, rien a signaler`() {
+    fun `under 80 percent, nothing to flag`() {
         assertEquals(UsageLevel.NORMAL, usage("7999.99").level)
     }
 
     @Test
-    fun `80 pour cent tout juste declenche l'attention`() {
+    fun `80 percent exactly triggers the warning`() {
         assertEquals(UsageLevel.WARNING, usage("8000.00").level)
     }
 
     @Test
-    fun `95 pour cent tout juste est critique`() {
+    fun `95 percent exactly is critical`() {
         assertEquals(UsageLevel.CRITICAL, usage("9500.00").level)
     }
 
     @Test
-    fun `utiliser exactement tous ses droits n'est pas une sur-cotisation`() {
+    fun `using exactly all of one's room is not an over-contribution`() {
         assertEquals(UsageLevel.CRITICAL, usage("10000.00").level)
     }
 
     @Test
-    fun `un cent de trop est une sur-cotisation`() {
+    fun `one cent over is an over-contribution`() {
         val exceeded = usage("10000.01")
 
         assertEquals(UsageLevel.EXCEEDED, exceeded.level)
@@ -40,12 +40,12 @@ class UsageTest {
     }
 
     @Test
-    fun `le pourcentage est arrondi a l'entier`() {
+    fun `the percentage is rounded to a whole number`() {
         assertEquals(85, usage("8450.00").percent)
     }
 
     @Test
-    fun `sans droits, pas de pourcentage, et tout depot est un depassement`() {
+    fun `without room, no percentage, and any deposit is an overage`() {
         val withoutRoom = Usage(room = BigDecimal.ZERO, contributed = BigDecimal.ZERO)
 
         assertNull(withoutRoom.percent)
@@ -54,29 +54,29 @@ class UsageTest {
     }
 
     @Test
-    fun `l'utilisation CELI vient des droits du 1er janvier et des depots de l'annee`() {
-        // Naissance en 2008: admissible au TFSA en 2026.
+    fun `TFSA usage comes from january 1 room and the year's deposits`() {
+        // Born in 2008: TFSA-eligible in 2026.
         val profile = Profile(birthYear = 2008, fhsaOpeningDate = null)
         val limits = listOf(AnnualLimit(Account.TFSA, 2026, BigDecimal("7000.00")))
-        val repository = Transaction(Account.TFSA, LocalDate.of(2026, 3, 1), TransactionType.DEPOSIT, BigDecimal("6000.00"))
+        val deposit = Transaction(Account.TFSA, LocalDate.of(2026, 3, 1), TransactionType.DEPOSIT, BigDecimal("6000.00"))
 
-        val usage = tfsaUsage(profile, limits, listOf(repository), 2026)
+        val usage = tfsaUsage(profile, limits, listOf(deposit), 2026)
 
         assertEquals(Usage(BigDecimal("7000.00"), BigDecimal("6000.00")), usage)
     }
 
     @Test
-    fun `sans CELIAPP ouvert, pas d'utilisation`() {
+    fun `without an open FHSA, no usage`() {
         val profile = Profile(birthYear = 2000, fhsaOpeningDate = null)
 
         assertNull(fhsaUsage(profile, emptyList(), 2026))
     }
 
     @Test
-    fun `sans plafond connu, l'utilisation CELI est inconnue plutot que fausse`() {
+    fun `without a known limit, TFSA usage is unknown rather than wrong`() {
         val profile = Profile(birthYear = 2008, fhsaOpeningDate = null)
-        val repository = Transaction(Account.TFSA, LocalDate.of(2026, 3, 1), TransactionType.DEPOSIT, BigDecimal("100.00"))
+        val deposit = Transaction(Account.TFSA, LocalDate.of(2026, 3, 1), TransactionType.DEPOSIT, BigDecimal("100.00"))
 
-        assertNull(tfsaUsage(profile, emptyList(), listOf(repository), 2026))
+        assertNull(tfsaUsage(profile, emptyList(), listOf(deposit), 2026))
     }
 }

@@ -31,17 +31,17 @@ class TfsaDetailViewModelTest {
     }
 
     @Test
-    fun `sans profil, aucune ligne`() = runTest {
+    fun `without a profile, no rows`() = runTest {
         val viewModel = TfsaDetailViewModel(repository).also { it.load() }
 
         assertEquals(emptyList(), viewModel.uiState.value.rows)
     }
 
     @Test
-    fun `un plafond absent est signale plafondManquant`() = runTest {
-        // Naissance il y a 19 ans: admissible au TFSA depuis l'an dernier.
+    fun `a missing limit is flagged as limitMissing`() = runTest {
+        // Born 19 years ago: TFSA-eligible since last year.
         repository.saveProfile(Profile(currentYear - 19, null))
-        // Aucun limit enregistre pour currentYear - 1 ni currentYear.
+        // No limit recorded for currentYear - 1 or currentYear.
 
         val viewModel = TfsaDetailViewModel(repository).also { it.load() }
         val state = viewModel.uiState.first { it.rows.isNotEmpty() }
@@ -50,7 +50,7 @@ class TfsaDetailViewModelTest {
     }
 
     @Test
-    fun `un plafond confirme n'est pas signale`() = runTest {
+    fun `a confirmed limit is not flagged`() = runTest {
         repository.saveProfile(Profile(currentYear - 18, null))
         repository.saveLimit(AnnualLimit(Account.TFSA, currentYear, BigDecimal("7000.00"), confirmed = true))
 
@@ -61,7 +61,7 @@ class TfsaDetailViewModelTest {
     }
 
     @Test
-    fun `seules les annees avec des transactions CELI offrent un lien vers le journal`() = runTest {
+    fun `only years with TFSA transactions offer a link to the journal`() = runTest {
         repository.saveProfile(Profile(currentYear - 20, LocalDate.of(currentYear - 1, 1, 1)))
         repository.addTransaction(Transaction(Account.TFSA, LocalDate.of(currentYear, 1, 5), TransactionType.DEPOSIT, BigDecimal("100.00")))
         repository.addTransaction(Transaction(Account.FHSA, LocalDate.of(currentYear - 1, 6, 1), TransactionType.DEPOSIT, BigDecimal("100.00")))

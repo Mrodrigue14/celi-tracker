@@ -25,8 +25,8 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 /**
- * [downloadPage] est injecte plutot qu'appele en dur: la regle de lecture
- * de l'ARC se teste ainsi sans reseau.
+ * [downloadPage] is injected rather than hardcoded: this lets the CRA
+ * reading logic be tested without a network.
  */
 class SettingsViewModel(
     private val repository: Repository,
@@ -42,10 +42,11 @@ class SettingsViewModel(
     }
 
     /**
-     * [replaceInputs] a false, le chargement ne remplit que les champs
-     * encore vides: la lecture de la database est asynchrone et ecraserait sinon ce
-     * que l'utilisateur vient de taper. Un import, lui, remplace whole le
-     * content, donc les champs affiches aussi.
+     * With [replaceInputs] false, loading only fills fields that are
+     * still empty: reading the database is asynchronous and would
+     * otherwise overwrite what the user just typed. An import, on the
+     * other hand, replaces all the content, including the displayed
+     * fields.
      */
     fun load(replaceInputs: Boolean = false) {
         viewModelScope.launch {
@@ -59,7 +60,7 @@ class SettingsViewModel(
                     birthYear = if (replaceInputs) birth else it.birthYear.ifBlank { birth },
                     fhsaOpeningDate = if (replaceInputs) opening else it.fhsaOpeningDate.ifBlank { opening },
                     limits = limits,
-                    urlPageArc = it.urlPageArc.ifBlank { settings.urlPageArc },
+                    craPageUrl = it.craPageUrl.ifBlank { settings.craPageUrl },
                     lastCraCheck = settings.lastCheckDate,
                 )
             }
@@ -71,7 +72,7 @@ class SettingsViewModel(
     fun updateNewLimitYear(value: String) = _uiState.update { it.copy(newLimitYear = value) }
     fun updateNewLimitAmount(value: String) = _uiState.update { it.copy(newLimitAmount = value) }
 
-    fun updateCraPageUrl(value: String) = _uiState.update { it.copy(urlPageArc = value) }
+    fun updateCraPageUrl(value: String) = _uiState.update { it.copy(craPageUrl = value) }
 
     fun messageShown() = _uiState.update { it.copy(message = null) }
 
@@ -92,8 +93,8 @@ class SettingsViewModel(
         val year = state.validNewLimitYear ?: return
         val amount = state.validNewLimitAmount ?: return
         viewModelScope.launch {
-            // confirmed = true : input manuelle directe, labelStep une lecture ARC en
-            // attente de validation.
+            // confirmed = true: direct manual entry, not a CRA reading
+            // awaiting validation.
             repository.saveLimit(AnnualLimit(account = Account.TFSA, year = year, amount = amount, confirmed = true))
             val limits = tfsaLimits()
             _uiState.update {
@@ -108,8 +109,8 @@ class SettingsViewModel(
     }
 
     /**
-     * Va read le limit annonce par l'ARC. Une demande explicite ignore la
-     * limite d'une lecture par month; l'opening de l'ecran, non.
+     * Reads the limit published by the CRA. An explicit request ignores
+     * the once-a-month reading limit; opening the screen does not.
      */
     fun checkCra(explicitRequest: Boolean) {
         viewModelScope.launch {
@@ -156,22 +157,22 @@ class SettingsViewModel(
     }
 
     /**
-     * L'address est essayee before d'etre enregistree. Rejected, le champ revient
-     * a l'address en place, la latest qui a fonctionne.
+     * The address is tried before being saved. If rejected, the field
+     * reverts to the current address, the last one that worked.
      */
-    fun saveCraPageUrl() = changeAddress(_uiState.value.urlPageArc.trim())
+    fun saveCraPageUrl() = changeAddress(_uiState.value.craPageUrl.trim())
 
-    /** L'address d'origine passe par le meme essai: elle aussi peut avoir change. */
+    /** The default address goes through the same check: it too may have changed. */
     fun restoreCraPageUrl() = changeAddress(DEFAULT_CRA_PAGE_URL)
 
     private fun changeAddress(input: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(checkInProgress = true) }
             val result = repository.changeCraPageUrl(input, downloadPage)
-            val inPlace = repository.settings().urlPageArc
+            val inPlace = repository.settings().craPageUrl
             _uiState.update {
                 it.copy(
-                    urlPageArc = inPlace,
+                    craPageUrl = inPlace,
                     checkInProgress = false,
                     message = when (result) {
                         CraAddressResult.Saved -> uiText(R.string.message_address_saved)
@@ -183,8 +184,8 @@ class SettingsViewModel(
     }
 
     /**
-     * L'ecran fournit l'ecriture et la lecture du file: les API Android de
-     * stockage restent hors du ViewModel.
+     * The screen provides the file read and write: Android storage APIs
+     * stay out of the ViewModel.
      */
     fun exportData(write: suspend (String) -> Unit) {
         viewModelScope.launch {
@@ -198,7 +199,7 @@ class SettingsViewModel(
         }
     }
 
-    /** L'import remplace whole le content; l'ecran confirmed before d'appeler. */
+    /** Import replaces all the content; the screen confirms before calling this. */
     fun importData(read: suspend () -> String) {
         viewModelScope.launch {
             val message = try {

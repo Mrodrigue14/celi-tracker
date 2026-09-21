@@ -3,20 +3,21 @@ package dev.celitracker.engine
 import java.math.BigDecimal
 
 /**
- * Plafonds annuels du TFSA publies par l'ARC, recopies de la page
- * « Avant de cotiser a un TFSA » (canada.ca, consultee le 2026-09-17) :
+ * Annual TFSA limits published by the CRA, copied from the page
+ * "Avant de cotiser à un CELI" (canada.ca, retrieved 2026-09-17):
  *
  * ```
- * De 2009 a 2012  5 000 $     2019 a 2022  6 000 $
- * 2013 et 2014    5 500 $     2023         6 500 $
- * 2015           10 000 $     2024 a 2026  7 000 $
- * De 2016 a 2018  5 500 $
+ * 2009 to 2012   $5,000      2019 to 2022  $6,000
+ * 2013 and 2014  $5,500      2023          $6,500
+ * 2015          $10,000      2024 to 2026  $7,000
+ * 2016 to 2018   $5,500
  * ```
  *
- * C'est une SAISIE, labelStep un calcul: les montants sont transcrits d'une source
- * officielle. L'ARC les indexe a l'inflation et les arrondit au 500 $ pres,
- * mais deviner une year future a partir de cette regle produirait un chiffre
- * faux et plausible, exactement ce que ce projet evite.
+ * This is INPUT, not a calculation: the amounts are transcribed from an
+ * official source. The CRA indexes them to inflation and rounds to the
+ * nearest $500, but guessing a future year from that rule would produce
+ * a number that is wrong and plausible, exactly what this project
+ * avoids.
  */
 val PUBLISHED_TFSA_LIMITS: Map<Int, BigDecimal> = buildMap {
     fun putRange(years: IntRange, amount: String) = years.forEach { put(it, BigDecimal(amount).toMoney()) }

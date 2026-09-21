@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 
 class CraLimitReaderTest {
 
-    /** Structure relevee sur la page de l'ARC le 2026-09-17, spans compris. */
+    /** Structure captured from the CRA page on 2026-09-17, spans included. */
     private val craPage = """
         <h2 id="toc3">Plafond de cotisation à un CELI pour 2026</h2>
         <p>Le plafond de cotisation à un compte d'épargne libre <span class="nowrap">d'impôt (CELI)</span>
@@ -18,49 +18,49 @@ class CraLimitReaderTest {
     """.trimIndent()
 
     @Test
-    fun `lit l'annee et le montant a travers les balises`() {
+    fun `reads the year and amount through the tags`() {
         val limit = readTfsaLimitFromCraPage(craPage)
 
         assertEquals(AnnualLimit(Account.TFSA, 2026, BigDecimal("7000.00"), confirmed = false), limit)
     }
 
     @Test
-    fun `l'espace insecable des milliers est accepte`() {
+    fun `the non-breaking space in thousands is accepted`() {
         val withNonBreakingSpace = craPage.replace("7 000", "7 000")
 
         assertEquals(BigDecimal("7000.00"), readTfsaLimitFromCraPage(withNonBreakingSpace)?.amount)
     }
 
     @Test
-    fun `le plafond lu n'est jamais confirme`() {
+    fun `the limit read is never confirmed`() {
         assertEquals(false, readTfsaLimitFromCraPage(craPage)?.confirmed)
     }
 
     @Test
-    fun `une page sans la phrase attendue ne donne rien`() {
+    fun `a page without the expected sentence gives nothing`() {
         assertNull(readTfsaLimitFromCraPage("<h1>Page non trouvée</h1><p>Erreur 404</p>"))
     }
 
     @Test
-    fun `une phrase sans montant lisible ne donne rien`() {
+    fun `a sentence without a readable amount gives nothing`() {
         assertNull(readTfsaLimitFromCraPage("<p>Le plafond de cotisation pour 2027 est de bientôt $.</p>"))
     }
 
     @Test
-    fun `un montant nul est refuse`() {
+    fun `a zero amount is rejected`() {
         assertNull(readTfsaLimitFromCraPage("<p>Le plafond de cotisation pour 2027 est de 0 $.</p>"))
     }
 
     @Test
-    fun `une adresse https de canada point ca est valide`() {
+    fun `an https address on canada dot ca is valid`() {
         assertTrue(isValidCraPageUrl("https://www.canada.ca/fr/agence-revenu/services.html"))
     }
 
     @Test
-    fun `une adresse hors canada point ca ou sans https est refusee`() {
+    fun `an address outside canada dot ca or without https is rejected`() {
         assertFalse(isValidCraPageUrl("http://www.canada.ca/fr.html"))
         assertFalse(isValidCraPageUrl("https://example.com/limits"))
-        assertFalse(isValidCraPageUrl("pas une adresse"))
+        assertFalse(isValidCraPageUrl("not an address"))
         assertFalse(isValidCraPageUrl(""))
     }
 }

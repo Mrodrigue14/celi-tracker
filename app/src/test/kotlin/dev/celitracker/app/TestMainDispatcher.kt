@@ -7,10 +7,10 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.setMain
 
 /**
- * Fixe `Dispatchers.Main` une fois pour toute la JVM de test, sans jamais le
- * reinitialiser. Chaque classe le remettait a zero a la end, pendant que des
- * coroutines d'une other classe tournaient encore sur le vrai dispatcher IO de
- * Room: les tests echouaient alors au hasard, selon l'ordre d'execution.
+ * Sets `Dispatchers.Main` once for the whole test JVM, and never
+ * resets it. Each class used to reset it at the end, while
+ * coroutines from another class were still running on Room's real IO
+ * dispatcher: tests then failed at random, depending on execution order.
  */
 object TestMainDispatcher {
     private val dispatcher = UnconfinedTestDispatcher()

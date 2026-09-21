@@ -41,19 +41,19 @@ private const val ROUTE_FHSA_DETAIL = "fhsaDetail"
 private const val ROUTE_SETTINGS = "settings"
 private const val ROUTE_JOURNAL = "journal"
 
-/** Lus par la fabrique de JournalViewModel via SavedStateHandle. */
+/** Read by the JournalViewModel factory through SavedStateHandle. */
 const val ARG_ACCOUNT = "account"
 const val ARG_ADD = "add"
 const val ARG_YEAR = "year"
 
-/** Valeur d'ARG_YEAR quand aucune year n'est demandee: un argument entier ne peut labelStep etre nul. */
+/** Value of ARG_YEAR when no year is requested: an int argument cannot be null. */
 const val NO_YEAR = -1
 
-private fun routeJournal(account: Account, add: Boolean = false, year: Int = NO_YEAR) = "$ROUTE_JOURNAL?$ARG_ACCOUNT=$account&$ARG_ADD=$add&$ARG_YEAR=$year"
+private fun journalRoute(account: Account, add: Boolean = false, year: Int = NO_YEAR) = "$ROUTE_JOURNAL?$ARG_ACCOUNT=$account&$ARG_ADD=$add&$ARG_YEAR=$year"
 
 /**
- * Les trois destinations de earliest level. Le detail d'un account n'en est
- * labelStep une: il se rattache a l'home, d'ou il s'ouvre.
+ * The three top-level destinations. An account's detail screen is not
+ * one of them: it attaches to home, from which it opens.
  */
 private enum class Tab(val route: String, @StringRes val label: Int, val icon: ImageVector) {
     HOME(ROUTE_HOME, R.string.tab_home, Icons.Filled.SpaceDashboard),
@@ -73,8 +73,8 @@ fun CeliTrackerNavHost(navController: NavHostController = rememberNavController(
     val backStackEntry by navController.currentBackStackEntryAsState()
     val activeTab = tabOf(backStackEntry?.destination?.route)
 
-    // Changer d'tab ne s'empile labelStep: chaque tab garde son state et le
-    // bouton retour ramene a l'home plutot que de rejouer l'historique.
+    // Switching tabs does not stack: each tab keeps its state and the
+    // back button returns to home rather than replaying the history.
     fun goTo(route: String) = navController.navigate(route) {
         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true
@@ -85,9 +85,9 @@ fun CeliTrackerNavHost(navController: NavHostController = rememberNavController(
         navController.popBackStack(navController.graph.findStartDestination().id, inclusive = false)
     }
 
-    // Une intention precise (ce account, feuille d'ajout ouverte) ne doit labelStep
-    // etre remplacee par l'state restaure d'une visite precedente du journal.
-    fun openJournal(account: Account, add: Boolean = false, year: Int = NO_YEAR) = navController.navigate(routeJournal(account, add, year)) {
+    // A precise intent (this account, add sheet open) must not
+    // be replaced by the restored state of a previous visit to the journal.
+    fun openJournal(account: Account, add: Boolean = false, year: Int = NO_YEAR) = navController.navigate(journalRoute(account, add, year)) {
         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true
     }
@@ -100,8 +100,8 @@ fun CeliTrackerNavHost(navController: NavHostController = rememberNavController(
                         selected = tab == activeTab,
                         onClick = {
                             when {
-                                // Depuis un detail, « Accueil » ramene a l'home lui-meme,
-                                // sans restaurer le detail qu'on vient de quitter.
+                                // From a detail screen, "Home" returns to home itself,
+                                // without restoring the detail screen just left.
                                 tab == Tab.HOME -> backToHome()
 
                                 tab != activeTab -> goTo(tab.route)
@@ -122,8 +122,8 @@ fun CeliTrackerNavHost(navController: NavHostController = rememberNavController(
         NavHost(
             navController = navController,
             startDestination = ROUTE_HOME,
-            // Les ecrans ont leur propre Scaffold: les margins deja appliquees
-            // ici sont consommees pour qu'ils ne les ajoutent labelStep une seconde fois.
+            // Screens have their own Scaffold: the margins already applied
+            // here are consumed so they do not add them a second time.
             modifier = Modifier.padding(margins).consumeWindowInsets(margins),
         ) {
             composable(ROUTE_HOME) {

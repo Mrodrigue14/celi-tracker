@@ -11,18 +11,17 @@ import java.time.Instant
 import java.time.LocalDate
 
 /**
- * Page de l'ARC qui enonce le limit TFSA de l'year en cours. Une donnee,
- * labelStep une constante figee dans le code appelant: une reorganisation du site se
- * corrige dans les settings, sans nouvelle version de l'application.
+ * CRA page that states the current year's TFSA limit. A piece of data, not a
+ * constant frozen in the calling code: a site reorganization is fixed in
+ * settings, without a new version of the app.
  */
 const val DEFAULT_CRA_PAGE_URL =
     "https://www.canada.ca/fr/agence-revenu/services/impot/particuliers/sujets/" +
         "compte-epargne-libre-impot/cotiser/calculer-droits.html"
 
 /**
- * Expose uniquement les types de `:engine`, jamais les entites Room. Aucune
- * value calculee n'est persistee: les room sont recalcules a la lecture
- * par `:engine`.
+ * Only exposes types from `:engine`, never Room entities. No calculated
+ * value is persisted: contribution room is recalculated on read by `:engine`.
  */
 class Repository(private val database: CeliTrackerDatabase) {
     private val dao get() = database.dao()
@@ -69,9 +68,9 @@ class Repository(private val database: CeliTrackerDatabase) {
     }
 
     /**
-     * Rejette les saisies incoherentes ici, labelStep dans le moteur: une
-     * transaction earlier a l'year d'admissibilite produirait des
-     * resultats differents selon le moteur consulte.
+     * Rejects inconsistent input here, not in the engine: a transaction
+     * earlier than the eligibility year would produce different results
+     * depending on which engine is consulted.
      */
     private suspend fun validate(transaction: Transaction) {
         if (transaction.amount <= BigDecimal.ZERO) rejectInput(InputRejectionReason.NON_POSITIVE_AMOUNT)
@@ -104,25 +103,25 @@ class Repository(private val database: CeliTrackerDatabase) {
         )
     }
 
-    suspend fun settings(): Settings = dao.settings()?.let { Settings(it.urlPageArc, it.lastCheckDate) }
-        ?: Settings(urlPageArc = DEFAULT_CRA_PAGE_URL, lastCheckDate = null)
+    suspend fun settings(): Settings = dao.settings()?.let { Settings(it.craPageUrl, it.lastCheckDate) }
+        ?: Settings(craPageUrl = DEFAULT_CRA_PAGE_URL, lastCheckDate = null)
 
     suspend fun saveSettings(settings: Settings) {
-        dao.saveSettings(SettingsEntity(urlPageArc = settings.urlPageArc, lastCheckDate = settings.lastCheckDate))
+        dao.saveSettings(SettingsEntity(craPageUrl = settings.craPageUrl, lastCheckDate = settings.lastCheckDate))
     }
 
     /**
-     * Ecrit la seule date de verification, sans relire ni reecrire l'address:
-     * une lecture ARC en cours ne doit labelStep ecraser une address que
-     * l'utilisateur vient de changer.
+     * Writes only the check date, without re-reading or rewriting the
+     * address: an in-progress CRA read must not overwrite an address the
+     * user just changed.
      */
     suspend fun recordCraCheck(date: Instant) {
         if (dao.recordCraCheck(date) == 0) {
-            dao.saveSettings(SettingsEntity(urlPageArc = settings().urlPageArc, lastCheckDate = date))
+            dao.saveSettings(SettingsEntity(craPageUrl = settings().craPageUrl, lastCheckDate = date))
         }
     }
 
-    /** Reserve a `importJson` : remplace whole le content en une transaction. */
+    /** Reserved for `importJson`: replaces the entire content in one transaction. */
     internal suspend fun replaceEverything(
         profile: ProfileEntity?,
         limits: List<LimitEntity>,

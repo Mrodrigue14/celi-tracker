@@ -45,19 +45,19 @@ import dev.celitracker.app.R
 import dev.celitracker.app.ui.theme.tabularFigures
 import kotlin.math.roundToInt
 
-/** Rayon unique des cartes et des tiles, pour une forme coherente partout. */
+/** Single corner radius for cards and tiles, for a consistent shape everywhere. */
 val CARD_SHAPE = RoundedCornerShape(20.dp)
 
 val TILE_SHAPE = RoundedCornerShape(14.dp)
 
 /**
- * Anneau de progression des room de l'year. Au-dela de 100 %, il passe a
- * la color d'error: une sur-cotisation se voit before de se read.
+ * Progress ring for the year's room. Past 100%, it switches to
+ * the error color: an over-contribution is visible before it is read.
  */
 @Composable
 fun RoomRing(fraction: Float, color: Color, modifier: Modifier = Modifier) {
     val target = fraction.coerceIn(0f, 1f)
-    // L'animation dit « voici ce qui a change » a l'opening de l'ecran.
+    // The animation says "here is what changed" when the screen opens.
     val labelled by animateFloatAsState(target, animationSpec = tween(700), label = "ring")
     val exceeded = fraction > 1f
     val stroke = if (exceeded) MaterialTheme.colorScheme.error else color
@@ -87,7 +87,7 @@ fun RoomRing(fraction: Float, color: Color, modifier: Modifier = Modifier) {
     }
 }
 
-/** Pastille ronde teintee, qui porte une icon. */
+/** Round tinted badge carrying an icon. */
 @Composable
 fun IconBadge(icon: ImageVector, backgroundColor: Color, tint: Color, description: String? = null) {
     Box(
@@ -100,17 +100,17 @@ fun IconBadge(icon: ImageVector, backgroundColor: Color, tint: Color, descriptio
     }
 }
 
-/** Titre de section, dans la color d'accent de l'ecran. */
+/** Section title, in the screen's accent color. */
 @Composable
 fun SectionTitle(text: String, modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.primary) {
     Text(text, modifier = modifier, style = MaterialTheme.typography.labelLarge, color = color)
 }
 
 /**
- * Une value secondaire de la card: le chiffre d'abord, son label dessous.
- * `fillMaxHeight` sur la Column: un appelant qui l'etire (TileGrid, pour
- * qu'une label sur deux rows n'ecrase labelStep sa voisine) doit see le backgroundColor
- * suivre, labelStep seulement le text.
+ * A secondary value on the card: the number first, its label below.
+ * `fillMaxHeight` on the Column: a caller that stretches it (TileGrid, so
+ * that a label spanning two lines does not crush its neighbor) needs the background
+ * to follow, not just the text.
  */
 @Composable
 fun Tile(value: String, label: String, modifier: Modifier = Modifier) {
@@ -127,11 +127,11 @@ fun Tile(value: String, label: String, modifier: Modifier = Modifier) {
 }
 
 /**
- * Grille de tiles sur deux colonnes; une tuile seule sur sa row garde sa
- * demi-largeur. `IntrinsicSize.Min` sur chaque row: une label qui
- * deborde sur deux rows (une date longue en anglais, par exemple) agrandit
- * les DEUX tiles de la row a la meme barHeight plutot que de rendre l'une
- * plus haute que l'other.
+ * Grid of tiles in two columns; a lone tile on its row keeps its
+ * half-width. `IntrinsicSize.Min` on each row: a label that
+ * overflows onto two lines (a long date in English, for example) grows
+ * BOTH tiles on the row to the same height rather than making one
+ * taller than the other.
  */
 @Composable
 fun TileGrid(tiles: List<Pair<String, String>>, modifier: Modifier = Modifier) {
@@ -148,26 +148,26 @@ fun TileGrid(tiles: List<Pair<String, String>>, modifier: Modifier = Modifier) {
 }
 
 /**
- * Seuil « expanded » de Material 3. En deca, deux volets cote a cote seraient
- * chacun plus etroits qu'un telephone: les ecrans restent en un seul volet.
+ * Material 3 "expanded" threshold. Below it, two side-by-side panes would each
+ * be narrower than a phone: screens stay in a single pane.
  */
 private const val TWO_PANE_THRESHOLD_DP = 840
 
-/** Vrai quand l'ecran a la place de poser deux volets cote a cote. */
+/** True when the screen has room to place two panes side by side. */
 @Composable
 fun isWideScreen(): Boolean = LocalConfiguration.current.screenWidthDp >= TWO_PANE_THRESHOLD_DP
 
-/** Un seul volet: au-dela, les rows s'allongent jusqu'a nuire a la lecture. */
+/** Single pane: beyond this, lines stretch out long enough to hurt readability. */
 private val MAX_WIDTH_ONE_PANE = 720.dp
 
-/** Deux volets: chacun garde alors une largeur confortable. */
+/** Two panes: each then keeps a comfortable width. */
 private val MAX_WIDTH_TWO_PANES = 1100.dp
 
 /**
- * Plafonne la largeur du content principal d'un ecran et le centre. Sur un
- * telephone, la limite ne joue jamais (aucun telephone n'atteint 720 dp de
- * large). Sur une tablette, elle laisse la place aux deux volets sans pour
- * autant etirer les cartes d'un bord a l'other d'un tres grand ecran.
+ * Caps the width of a screen's main content and centers it. On a
+ * phone, the limit never kicks in (no phone reaches 720 dp wide).
+ * On a tablet, it leaves room for the two panes without stretching
+ * the cards from edge to edge on a very large screen.
  */
 @Composable
 fun WidthLimitedContent(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
@@ -178,8 +178,8 @@ fun WidthLimitedContent(modifier: Modifier = Modifier, content: @Composable BoxS
 }
 
 /**
- * Les deux volets d'un ecran large, separes par un filet. Chaque ecran decide
- * lui-meme de sa mise en page en un seul volet: elles n'ont rien en commun.
+ * The two panes of a wide screen, separated by a divider. Each screen decides
+ * its own single-pane layout: they have nothing in common.
  */
 @Composable
 fun TwoPanes(
@@ -195,7 +195,7 @@ fun TwoPanes(
     }
 }
 
-/** Un ecran ou un volet sans content: ce qui manque et, s'il y a lieu, le geste pour y remedier. */
+/** A screen or pane with no content: what is missing and, if applicable, the action to fix it. */
 @Composable
 fun EmptyState(
     icon: ImageVector,
@@ -221,7 +221,7 @@ fun EmptyState(
     }
 }
 
-/** Un choix exclusif parmi quelques options, en boutons segmentes pleine largeur. */
+/** An exclusive choice among a few options, as full-width segmented buttons. */
 @Composable
 fun <T> SegmentedChoice(
     options: List<T>,
@@ -246,8 +246,8 @@ fun <T> SegmentedChoice(
 }
 
 /**
- * Bandeau d'alerte. [severe] a vrai prend la color d'error, reservee a ce qui
- * coute de l'toMoney; a faux, un simple warning sur backgroundColor neutre.
+ * Alert banner. [severe] true takes the error color, reserved for what
+ * costs money; false is a plain warning on a neutral background.
  */
 @Composable
 fun AlertBanner(text: String, icon: ImageVector, modifier: Modifier = Modifier, severe: Boolean = true) {

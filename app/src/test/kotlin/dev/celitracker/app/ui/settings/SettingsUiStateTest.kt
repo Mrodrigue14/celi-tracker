@@ -11,8 +11,8 @@ class SettingsUiStateTest {
     private val limits = (2019..2023).map { AnnualLimit(Account.TFSA, it, BigDecimal("6000.00"), confirmed = true) }
 
     @Test
-    fun `seuls les plafonds depuis l'admissibilite sont pertinents`() {
-        // Naissance en 2003: admissible au TFSA en 2021.
+    fun `only limits from eligibility onward are relevant`() {
+        // Born in 2003: eligible for the TFSA in 2021.
         val state = SettingsUiState(birthYear = "2003", limits = limits)
 
         assertEquals(listOf(2021, 2022, 2023), state.relevantLimits.map { it.year })
@@ -20,7 +20,7 @@ class SettingsUiStateTest {
     }
 
     @Test
-    fun `sans annee de naissance, tous les plafonds restent visibles`() {
+    fun `without a birth year, all limits remain visible`() {
         val state = SettingsUiState(limits = limits)
 
         assertEquals(limits, state.relevantLimits)

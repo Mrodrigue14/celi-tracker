@@ -8,17 +8,17 @@ import kotlin.test.assertNull
 class TransactionFormTest {
 
     @Test
-    fun `la virgule est acceptee comme separateur decimal`() {
+    fun `the comma is accepted as a decimal separator`() {
         assertEquals(BigDecimal("12.50"), TransactionForm(amount = "12,50").validAmount)
     }
 
     @Test
-    fun `un montant nul n'est pas valide`() {
+    fun `a zero amount is not valid`() {
         assertNull(TransactionForm(amount = "0").validAmount)
     }
 
     @Test
-    fun `une date hors format ISO n'est pas valide`() {
+    fun `a date outside ISO format is not valid`() {
         assertNull(TransactionForm(date = "15/01/2026").validDate)
     }
 }
