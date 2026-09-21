@@ -65,7 +65,10 @@ import dev.celitracker.app.R
 import dev.celitracker.app.ui.composants.BandeauAlerte
 import dev.celitracker.app.ui.composants.ChampDate
 import dev.celitracker.app.ui.composants.ChampMontant
+import dev.celitracker.app.ui.composants.ChoixSegmente
 import dev.celitracker.app.ui.composants.ContenuLargeurLimitee
+import dev.celitracker.app.ui.composants.DeuxVolets
+import dev.celitracker.app.ui.composants.EtatVide
 import dev.celitracker.app.ui.composants.PastilleCompte
 import dev.celitracker.app.ui.composants.ecranLarge
 import dev.celitracker.app.ui.format.formatDate
@@ -133,20 +136,21 @@ fun JournalScreen() {
                 )
             }
             if (deuxVolets) {
-                Row(modifier = Modifier.fillMaxSize()) {
-                    journal(Modifier.weight(1f))
-                    VerticalDivider()
-                    VoletTransaction(
-                        formulaire = etat.formulaire,
-                        onDate = viewModel::modifierDate,
-                        onType = viewModel::modifierType,
-                        onMontant = viewModel::modifierMontant,
-                        onEnregistrer = viewModel::enregistrer,
-                        onSupprimer = viewModel::supprimer,
-                        onFermer = viewModel::fermerFormulaire,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
+                DeuxVolets(
+                    gauche = journal,
+                    droite = {
+                        VoletTransaction(
+                            formulaire = etat.formulaire,
+                            onDate = viewModel::modifierDate,
+                            onType = viewModel::modifierType,
+                            onMontant = viewModel::modifierMontant,
+                            onEnregistrer = viewModel::enregistrer,
+                            onSupprimer = viewModel::supprimer,
+                            onFermer = viewModel::fermerFormulaire,
+                            modifier = it,
+                        )
+                    },
+                )
             } else {
                 journal(Modifier.fillMaxSize())
             }
@@ -183,25 +187,17 @@ fun JournalScreen() {
 /** Les deux comptes a portee de pouce, au lieu d'un journal par ecran de detail. */
 @Composable
 private fun ChoixCompte(compte: Compte, onChanger: (Compte) -> Unit, modifier: Modifier = Modifier) {
-    SingleChoiceSegmentedButtonRow(modifier = modifier.fillMaxWidth()) {
-        Compte.entries.forEachIndexed { index, choix ->
-            SegmentedButton(
-                selected = compte == choix,
-                onClick = { if (choix != compte) onChanger(choix) },
-                shape = SegmentedButtonDefaults.itemShape(index, Compte.entries.size),
-                // Chaque compte garde sa couleur, ici comme sur l'accueil.
-                colors = SegmentedButtonDefaults.colors(
-                    activeContainerColor = if (choix == Compte.CELI) {
-                        MaterialTheme.colorScheme.primaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.secondaryContainer
-                    },
-                ),
-            ) {
-                Text(choix.libelle())
-            }
-        }
-    }
+    ChoixSegmente(
+        options = Compte.entries,
+        selection = compte,
+        onChoisir = onChanger,
+        libelle = { it.libelle() },
+        modifier = modifier,
+        // Chaque compte garde sa couleur, ici comme sur l'accueil.
+        couleurActive = {
+            if (it == Compte.CELI) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
+        },
+    )
 }
 
 @Composable
@@ -213,7 +209,14 @@ fun JournalContenu(
     liste: LazyListState = rememberLazyListState(),
 ) {
     if (etat.transactions.isEmpty()) {
-        JournalVide(onAjouter = onAjouter, modifier = modifier)
+        EtatVide(
+            icone = Icons.AutoMirrored.Filled.List,
+            titre = stringResource(R.string.journal_vide_titre),
+            texte = stringResource(R.string.journal_vide_texte),
+            libelleAction = stringResource(R.string.journal_vide_action),
+            onAction = onAjouter,
+            modifier = modifier,
+        )
         return
     }
     val parAnnee = remember(etat.transactions) { etat.transactions.groupBy { it.date.year } }
@@ -238,38 +241,6 @@ internal fun positionEnTete(transactions: List<Transaction>, annee: Int): Int {
         position += 1 + lignes.size
     }
     return -1
-}
-
-@Composable
-private fun JournalVide(onAjouter: () -> Unit, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        PastilleCompte(
-            icone = Icons.AutoMirrored.Filled.List,
-            fond = MaterialTheme.colorScheme.surfaceVariant,
-            teinte = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            stringResource(R.string.journal_vide_titre),
-            modifier = Modifier.padding(top = 16.dp),
-            style = MaterialTheme.typography.titleMedium,
-        )
-        Text(
-            stringResource(R.string.journal_vide_texte),
-            modifier = Modifier.padding(top = 8.dp),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-        Button(onClick = onAjouter, modifier = Modifier.padding(top = 24.dp)) {
-            Text(stringResource(R.string.journal_vide_action))
-        }
-    }
 }
 
 @Composable
@@ -391,7 +362,7 @@ private fun VoletTransaction(
     modifier: Modifier = Modifier,
 ) {
     if (formulaire == null) {
-        VoletSansTransaction(modifier)
+        EtatVide(icone = Icons.AutoMirrored.Filled.List, texte = stringResource(R.string.journal_volet_vide), modifier = modifier)
         return
     }
     Column(
@@ -426,30 +397,6 @@ private fun VoletTransaction(
     }
 }
 
-@Composable
-private fun VoletSansTransaction(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        PastilleCompte(
-            icone = Icons.AutoMirrored.Filled.List,
-            fond = MaterialTheme.colorScheme.surfaceVariant,
-            teinte = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            stringResource(R.string.journal_volet_vide),
-            modifier = Modifier.padding(top = 16.dp),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-    }
-}
-
 /** Les memes champs, que le formulaire s'ouvre en feuille ou dans un volet. */
 @Composable
 private fun ChampsTransaction(
@@ -460,17 +407,12 @@ private fun ChampsTransaction(
     onEnregistrer: () -> Unit,
     onSupprimer: () -> Unit,
 ) {
-    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-        TypeTx.entries.forEachIndexed { index, type ->
-            SegmentedButton(
-                selected = formulaire.type == type,
-                onClick = { onType(type) },
-                shape = SegmentedButtonDefaults.itemShape(index, TypeTx.entries.size),
-            ) {
-                Text(if (type == TypeTx.DEPOT) stringResource(R.string.type_depot) else stringResource(R.string.type_retrait))
-            }
-        }
-    }
+    ChoixSegmente(
+        options = TypeTx.entries,
+        selection = formulaire.type,
+        onChoisir = onType,
+        libelle = { if (it == TypeTx.DEPOT) stringResource(R.string.type_depot) else stringResource(R.string.type_retrait) },
+    )
     ChampMontant(
         valeur = formulaire.montant,
         onValeur = onMontant,
@@ -517,5 +459,5 @@ private fun JournalContenuApercu() {
 @Preview(showBackground = true)
 @Composable
 private fun JournalVideApercu() {
-    JournalVide(onAjouter = {})
+    JournalContenu(etat = JournalUiState(), onOuvrirTransaction = {}, onAjouter = {})
 }

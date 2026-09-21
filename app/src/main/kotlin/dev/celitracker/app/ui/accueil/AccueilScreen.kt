@@ -60,6 +60,7 @@ import dev.celitracker.app.R
 import dev.celitracker.app.ui.composants.AnneauDroits
 import dev.celitracker.app.ui.composants.BandeauAlerte
 import dev.celitracker.app.ui.composants.ContenuLargeurLimitee
+import dev.celitracker.app.ui.composants.EtatVide
 import dev.celitracker.app.ui.composants.FORME_CARTE
 import dev.celitracker.app.ui.composants.GrilleTuiles
 import dev.celitracker.app.ui.composants.PastilleCompte
@@ -122,7 +123,16 @@ fun AccueilContenu(
 ) {
     if (!etat.chargementTermine) return
     if (!etat.profilEnregistre) {
-        EtatVide(onOuvrirReglages, modifier)
+        EtatVide(
+            icone = Icons.Filled.Person,
+            titre = stringResource(R.string.accueil_sans_profil_titre),
+            texte = stringResource(R.string.accueil_sans_profil_texte),
+            libelleAction = stringResource(R.string.accueil_sans_profil_action),
+            onAction = onOuvrirReglages,
+            fond = MaterialTheme.colorScheme.primaryContainer,
+            teinte = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = modifier,
+        )
         return
     }
 
@@ -235,31 +245,6 @@ private fun AlerteUtilisation(utilisation: Utilisation?, annee: Int) {
             stringResource(R.string.alerte_utilisation_depassee, annee, u.excedent.formatMontant()),
             Icons.Filled.Warning,
         )
-    }
-}
-
-@Composable
-private fun EtatVide(onOuvrirReglages: () -> Unit, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        PastilleCompte(
-            icone = Icons.Filled.Person,
-            fond = MaterialTheme.colorScheme.primaryContainer,
-            teinte = MaterialTheme.colorScheme.onPrimaryContainer,
-        )
-        Text(stringResource(R.string.accueil_sans_profil_titre), style = MaterialTheme.typography.titleLarge)
-        Text(
-            stringResource(R.string.accueil_sans_profil_texte),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-        Button(onClick = onOuvrirReglages, modifier = Modifier.padding(top = 12.dp)) { Text(stringResource(R.string.accueil_sans_profil_action)) }
     }
 }
 

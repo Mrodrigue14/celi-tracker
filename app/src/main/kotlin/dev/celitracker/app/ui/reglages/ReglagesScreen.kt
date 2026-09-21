@@ -63,7 +63,11 @@ import dev.celitracker.app.CeliTrackerApplication
 import dev.celitracker.app.R
 import dev.celitracker.app.ui.composants.ChampDate
 import dev.celitracker.app.ui.composants.ChampMontant
+import dev.celitracker.app.ui.composants.ChoixSegmente
 import dev.celitracker.app.ui.composants.ContenuLargeurLimitee
+import dev.celitracker.app.ui.composants.DeuxVolets
+import dev.celitracker.app.ui.composants.FORME_TUILE
+import dev.celitracker.app.ui.composants.PastilleCompte
 import dev.celitracker.app.ui.composants.TitreSection
 import dev.celitracker.app.ui.composants.ecranLarge
 import dev.celitracker.app.ui.format.formatDate
@@ -337,26 +341,16 @@ fun ReglagesContenu(
     }
 
     if (ecranLarge()) {
-        Row(modifier = modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState())
-                    .padding(bottom = 32.dp),
-            ) {
-                profilEtApparence(Modifier)
-                sauvegarde(Modifier)
-            }
-            VerticalDivider()
-            plafonds(
-                Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState())
-                    .padding(top = 24.dp, bottom = 32.dp),
-            )
-        }
+        DeuxVolets(
+            gauche = {
+                Column(modifier = it.verticalScroll(rememberScrollState()).padding(bottom = 32.dp)) {
+                    profilEtApparence(Modifier)
+                    sauvegarde(Modifier)
+                }
+            },
+            droite = { plafonds(it.verticalScroll(rememberScrollState()).padding(top = 24.dp, bottom = 32.dp)) },
+            modifier = modifier,
+        )
     } else {
         Column(
             modifier = modifier
@@ -376,26 +370,21 @@ fun ReglagesContenu(
 @Composable
 private fun Apparence(mode: ModeTheme, onChoisir: (ModeTheme) -> Unit) {
     TitreSection(stringResource(R.string.reglages_apparence), Modifier.padding(top = 24.dp, bottom = 12.dp))
-    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-        ModeTheme.entries.forEachIndexed { index, choix ->
-            SegmentedButton(
-                selected = mode == choix,
-                onClick = { onChoisir(choix) },
-                shape = SegmentedButtonDefaults.itemShape(index, ModeTheme.entries.size),
-                colors = SegmentedButtonDefaults.colors(activeContainerColor = MaterialTheme.colorScheme.primaryContainer),
-            ) {
-                Text(
-                    stringResource(
-                        when (choix) {
-                            ModeTheme.SYSTEME -> R.string.theme_systeme
-                            ModeTheme.CLAIR -> R.string.theme_clair
-                            ModeTheme.SOMBRE -> R.string.theme_sombre
-                        },
-                    ),
-                )
-            }
-        }
-    }
+    ChoixSegmente(
+        options = ModeTheme.entries,
+        selection = mode,
+        onChoisir = onChoisir,
+        libelle = {
+            stringResource(
+                when (it) {
+                    ModeTheme.SYSTEME -> R.string.theme_systeme
+                    ModeTheme.CLAIR -> R.string.theme_clair
+                    ModeTheme.SOMBRE -> R.string.theme_sombre
+                },
+            )
+        },
+        couleurActive = { MaterialTheme.colorScheme.primaryContainer },
+    )
 }
 
 /**
@@ -467,7 +456,7 @@ private fun EchecLectureArc(raison: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 16.dp)
-            .background(MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.errorContainer, FORME_TUILE)
             .padding(16.dp),
     ) {
         Text(
@@ -522,18 +511,11 @@ private fun AdmissibiliteCeli(annee: Int?, modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                Icons.Filled.Check,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-            )
-        }
+        PastilleCompte(
+            icone = Icons.Filled.Check,
+            fond = MaterialTheme.colorScheme.secondaryContainer,
+            teinte = MaterialTheme.colorScheme.onSecondaryContainer,
+        )
         Column {
             Text(
                 if (annee != null) stringResource(R.string.reglages_droits_depuis, annee) else stringResource(R.string.reglages_entre_naissance),
