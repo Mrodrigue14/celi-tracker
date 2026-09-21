@@ -30,10 +30,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.celitracker.app.R
 import dev.celitracker.app.ui.theme.chiffres
@@ -141,20 +141,31 @@ fun GrilleTuiles(tuiles: List<Pair<String, String>>, modifier: Modifier = Modifi
     }
 }
 
-/** Au-dela, une tablette etirerait les listes et les formulaires jusqu'a nuire a leur lecture. */
-val LARGEUR_MAX_CONTENU = 720.dp
+/**
+ * Seuil « expanded » de Material 3. En deca, deux volets cote a cote seraient
+ * chacun plus etroits qu'un telephone: les ecrans restent en un seul volet.
+ */
+private const val SEUIL_DEUX_VOLETS_DP = 840
 
-/** Pour un ecran a deux colonnes (les deux comptes cote a cote): profiter de bien plus de largeur. */
-val LARGEUR_MAX_CONTENU_DEUX_COLONNES = 1100.dp
+/** Vrai quand l'ecran a la place de poser deux volets cote a cote. */
+@Composable
+fun ecranLarge(): Boolean = LocalConfiguration.current.screenWidthDp >= SEUIL_DEUX_VOLETS_DP
+
+/** Un seul volet: au-dela, les lignes s'allongent jusqu'a nuire a la lecture. */
+private val LARGEUR_MAX_UN_VOLET = 720.dp
+
+/** Deux volets: chacun garde alors une largeur confortable. */
+private val LARGEUR_MAX_DEUX_VOLETS = 1100.dp
 
 /**
  * Plafonne la largeur du contenu principal d'un ecran et le centre. Sur un
  * telephone, la limite ne joue jamais (aucun telephone n'atteint 720 dp de
- * large). Sur une tablette, elle evite des lignes de texte interminables et
- * des tuiles etirees plutot que d'etoffer la mise en page.
+ * large). Sur une tablette, elle laisse la place aux deux volets sans pour
+ * autant etirer les cartes d'un bord a l'autre d'un tres grand ecran.
  */
 @Composable
-fun ContenuLargeurLimitee(modifier: Modifier = Modifier, largeurMax: Dp = LARGEUR_MAX_CONTENU, contenu: @Composable BoxScope.() -> Unit) {
+fun ContenuLargeurLimitee(modifier: Modifier = Modifier, contenu: @Composable BoxScope.() -> Unit) {
+    val largeurMax = if (ecranLarge()) LARGEUR_MAX_DEUX_VOLETS else LARGEUR_MAX_UN_VOLET
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
         Box(modifier = Modifier.widthIn(max = largeurMax).fillMaxSize(), content = contenu)
     }

@@ -79,6 +79,7 @@
     <string name="journal_vide_titre">Aucune transaction</string>
     <string name="journal_vide_texte">Inscris tes dépôts et tes retraits ici. Les droits de cotisation se recalculent à partir d\'eux.</string>
     <string name="journal_vide_action">Ajouter une transaction</string>
+    <string name="journal_volet_vide">Touche une transaction pour la modifier, ou ajoutes-en une.</string>
     <string name="journal_nouvelle">Nouvelle transaction</string>
     <string name="journal_modifier">Modifier la transaction</string>
     <string name="journal_montant">Montant</string>

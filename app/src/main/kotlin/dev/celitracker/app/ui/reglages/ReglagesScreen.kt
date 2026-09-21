@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -40,6 +41,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -63,6 +65,7 @@ import dev.celitracker.app.ui.composants.ChampDate
 import dev.celitracker.app.ui.composants.ChampMontant
 import dev.celitracker.app.ui.composants.ContenuLargeurLimitee
 import dev.celitracker.app.ui.composants.TitreSection
+import dev.celitracker.app.ui.composants.ecranLarge
 import dev.celitracker.app.ui.format.formatDate
 import dev.celitracker.app.ui.format.formatMontant
 import dev.celitracker.app.ui.texte.resoudre
@@ -190,143 +193,182 @@ fun ReglagesContenu(
     onImporter: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp)
-            .padding(bottom = 32.dp),
-    ) {
-        TitreSection(stringResource(R.string.reglages_profil), Modifier.padding(top = 24.dp, bottom = 12.dp))
-        OutlinedTextField(
-            value = etat.anneeNaissance,
-            onValueChange = onAnneeNaissanceChange,
-            label = { Text(stringResource(R.string.reglages_annee_naissance)) },
-            supportingText = { Text(stringResource(R.string.reglages_annee_naissance_aide)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            isError = etat.anneeNaissance.isNotBlank() && etat.anneeNaissanceValide == null,
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        AdmissibiliteCeli(annee = etat.anneeAdmissibiliteCeli, modifier = Modifier.padding(top = 8.dp))
-        ChampDate(
-            date = etat.dateOuvertureCeliapp,
-            onDate = onDateOuvertureChange,
-            etiquette = stringResource(R.string.reglages_ouverture_celiapp),
-            estErreur = etat.dateOuvertureInvalide,
-            effacable = true,
-            modifier = Modifier.padding(top = 16.dp),
-        )
-        Button(
-            onClick = onEnregistrerProfil,
-            enabled = etat.profilValide,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-        ) {
-            Text(stringResource(R.string.reglages_enregistrer_profil))
-        }
-
-        HorizontalDivider(modifier = Modifier.padding(top = 32.dp))
-
-        Apparence(mode = modeTheme, onChoisir = onModeTheme)
-
-        HorizontalDivider(modifier = Modifier.padding(top = 32.dp))
-
-        PropositionsArc(
-            propositions = etat.propositions,
-            onConfirmer = onConfirmerProposition,
-            onRejeter = onRejeterProposition,
-        )
-        etat.erreurArc?.let { EchecLectureArc(it.resoudre()) }
-
-        TitreSection(stringResource(R.string.reglages_source_plafonds), Modifier.padding(top = 24.dp, bottom = 12.dp))
-        OutlinedTextField(
-            value = etat.urlPageArc,
-            onValueChange = onUrlPageArcChange,
-            label = { Text(stringResource(R.string.reglages_page_arc)) },
-            supportingText = {
-                Text(
-                    etat.derniereVerificationArc
-                        ?.let { stringResource(R.string.reglages_derniere_lecture, it.atZone(ZoneId.systemDefault()).toLocalDate().formatDate()) }
-                        ?: stringResource(R.string.reglages_jamais_lue),
-                )
-            },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Row(
-            modifier = Modifier.padding(top = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            OutlinedButton(
-                onClick = onEnregistrerUrlPageArc,
-                enabled = !etat.verificationEnCours,
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(stringResource(R.string.reglages_tester_enregistrer))
-            }
-            Button(
-                onClick = onVerifierArc,
-                enabled = !etat.verificationEnCours,
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(if (etat.verificationEnCours) stringResource(R.string.reglages_lecture_en_cours) else stringResource(R.string.reglages_verifier))
-            }
-        }
-        // Porte de sortie quand l'adresse en place ne marche plus, par exemple
-        // apres une reorganisation du site ou une adresse mal saisie autrefois.
-        TextButton(
-            onClick = onRetablirUrlPageArc,
-            enabled = !etat.verificationEnCours,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(stringResource(R.string.reglages_retablir_adresse))
-        }
-
-        TitreSection(stringResource(R.string.reglages_plafonds_celi), Modifier.padding(top = 24.dp, bottom = 12.dp))
-        if (etat.plafondsConfirmes.isEmpty()) {
-            Text(
-                stringResource(R.string.reglages_aucun_plafond),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        etat.plafondsPertinents.forEach { plafond -> LignePlafond(plafond) }
-        PlafondsAnterieurs(etat.plafondsAnterieurs)
-
-        Row(
-            modifier = Modifier.padding(top = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+    // Trois familles de reglages: ce qui me decrit, d'ou viennent les plafonds,
+    // et la copie de mes donnees. Sur un ecran large, les plafonds prennent le
+    // volet de droite et les deux autres restent a gauche.
+    val profilEtApparence: @Composable (Modifier) -> Unit = { modifierGroupe ->
+        Column(modifier = modifierGroupe.padding(horizontal = 16.dp)) {
+            TitreSection(stringResource(R.string.reglages_profil), Modifier.padding(top = 24.dp, bottom = 12.dp))
             OutlinedTextField(
-                value = etat.nouveauPlafondAnnee,
-                onValueChange = onNouveauPlafondAnneeChange,
-                label = { Text(stringResource(R.string.reglages_annee)) },
+                value = etat.anneeNaissance,
+                onValueChange = onAnneeNaissanceChange,
+                label = { Text(stringResource(R.string.reglages_annee_naissance)) },
+                supportingText = { Text(stringResource(R.string.reglages_annee_naissance_aide)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = etat.anneeNaissance.isNotBlank() && etat.anneeNaissanceValide == null,
                 singleLine = true,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
             )
-            ChampMontant(
-                valeur = etat.nouveauPlafondMontant,
-                onValeur = onNouveauPlafondMontantChange,
-                etiquette = stringResource(R.string.reglages_montant),
-                modifier = Modifier.weight(1f),
+            AdmissibiliteCeli(annee = etat.anneeAdmissibiliteCeli, modifier = Modifier.padding(top = 8.dp))
+            ChampDate(
+                date = etat.dateOuvertureCeliapp,
+                onDate = onDateOuvertureChange,
+                etiquette = stringResource(R.string.reglages_ouverture_celiapp),
+                estErreur = etat.dateOuvertureInvalide,
+                effacable = true,
+                modifier = Modifier.padding(top = 16.dp),
+            )
+            Button(
+                onClick = onEnregistrerProfil,
+                enabled = etat.profilValide,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+            ) {
+                Text(stringResource(R.string.reglages_enregistrer_profil))
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(top = 32.dp))
+
+            Apparence(mode = modeTheme, onChoisir = onModeTheme)
+        }
+    }
+
+    val plafonds: @Composable (Modifier) -> Unit = { modifierGroupe ->
+        Column(modifier = modifierGroupe.padding(horizontal = 16.dp)) {
+            PropositionsArc(
+                propositions = etat.propositions,
+                onConfirmer = onConfirmerProposition,
+                onRejeter = onRejeterProposition,
+            )
+            etat.erreurArc?.let { EchecLectureArc(it.resoudre()) }
+
+            TitreSection(stringResource(R.string.reglages_source_plafonds), Modifier.padding(top = 24.dp, bottom = 12.dp))
+            OutlinedTextField(
+                value = etat.urlPageArc,
+                onValueChange = onUrlPageArcChange,
+                label = { Text(stringResource(R.string.reglages_page_arc)) },
+                supportingText = {
+                    Text(
+                        etat.derniereVerificationArc
+                            ?.let { stringResource(R.string.reglages_derniere_lecture, it.atZone(ZoneId.systemDefault()).toLocalDate().formatDate()) }
+                            ?: stringResource(R.string.reglages_jamais_lue),
+                    )
+                },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Row(
+                modifier = Modifier.padding(top = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                OutlinedButton(
+                    onClick = onEnregistrerUrlPageArc,
+                    enabled = !etat.verificationEnCours,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.reglages_tester_enregistrer))
+                }
+                Button(
+                    onClick = onVerifierArc,
+                    enabled = !etat.verificationEnCours,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(if (etat.verificationEnCours) stringResource(R.string.reglages_lecture_en_cours) else stringResource(R.string.reglages_verifier))
+                }
+            }
+            // Porte de sortie quand l'adresse en place ne marche plus, par exemple
+            // apres une reorganisation du site ou une adresse mal saisie autrefois.
+            TextButton(
+                onClick = onRetablirUrlPageArc,
+                enabled = !etat.verificationEnCours,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.reglages_retablir_adresse))
+            }
+
+            TitreSection(stringResource(R.string.reglages_plafonds_celi), Modifier.padding(top = 24.dp, bottom = 12.dp))
+            if (etat.plafondsConfirmes.isEmpty()) {
+                Text(
+                    stringResource(R.string.reglages_aucun_plafond),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            etat.plafondsPertinents.forEach { plafond -> LignePlafond(plafond) }
+            PlafondsAnterieurs(etat.plafondsAnterieurs)
+
+            Row(
+                modifier = Modifier.padding(top = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                OutlinedTextField(
+                    value = etat.nouveauPlafondAnnee,
+                    onValueChange = onNouveauPlafondAnneeChange,
+                    label = { Text(stringResource(R.string.reglages_annee)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                )
+                ChampMontant(
+                    valeur = etat.nouveauPlafondMontant,
+                    onValeur = onNouveauPlafondMontantChange,
+                    etiquette = stringResource(R.string.reglages_montant),
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            OutlinedButton(
+                onClick = onAjouterPlafond,
+                enabled = etat.nouveauPlafondValide,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+            ) {
+                Text(stringResource(R.string.reglages_ajouter_plafond))
+            }
+        }
+    }
+
+    val sauvegarde: @Composable (Modifier) -> Unit = { modifierGroupe ->
+        Column(modifier = modifierGroupe.padding(horizontal = 16.dp)) {
+            HorizontalDivider(modifier = Modifier.padding(top = 32.dp))
+            SauvegardeEtRecuperation(onExporter = onExporter, onImporter = onImporter)
+        }
+    }
+
+    if (ecranLarge()) {
+        Row(modifier = modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = 32.dp),
+            ) {
+                profilEtApparence(Modifier)
+                sauvegarde(Modifier)
+            }
+            VerticalDivider()
+            plafonds(
+                Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = 24.dp, bottom = 32.dp),
             )
         }
-        OutlinedButton(
-            onClick = onAjouterPlafond,
-            enabled = etat.nouveauPlafondValide,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 12.dp),
+    } else {
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 32.dp),
         ) {
-            Text(stringResource(R.string.reglages_ajouter_plafond))
+            profilEtApparence(Modifier)
+            HorizontalDivider(modifier = Modifier.padding(top = 32.dp, start = 16.dp, end = 16.dp))
+            plafonds(Modifier)
+            sauvegarde(Modifier)
         }
-
-        HorizontalDivider(modifier = Modifier.padding(top = 32.dp))
-
-        SauvegardeEtRecuperation(onExporter = onExporter, onImporter = onImporter)
     }
 }
 

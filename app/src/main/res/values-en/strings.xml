@@ -75,6 +75,7 @@
     <string name="journal_vide_titre">No transactions</string>
     <string name="journal_vide_texte">Record your deposits and withdrawals here. Your contribution room is recalculated from them.</string>
     <string name="journal_vide_action">Add a transaction</string>
+    <string name="journal_volet_vide">Tap a transaction to edit it, or add a new one.</string>
     <string name="journal_nouvelle">New transaction</string>
     <string name="journal_modifier">Edit transaction</string>
     <string name="journal_montant">Amount</string>
