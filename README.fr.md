@@ -49,10 +49,15 @@ Déjà livré :
 8. Chiffre de l'ARC : on saisit les droits qu'affiche son dossier de l'ARC et
    sa date, et l'accueil les place à côté des droits calculés sans les
    remplacer
+9. APK de release signé
 
-À venir :
+## APK de release
 
-9. APK
+`./gradlew :app:assembleRelease` produit un APK réduit par R8. Il n'est signé
+que si `local.properties` contient `releaseStoreFile`, `releaseStorePassword`,
+`releaseKeyAlias` et `releaseKeyPassword`. Sans elles, l'APK n'est pas signé
+et ne s'installe pas. Le keystore reste hors du dépôt : si on le perd, les
+versions suivantes ne pourront plus mettre à jour l'appli installée.
 
 ## Avertissement
 
