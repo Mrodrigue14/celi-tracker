@@ -19,8 +19,8 @@ installed with `sdkmanager` (`cmdline-tools`).
 
 Code, comments, test names, docs and commit messages are in English. The app
 ships English (`app/src/main/res/values/strings.xml`, the default) and French
-(`values-fr/strings.xml`). The README and PR descriptions are bilingual,
-English first.
+(`values-fr/strings.xml`). The README is bilingual, English first.
+PR descriptions and the repository description are English only.
 
 ## Invariants: do not break
 
