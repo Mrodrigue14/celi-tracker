@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- Memes valeurs que `background` dans ui/theme/Theme.kt. -->
-    <color name="fond_fenetre">#F6F7FB</color>
-</resources>

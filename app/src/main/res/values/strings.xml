@@ -1,172 +1,168 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Textes de l'application. Le francais est la langue par defaut: un appareil
-  regle dans une langue sans traduction affiche le francais. Chaque autre
-  langue vit dans values-xx/strings.xml, et lint refuse un texte sans
-  traduction.
-
-  Registre: tutoiement, phrases directes. Garder le meme ton en traduction.
+  English. Same register as the French: direct, informal ("you").
+  Account names follow the official English terms: TFSA, FHSA, CRA.
 -->
 <resources>
-    <string name="app_name">CELI Tracker</string>
+    <string name="app_name">TFSA Tracker</string>
 
-    <!-- Comptes et organismes -->
-    <string name="compte_celi">CELI</string>
-    <string name="compte_celiapp">CELIAPP</string>
+    <!-- Accounts -->
+    <string name="account_tfsa">TFSA</string>
+    <string name="account_fhsa">FHSA</string>
 
-    <!-- Actions communes -->
-    <string name="action_ajouter">Ajouter</string>
-    <string name="action_annuler">Annuler</string>
-    <string name="action_choisir">Choisir</string>
-    <string name="action_confirmer">Confirmer</string>
-    <string name="action_enregistrer">Enregistrer</string>
-    <string name="action_enregistrer_quand_meme">Enregistrer quand même</string>
+    <!-- Common actions -->
+    <string name="action_add">Add</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_choose">Select</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_save">Save</string>
+    <string name="action_save_anyway">Save anyway</string>
     <string name="action_journal">Journal</string>
-    <string name="action_rejeter">Rejeter</string>
-    <string name="action_retour">Retour</string>
-    <string name="action_supprimer">Supprimer</string>
-    <string name="action_voir_detail">Voir le détail</string>
-    <string name="action_voir_transactions">Voir les transactions</string>
-    <string name="action_aller_a_annee">Aller à %1$d</string>
+    <string name="action_reject">Reject</string>
+    <string name="action_back">Back</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_see_detail">See details</string>
+    <string name="action_see_transactions">See transactions</string>
+    <string name="action_go_to_year">Go to %1$d</string>
 
-    <!-- Onglets -->
-    <string name="onglet_accueil">Accueil</string>
-    <string name="onglet_journal">Journal</string>
-    <string name="onglet_reglages">Réglages</string>
+    <!-- Tabs -->
+    <string name="tab_home">Home</string>
+    <string name="tab_journal">Journal</string>
+    <string name="tab_settings">Settings</string>
 
-    <!-- Accueil -->
-    <string name="accueil_droits_restants">Droits restants</string>
-    <string name="accueil_cotise_en">Cotisé en %1$d</string>
-    <string name="accueil_plafond_annee">Plafond %1$d</string>
-    <string name="accueil_plafond_vie_restant">Plafond à vie restant</string>
-    <string name="accueil_report_recu">Report reçu</string>
-    <string name="accueil_echeance">Échéance</string>
-    <string name="accueil_sans_profil_titre">Commence par ton profil</string>
-    <string name="accueil_sans_profil_texte">Ton année de naissance suffit pour calculer tes droits CELI. Ajoute la date d\'ouverture de ton CELIAPP si tu en as un.</string>
-    <string name="accueil_sans_profil_action">Saisir mon profil</string>
-    <string name="accueil_sans_celiapp">Aucun compte ouvert. Ajoute sa date d\'ouverture dans les réglages pour suivre tes droits.</string>
-    <string name="accueil_ouvrir_reglages">Ouvrir les réglages</string>
-    <string name="alerte_plafond_non_confirme">Plafond de l\'année non confirmé : droits sous-estimés.</string>
-    <string name="alerte_sur_cotisation">Sur-cotisation : pénalité estimée %1$s.</string>
-    <string name="alerte_utilisation_attention">Tu as utilisé %1$d %% de tes droits de %2$d. Il te reste %3$s.</string>
-    <string name="alerte_utilisation_critique">Tu as utilisé %1$d %% de tes droits de %2$d. Il ne te reste que %3$s : vérifie avant ton prochain dépôt.</string>
-    <string name="alerte_utilisation_depassee">Tu dépasses tes droits de %1$d de %2$s. L\'ARC impose 1 %% par mois sur l\'excédent.</string>
-    <string name="anneau_pourcentage">%1$d %%</string>
-    <string name="anneau_utilise">utilisé</string>
-    <string name="anneau_description">%1$d %% des droits de l\'année utilisés</string>
+    <!-- Home -->
+    <string name="home_room_left">Room left</string>
+    <string name="home_contributed_in">Contributed in %1$d</string>
+    <string name="home_year_limit">%1$d limit</string>
+    <string name="home_lifetime_limit_left">Lifetime limit left</string>
+    <string name="home_carry_forward_received">Carry-forward received</string>
+    <string name="home_deadline">Deadline</string>
+    <string name="home_no_profile_title">Start with your profile</string>
+    <string name="home_no_profile_text">Your year of birth is all it takes to work out your TFSA room. Add your FHSA opening date if you have one.</string>
+    <string name="home_no_profile_action">Enter my profile</string>
+    <string name="home_no_fhsa">No account opened. Add its opening date in the settings to track your room.</string>
+    <string name="home_open_settings">Open settings</string>
+    <string name="alert_limit_unconfirmed">This year\'s limit isn\'t confirmed: room is underestimated.</string>
+    <string name="alert_overcontribution">Over-contribution: estimated penalty %1$s.</string>
+    <string name="alert_usage_warning">You\'ve used %1$d%% of your %2$d room. You have %3$s left.</string>
+    <string name="alert_usage_critical">You\'ve used %1$d%% of your %2$d room. Only %3$s left: check before your next deposit.</string>
+    <string name="alert_usage_exceeded">You\'re over your %1$d room by %2$s. The CRA charges 1%% a month on the excess.</string>
+    <string name="ring_percent">%1$d%%</string>
+    <string name="ring_used">used</string>
+    <string name="ring_description">%1$d%% of this year\'s room used</string>
 
-    <!-- Detail d'un compte -->
-    <string name="detail_titre_celi">Détail du CELI</string>
-    <string name="detail_titre_celiapp">Détail du CELIAPP</string>
-    <string name="detail_droits_fin_annee">Droits en fin d\'année</string>
-    <string name="detail_plafond_vie_restant">Plafond à vie restant</string>
-    <string name="detail_annee_par_annee">Année par année</string>
-    <string name="detail_annee_en_cours">%1$d, en cours</string>
-    <string name="detail_droits_restants">Droits restants</string>
-    <string name="detail_droits_non_utilises">Droits non utilisés</string>
-    <string name="detail_plafond_annee">Plafond de l\'année</string>
-    <string name="detail_droits_premier_janvier">Droits au 1er janvier</string>
-    <string name="detail_depots">Dépôts</string>
-    <string name="detail_retraits">Retraits</string>
-    <string name="detail_report_recu">Report reçu</string>
-    <string name="detail_droits_annee">Droits de l\'année</string>
-    <string name="detail_report_transmis">Report transmis</string>
-    <string name="detail_plafond_non_confirme">Plafond de %1$d non confirmé : droits sous-estimés.</string>
-    <string name="graphique_barre">%1$d : %2$s</string>
+    <!-- Account details -->
+    <string name="detail_title_tfsa">TFSA details</string>
+    <string name="detail_title_fhsa">FHSA details</string>
+    <string name="detail_room_year_end">Room at year end</string>
+    <string name="detail_lifetime_limit_left">Lifetime limit left</string>
+    <string name="detail_year_by_year">Year by year</string>
+    <string name="detail_year_in_progress">%1$d, in progress</string>
+    <string name="detail_room_left">Room left</string>
+    <string name="detail_unused_room">Unused room</string>
+    <string name="detail_year_limit">Annual limit</string>
+    <string name="detail_room_january_first">Room on January 1</string>
+    <string name="detail_deposits">Deposits</string>
+    <string name="detail_withdrawals">Withdrawals</string>
+    <string name="detail_carry_forward_received">Carry-forward received</string>
+    <string name="detail_year_room">Room for the year</string>
+    <string name="detail_carry_forward_out">Carry-forward passed on</string>
+    <string name="detail_limit_unconfirmed">%1$d limit not confirmed: room is underestimated.</string>
+    <string name="chart_bar">%1$d: %2$s</string>
 
     <!-- Journal -->
-    <string name="journal_titre">Journal</string>
-    <string name="journal_vide_titre">Aucune transaction</string>
-    <string name="journal_vide_texte">Inscris tes dépôts et tes retraits ici. Les droits de cotisation se recalculent à partir d\'eux.</string>
-    <string name="journal_vide_action">Ajouter une transaction</string>
-    <string name="journal_volet_vide">Touche une transaction pour la modifier, ou ajoutes-en une.</string>
-    <string name="journal_nouvelle">Nouvelle transaction</string>
-    <string name="journal_modifier">Modifier la transaction</string>
-    <string name="journal_montant">Montant</string>
+    <string name="journal_title">Journal</string>
+    <string name="journal_empty_title">No transactions</string>
+    <string name="journal_empty_text">Record your deposits and withdrawals here. Your contribution room is recalculated from them.</string>
+    <string name="journal_empty_action">Add a transaction</string>
+    <string name="journal_pane_empty">Tap a transaction to edit it, or add a new one.</string>
+    <string name="journal_new">New transaction</string>
+    <string name="journal_edit">Edit transaction</string>
+    <string name="journal_amount">Amount</string>
     <string name="journal_date">Date</string>
-    <string name="type_depot">Dépôt</string>
-    <string name="type_retrait">Retrait</string>
-    <string name="journal_enregistree">Transaction enregistrée.</string>
-    <string name="journal_enregistree_utilisation">Transaction enregistrée. Tu as utilisé %1$d %% de tes droits %2$s de %3$d.</string>
-    <string name="journal_supprimee">Transaction supprimée.</string>
-    <string name="journal_avertissement_critique">Ce dépôt porterait ton utilisation à %1$d %% de tes droits %2$s de %3$d. Il te resterait %4$s.</string>
-    <string name="journal_avertissement_depassement">Ce dépôt dépasse tes droits %1$s de %2$d de %3$s. L\'ARC impose 1 %% par mois sur l\'excédent tant qu\'il reste dans le compte.</string>
-    <string name="saisie_montant_non_positif">Le montant doit être plus grand que zéro.</string>
-    <string name="saisie_profil_absent">Enregistre d\'abord ton profil dans les réglages.</string>
-    <string name="saisie_celi_avant_admissibilite">Cette date précède ton admissibilité au CELI.</string>
-    <string name="saisie_celiapp_non_ouvert">Ajoute d\'abord la date d\'ouverture de ton CELIAPP dans les réglages.</string>
-    <string name="saisie_celiapp_avant_ouverture">Cette date précède l\'ouverture de ton CELIAPP.</string>
-    <string name="saisie_transaction_introuvable">Cette transaction n\'existe plus.</string>
+    <string name="type_deposit">Deposit</string>
+    <string name="type_withdrawal">Withdrawal</string>
+    <string name="journal_saved">Transaction saved.</string>
+    <string name="journal_saved_usage">Transaction saved. You\'ve used %1$d%% of your %2$s room for %3$d.</string>
+    <string name="journal_deleted">Transaction deleted.</string>
+    <string name="journal_warning_critical">This deposit would bring you to %1$d%% of your %2$s room for %3$d. You\'d have %4$s left.</string>
+    <string name="journal_warning_exceeded">This deposit goes over your %1$s room for %2$d by %3$s. The CRA charges 1%% a month on the excess for as long as it stays in the account.</string>
+    <string name="input_non_positive_amount">The amount must be greater than zero.</string>
+    <string name="input_missing_profile">Save your profile in the settings first.</string>
+    <string name="input_tfsa_before_eligibility">This date is before you became eligible for a TFSA.</string>
+    <string name="input_fhsa_not_opened">Add your FHSA opening date in the settings first.</string>
+    <string name="input_fhsa_before_opening">This date is before your FHSA was opened.</string>
+    <string name="input_transaction_not_found">This transaction no longer exists.</string>
 
-    <!-- Champ de date -->
-    <string name="date_format_saisie">%1$s (AAAA-MM-JJ)</string>
-    <string name="date_retirer">Retirer la date</string>
+    <!-- Date field -->
+    <string name="date_input_format">%1$s (YYYY-MM-DD)</string>
+    <string name="date_clear">Remove date</string>
 
-    <!-- Reglages -->
-    <string name="reglages_titre">Réglages</string>
-    <string name="reglages_profil">Profil</string>
-    <string name="reglages_annee_naissance">Année de naissance</string>
-    <string name="reglages_annee_naissance_aide">Elle détermine l\'année où tes droits CELI commencent.</string>
-    <string name="reglages_droits_depuis">Droits CELI depuis %1$d</string>
-    <string name="reglages_entre_naissance">Entre ton année de naissance</string>
-    <string name="reglages_admissibilite_regle">Calculé : l\'année de tes 18 ans, au plus tôt 2009.</string>
-    <string name="reglages_ouverture_celiapp">Ouverture du CELIAPP (facultatif)</string>
-    <string name="reglages_enregistrer_profil">Enregistrer le profil</string>
-    <string name="reglages_propose_arc">Proposé par l\'ARC</string>
-    <string name="reglages_propose_arc_aide">Lu sur le site de l\'ARC. Il n\'entre dans le calcul qu\'une fois confirmé.</string>
-    <string name="reglages_lecture_impossible">Lecture automatique impossible</string>
-    <string name="reglages_saisie_manuelle">Saisis le plafond à la main plus bas.</string>
-    <string name="reglages_source_plafonds">Source des plafonds</string>
-    <string name="reglages_page_arc">Page de l\'ARC</string>
-    <string name="reglages_derniere_lecture">Dernière lecture : %1$s</string>
-    <string name="reglages_jamais_lue">Jamais lue. L\'application vérifie une fois par mois, et seulement s\'il manque un plafond.</string>
-    <string name="reglages_tester_enregistrer">Tester et enregistrer</string>
-    <string name="reglages_verifier">Vérifier</string>
-    <string name="reglages_lecture_en_cours">Lecture en cours</string>
-    <string name="reglages_retablir_adresse">Rétablir l\'adresse d\'origine</string>
-    <string name="reglages_plafonds_celi">Plafonds CELI</string>
-    <string name="reglages_aucun_plafond">Aucun plafond enregistré. Sans plafond confirmé, les droits de l\'année restent à zéro plutôt que d\'être devinés.</string>
-    <string name="reglages_annee">Année</string>
-    <string name="reglages_montant">Montant</string>
-    <string name="reglages_ajouter_plafond">Ajouter le plafond</string>
-    <string name="reglages_masquer_anterieures">Masquer les années antérieures</string>
-    <plurals name="reglages_afficher_anterieures">
-        <item quantity="one">Afficher %1$d année antérieure (%2$d)</item>
-        <item quantity="other">Afficher %1$d années antérieures (%2$d à %3$d)</item>
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_profile">Profile</string>
+    <string name="settings_birth_year">Year of birth</string>
+    <string name="settings_birth_year_help">It sets the year your TFSA room starts.</string>
+    <string name="settings_room_since">TFSA room since %1$d</string>
+    <string name="settings_enter_birth_year">Enter your year of birth</string>
+    <string name="settings_eligibility_rule">Calculated: the year you turn 18, 2009 at the earliest.</string>
+    <string name="settings_fhsa_opening">FHSA opening date (optional)</string>
+    <string name="settings_save_profile">Save profile</string>
+    <string name="settings_cra_proposed">Suggested by the CRA</string>
+    <string name="settings_cra_proposed_help">Read from the CRA website. It only counts once you confirm it.</string>
+    <string name="settings_read_failed">Automatic reading failed</string>
+    <string name="settings_manual_entry">Enter the limit by hand below.</string>
+    <string name="settings_limits_source">Source of the limits</string>
+    <string name="settings_cra_page">CRA page</string>
+    <string name="settings_last_read">Last read: %1$s</string>
+    <string name="settings_never_read">Never read. The app checks once a month, and only when a limit is missing.</string>
+    <string name="settings_test_and_save">Test and save</string>
+    <string name="settings_check">Check</string>
+    <string name="settings_reading">Reading</string>
+    <string name="settings_restore_address">Restore the original address</string>
+    <string name="settings_tfsa_limits">TFSA limits</string>
+    <string name="settings_no_limit">No limit saved. Without a confirmed limit, the year\'s room stays at zero rather than being guessed.</string>
+    <string name="settings_year">Year</string>
+    <string name="settings_amount">Amount</string>
+    <string name="settings_add_limit">Add limit</string>
+    <string name="settings_hide_earlier">Hide earlier years</string>
+    <plurals name="settings_show_earlier">
+        <item quantity="one">Show %1$d earlier year (%2$d)</item>
+        <item quantity="other">Show %1$d earlier years (%2$d to %3$d)</item>
     </plurals>
-    <string name="reglages_plafond_propose_ligne">%1$d : %2$s</string>
-    <string name="reglages_sauvegarde">Sauvegarde</string>
-    <string name="reglages_sauvegarde_texte">Tes données sont copiées automatiquement vers ton compte Google et reprises lors d\'un transfert vers un nouveau téléphone. Le fichier JSON reste la copie que tu peux vérifier et ranger où tu veux.</string>
-    <string name="reglages_exporter">Exporter</string>
-    <string name="reglages_importer">Importer</string>
-    <string name="reglages_import_titre">Remplacer toutes les données ?</string>
-    <string name="reglages_import_texte">L\'import écrase le profil, les plafonds et le journal des transactions par le contenu du fichier. Ce n\'est pas une fusion.</string>
-    <string name="reglages_import_remplacer">Remplacer</string>
+    <string name="settings_proposed_limit_row">%1$d: %2$s</string>
+    <string name="settings_backup">Backup</string>
+    <string name="settings_backup_text">Your data is copied automatically to your Google account and restored when you move to a new phone. The JSON file is the copy you can check and keep wherever you want.</string>
+    <string name="settings_export">Export</string>
+    <string name="settings_import">Import</string>
+    <string name="settings_import_title">Replace all data?</string>
+    <string name="settings_import_text">Importing overwrites the profile, the limits and the transaction journal with the file\'s content. It doesn\'t merge.</string>
+    <string name="settings_import_replace">Replace</string>
 
-    <!-- Messages des reglages -->
-    <string name="message_profil_enregistre">Profil enregistré.</string>
-    <string name="message_plafond_enregistre">Plafond enregistré.</string>
-    <string name="message_plafond_propose">Plafond %1$d proposé par l\'ARC, à confirmer.</string>
-    <string name="message_arc_rien_de_nouveau">Rien de nouveau sur le site de l\'ARC.</string>
-    <string name="message_plafond_confirme">Plafond %1$d confirmé.</string>
-    <string name="message_proposition_rejetee">Proposition %1$d rejetée.</string>
-    <string name="message_adresse_enregistree">Adresse vérifiée et enregistrée.</string>
-    <string name="message_adresse_refusee">%1$s L\'adresse précédente est conservée.</string>
-    <string name="message_donnees_exportees">Données exportées.</string>
-    <string name="message_export_impossible">Export impossible : le fichier n\'a pas pu être écrit.</string>
-    <string name="message_donnees_importees">Données importées.</string>
-    <string name="message_import_refuse">Import refusé : %1$s</string>
-    <string name="arc_echec_adresse_absente">Aucune adresse de page de l\'ARC enregistrée.</string>
-    <string name="arc_echec_injoignable">La page de l\'ARC est injoignable.</string>
-    <string name="arc_echec_forme">La page de l\'ARC ne donne plus le plafond sous la forme attendue.</string>
-    <string name="adresse_refus_hors_canada">L\'adresse doit être une page https de canada.ca.</string>
-    <string name="adresse_refus_injoignable">La page est injoignable.</string>
-    <string name="adresse_refus_sans_plafond">Cette page ne donne pas le plafond du CELI.</string>
-    <string name="import_version_inconnue">le fichier vient d\'une version inconnue de l\'application.</string>
-    <string name="import_json_malforme">le fichier n\'est pas un export valide.</string>
-    <string name="import_fichier_illisible">le fichier est illisible.</string>
-    <string name="reglages_apparence">Apparence</string>
-    <string name="theme_systeme">Système</string>
-    <string name="theme_clair">Clair</string>
-    <string name="theme_sombre">Sombre</string>
+    <!-- Settings messages -->
+    <string name="message_profile_saved">Profile saved.</string>
+    <string name="message_limit_saved">Limit saved.</string>
+    <string name="message_limit_proposed">%1$d limit suggested by the CRA, waiting for your confirmation.</string>
+    <string name="message_cra_nothing_new">Nothing new on the CRA website.</string>
+    <string name="message_limit_confirmed">%1$d limit confirmed.</string>
+    <string name="message_proposal_rejected">%1$d suggestion rejected.</string>
+    <string name="message_address_saved">Address checked and saved.</string>
+    <string name="message_address_rejected">%1$s The previous address is kept.</string>
+    <string name="message_data_exported">Data exported.</string>
+    <string name="message_export_failed">Export failed: the file couldn\'t be written.</string>
+    <string name="message_data_imported">Data imported.</string>
+    <string name="message_import_rejected">Import rejected: %1$s</string>
+    <string name="cra_failure_missing_address">No CRA page address saved.</string>
+    <string name="cra_failure_unreachable">The CRA page can\'t be reached.</string>
+    <string name="cra_failure_format">The CRA page no longer states the limit in the expected form.</string>
+    <string name="address_rejected_outside_canada">The address must be an https page on canada.ca.</string>
+    <string name="address_rejected_unreachable">The page can\'t be reached.</string>
+    <string name="address_rejected_no_limit">This page doesn\'t state the TFSA limit.</string>
+    <string name="import_unknown_version">the file comes from an unknown version of the app.</string>
+    <string name="import_malformed_json">the file isn\'t a valid export.</string>
+    <string name="import_unreadable_file">the file can\'t be read.</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
 </resources>

@@ -3,18 +3,18 @@ package dev.celitracker.app.ui.journal
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.celitracker.app.R
-import dev.celitracker.app.ui.texte.TexteUi
-import dev.celitracker.app.ui.texte.texte
-import dev.celitracker.app.ui.texte.texteRes
-import dev.celitracker.data.Depot
-import dev.celitracker.data.SaisieInvalide
-import dev.celitracker.engine.Compte
-import dev.celitracker.engine.NiveauUtilisation
+import dev.celitracker.app.ui.text.UiText
+import dev.celitracker.app.ui.text.textRes
+import dev.celitracker.app.ui.text.uiText
+import dev.celitracker.data.InvalidInput
+import dev.celitracker.data.Repository
+import dev.celitracker.engine.Account
 import dev.celitracker.engine.Transaction
-import dev.celitracker.engine.TypeTx
-import dev.celitracker.engine.Utilisation
-import dev.celitracker.engine.utilisationCeli
-import dev.celitracker.engine.utilisationCeliapp
+import dev.celitracker.engine.TransactionType
+import dev.celitracker.engine.Usage
+import dev.celitracker.engine.UsageLevel
+import dev.celitracker.engine.fhsaUsage
+import dev.celitracker.engine.tfsaUsage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,145 +24,145 @@ import java.math.RoundingMode
 import java.time.LocalDate
 
 /**
- * [ouvrirAjout] vient du bouton « Ajouter » de l'accueil: l'ecran s'ouvre
- * directement sur la feuille de saisie au lieu de demander un second geste.
+ * [openAdd] vient du bouton « Ajouter » de l'home: l'ecran s'ouvre
+ * directement sur la feuille de input au lieu de demander un second geste.
  */
 class JournalViewModel(
-    private val depot: Depot,
-    compteInitial: Compte,
-    ouvrirAjout: Boolean = false,
-    anneeCiblee: Int? = null,
+    private val repository: Repository,
+    initialAccount: Account,
+    openAdd: Boolean = false,
+    targetYear: Int? = null,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(JournalUiState(compte = compteInitial, anneeCiblee = anneeCiblee))
+    private val _uiState = MutableStateFlow(JournalUiState(account = initialAccount, targetYear = targetYear))
 
-    private val compte: Compte get() = _uiState.value.compte
+    private val account: Account get() = _uiState.value.account
     val uiState: StateFlow<JournalUiState> = _uiState.asStateFlow()
 
     init {
-        charger()
-        if (ouvrirAjout) ouvrirNouvelle()
+        load()
+        if (openAdd) openNew()
     }
 
-    fun charger() {
+    fun load() {
         viewModelScope.launch {
-            val transactions = transactionsDuCompte()
+            val transactions = accountTransactions()
             _uiState.update { it.copy(transactions = transactions) }
         }
     }
 
-    /** Passer du CELI au CELIAPP reste sur le meme ecran: c'est un filtre, pas une destination. */
-    fun changerCompte(nouveau: Compte) {
-        if (nouveau == compte) return
-        _uiState.update { it.copy(compte = nouveau, transactions = emptyList(), formulaire = null) }
-        charger()
+    /** Passer du TFSA au FHSA reste sur le meme ecran: c'est un filtre, labelStep une destination. */
+    fun changeAccount(choice: Account) {
+        if (choice == account) return
+        _uiState.update { it.copy(account = choice, transactions = emptyList(), form = null) }
+        load()
     }
 
-    fun ouvrirNouvelle() = _uiState.update {
-        it.copy(formulaire = FormulaireTransaction(date = LocalDate.now().toString()), message = null)
+    fun openNew() = _uiState.update {
+        it.copy(form = TransactionForm(date = LocalDate.now().toString()), message = null)
     }
 
-    fun ouvrirModification(transaction: Transaction) = _uiState.update {
+    fun openEdit(transaction: Transaction) = _uiState.update {
         it.copy(
-            formulaire = FormulaireTransaction(
+            form = TransactionForm(
                 id = transaction.id,
                 date = transaction.date.toString(),
                 type = transaction.type,
-                montant = transaction.montant.setScale(2, RoundingMode.HALF_UP).toPlainString(),
+                amount = transaction.amount.setScale(2, RoundingMode.HALF_UP).toPlainString(),
             ),
             message = null,
         )
     }
 
-    /** L'ecran a defile jusqu'a l'annee demandee: ne pas y revenir a chaque rechargement. */
-    fun anneeCibleeAtteinte() = _uiState.update { it.copy(anneeCiblee = null) }
+    /** L'ecran a defile jusqu'a l'year demandee: ne labelStep y revenir a chaque rechargement. */
+    fun targetYearReached() = _uiState.update { it.copy(targetYear = null) }
 
-    fun messageAffiche() = _uiState.update { it.copy(message = null) }
+    fun messageShown() = _uiState.update { it.copy(message = null) }
 
-    fun fermerFormulaire() = _uiState.update { it.copy(formulaire = null) }
+    fun closeForm() = _uiState.update { it.copy(form = null) }
 
-    fun modifierDate(valeur: String) = modifierFormulaire { copy(date = valeur) }
-    fun modifierType(valeur: TypeTx) = modifierFormulaire { copy(type = valeur) }
-    fun modifierMontant(valeur: String) = modifierFormulaire { copy(montant = valeur) }
+    fun updateDate(value: String) = updateForm { copy(date = value) }
+    fun updateType(value: TransactionType) = updateForm { copy(type = value) }
+    fun updateAmount(value: String) = updateForm { copy(amount = value) }
 
-    fun enregistrer() {
-        val formulaire = _uiState.value.formulaire ?: return
-        val date = formulaire.dateValide ?: return
-        val montant = formulaire.montantValide ?: return
-        val transaction = Transaction(compte, date, formulaire.type, montant, formulaire.id)
+    fun save() {
+        val form = _uiState.value.form ?: return
+        val date = form.validDate ?: return
+        val amount = form.validAmount ?: return
+        val transaction = Transaction(account, date, form.type, amount, form.id)
         viewModelScope.launch {
-            val apres = utilisationApres(transaction)
-            if (formulaire.avertissement == null) {
-                avertissement(transaction, apres)?.let { texte ->
-                    _uiState.update { it.copy(formulaire = it.formulaire?.copy(avertissement = texte)) }
+            val after = usageAfter(transaction)
+            if (form.warning == null) {
+                warning(transaction, after)?.let { text ->
+                    _uiState.update { it.copy(form = it.form?.copy(warning = text)) }
                     return@launch
                 }
             }
             try {
-                if (formulaire.estNouvelle) depot.ajouterTransaction(transaction) else depot.modifierTransaction(transaction)
-            } catch (e: SaisieInvalide) {
-                _uiState.update { it.copy(formulaire = it.formulaire?.copy(erreur = texte(e.raison.texteRes()))) }
+                if (form.isNew) repository.addTransaction(transaction) else repository.updateTransaction(transaction)
+            } catch (e: InvalidInput) {
+                _uiState.update { it.copy(form = it.form?.copy(error = uiText(e.reason.textRes()))) }
                 return@launch
             }
-            recharger(message = messageApres(apres, date.year))
+            reload(message = messageAfter(after, date.year))
         }
     }
 
     /**
-     * Utilisation de l'annee de [transaction], celle-ci comprise (a la place de
+     * Usage de l'year de [transaction], celle-ci comprise (a la place de
      * son ancienne version si c'est une modification). Sert a la fois a
-     * l'avertissement avant l'enregistrement et au message apres.
+     * l'warning before l'enregistrement et au message after.
      */
-    private suspend fun utilisationApres(transaction: Transaction): Utilisation? {
-        val profil = depot.profil() ?: return null
-        val transactions = depot.transactions().filter { it.id != transaction.id } + transaction
-        val annee = transaction.date.year
-        return when (compte) {
-            Compte.CELI -> utilisationCeli(profil, depot.plafonds(), transactions, annee)
-            Compte.CELIAPP -> utilisationCeliapp(profil, transactions, annee)
+    private suspend fun usageAfter(transaction: Transaction): Usage? {
+        val profile = repository.profile() ?: return null
+        val transactions = repository.transactions().filter { it.id != transaction.id } + transaction
+        val year = transaction.date.year
+        return when (account) {
+            Account.TFSA -> tfsaUsage(profile, repository.limits(), transactions, year)
+            Account.FHSA -> fhsaUsage(profile, transactions, year)
         }
     }
 
     /**
-     * Texte a confirmer si ce depot porte l'utilisation de l'annee a 95 % ou
-     * au-dela. Un retrait n'en demande jamais: il ne consomme pas de droits.
+     * Texte a confirmer si ce repository porte l'usage de l'year a 95 % ou
+     * au-dela. Un withdrawal n'en demande jamais: il ne consomme labelStep de room.
      */
-    private fun avertissement(transaction: Transaction, apres: Utilisation?): TexteUi? {
-        if (transaction.type != TypeTx.DEPOT || apres == null) return null
-        val annee = transaction.date.year
-        return when (apres.niveau) {
-            NiveauUtilisation.DEPASSE -> texte(R.string.journal_avertissement_depassement, compte, annee, apres.excedent)
+    private fun warning(transaction: Transaction, after: Usage?): UiText? {
+        if (transaction.type != TransactionType.DEPOSIT || after == null) return null
+        val year = transaction.date.year
+        return when (after.level) {
+            UsageLevel.EXCEEDED -> uiText(R.string.journal_warning_exceeded, account, year, after.excess)
 
-            NiveauUtilisation.CRITIQUE ->
-                texte(R.string.journal_avertissement_critique, apres.pourcentage ?: 0, compte, annee, apres.restant)
+            UsageLevel.CRITICAL ->
+                uiText(R.string.journal_warning_critical, after.percent ?: 0, account, year, after.remaining)
 
             else -> null
         }
     }
 
-    private fun messageApres(apres: Utilisation?, annee: Int): TexteUi {
-        if (apres == null || apres.niveau == NiveauUtilisation.NORMAL) return texte(R.string.journal_enregistree)
-        return texte(R.string.journal_enregistree_utilisation, apres.pourcentage ?: 0, compte, annee)
+    private fun messageAfter(after: Usage?, year: Int): UiText {
+        if (after == null || after.level == UsageLevel.NORMAL) return uiText(R.string.journal_saved)
+        return uiText(R.string.journal_saved_usage, after.percent ?: 0, account, year)
     }
 
-    fun supprimer() {
-        val formulaire = _uiState.value.formulaire?.takeUnless { it.estNouvelle } ?: return
+    fun delete() {
+        val form = _uiState.value.form?.takeUnless { it.isNew } ?: return
         viewModelScope.launch {
-            depot.supprimerTransaction(formulaire.id)
-            recharger(message = texte(R.string.journal_supprimee))
+            repository.deleteTransaction(form.id)
+            reload(message = uiText(R.string.journal_deleted))
         }
     }
 
-    private suspend fun recharger(message: TexteUi) {
-        val transactions = transactionsDuCompte()
-        _uiState.update { it.copy(transactions = transactions, formulaire = null, message = message) }
+    private suspend fun reload(message: UiText) {
+        val transactions = accountTransactions()
+        _uiState.update { it.copy(transactions = transactions, form = null, message = message) }
     }
 
-    // Toute saisie efface l'erreur et l'avertissement precedents: ils portaient
-    // sur l'ancienne valeur.
-    private fun modifierFormulaire(modification: FormulaireTransaction.() -> FormulaireTransaction) = _uiState.update { etat ->
-        etat.copy(formulaire = etat.formulaire?.modification()?.copy(erreur = null, avertissement = null))
+    // Toute input efface l'error et l'warning precedents: ils portaient
+    // sur l'ancienne value.
+    private fun updateForm(modification: TransactionForm.() -> TransactionForm) = _uiState.update { state ->
+        state.copy(form = state.form?.modification()?.copy(error = null, warning = null))
     }
 
-    private suspend fun transactionsDuCompte(): List<Transaction> = depot.transactions().filter { it.compte == compte }.sortedByDescending { it.date }
+    private suspend fun accountTransactions(): List<Transaction> = repository.transactions().filter { it.account == account }.sortedByDescending { it.date }
 }

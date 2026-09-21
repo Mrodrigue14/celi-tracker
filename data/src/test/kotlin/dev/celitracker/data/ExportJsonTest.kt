@@ -1,13 +1,13 @@
 package dev.celitracker.data
 
 import androidx.room.Room
-import dev.celitracker.engine.Compte
-import dev.celitracker.engine.PlafondAnnuel
-import dev.celitracker.engine.Profil
-import dev.celitracker.engine.Reglages
-import dev.celitracker.engine.SnapshotArc
+import dev.celitracker.engine.Account
+import dev.celitracker.engine.AnnualLimit
+import dev.celitracker.engine.CraSnapshot
+import dev.celitracker.engine.Profile
+import dev.celitracker.engine.Settings
 import dev.celitracker.engine.Transaction
-import dev.celitracker.engine.TypeTx
+import dev.celitracker.engine.TransactionType
 import kotlinx.coroutines.test.runTest
 import java.io.File
 import java.math.BigDecimal
@@ -21,62 +21,62 @@ import kotlin.test.assertTrue
 
 class ExportJsonTest {
 
-    private val fichier = File.createTempFile("celi-tracker-export-test", ".db")
-    private val base = configurerBase(Room.databaseBuilder<CeliTrackerBase>(name = fichier.absolutePath))
-    private val depot = Depot(base)
+    private val file = File.createTempFile("celi-tracker-export-test", ".db")
+    private val database = configureDatabase(Room.databaseBuilder<CeliTrackerDatabase>(name = file.absolutePath))
+    private val repository = Repository(database)
 
-    private val fichierVierge = File.createTempFile("celi-tracker-export-test-vierge", ".db")
-    private val baseVierge = configurerBase(Room.databaseBuilder<CeliTrackerBase>(name = fichierVierge.absolutePath))
-    private val depotVierge = Depot(baseVierge)
+    private val emptyFile = File.createTempFile("celi-tracker-export-test-empty", ".db")
+    private val emptyDatabase = configureDatabase(Room.databaseBuilder<CeliTrackerDatabase>(name = emptyFile.absolutePath))
+    private val emptyRepository = Repository(emptyDatabase)
 
     @AfterTest
-    fun fermer() {
-        base.close()
-        fichier.delete()
-        baseVierge.close()
-        fichierVierge.delete()
+    fun close() {
+        database.close()
+        file.delete()
+        emptyDatabase.close()
+        emptyFile.delete()
     }
 
-    private val profilCeli = Profil(
-        anneeNaissance = 2002,
-        dateOuvertureCeliapp = LocalDate.of(2023, 6, 1),
+    private val tfsaProfile = Profile(
+        birthYear = 2002,
+        fhsaOpeningDate = LocalDate.of(2023, 6, 1),
     )
 
-    private suspend fun peuplerDonneesTest() {
-        depot.enregistrerProfil(profilCeli)
+    private suspend fun populateTestData() {
+        repository.saveProfile(tfsaProfile)
         // Insere en ordre volontairement melange pour verifier le tri au moment de l'export.
-        depot.enregistrerPlafond(PlafondAnnuel(Compte.CELIAPP, 2026, BigDecimal("8000.00"), confirme = true))
-        depot.enregistrerPlafond(PlafondAnnuel(Compte.CELI, 2026, BigDecimal("7000.00"), confirme = true))
-        depot.enregistrerPlafond(PlafondAnnuel(Compte.CELI, 2020, BigDecimal("6000.00"), confirme = false))
-        depot.ajouterTransaction(Transaction(Compte.CELI, LocalDate.of(2026, 1, 15), TypeTx.DEPOT, BigDecimal("1234.56")))
-        depot.ajouterTransaction(Transaction(Compte.CELIAPP, LocalDate.of(2023, 7, 1), TypeTx.DEPOT, BigDecimal("1000.00")))
-        depot.enregistrerSnapshotArc(SnapshotArc(0, Compte.CELI, LocalDate.of(2026, 1, 1), BigDecimal("1234.56")))
-        depot.enregistrerReglages(Reglages(urlPageArc = "https://arc.gc.ca", dateDerniereVerification = Instant.parse("2026-09-08T12:00:00Z")))
+        repository.saveLimit(AnnualLimit(Account.FHSA, 2026, BigDecimal("8000.00"), confirmed = true))
+        repository.saveLimit(AnnualLimit(Account.TFSA, 2026, BigDecimal("7000.00"), confirmed = true))
+        repository.saveLimit(AnnualLimit(Account.TFSA, 2020, BigDecimal("6000.00"), confirmed = false))
+        repository.addTransaction(Transaction(Account.TFSA, LocalDate.of(2026, 1, 15), TransactionType.DEPOSIT, BigDecimal("1234.56")))
+        repository.addTransaction(Transaction(Account.FHSA, LocalDate.of(2023, 7, 1), TransactionType.DEPOSIT, BigDecimal("1000.00")))
+        repository.saveCraSnapshot(CraSnapshot(0, Account.TFSA, LocalDate.of(2026, 1, 1), BigDecimal("1234.56")))
+        repository.saveSettings(Settings(urlPageArc = "https://arc.gc.ca", lastCheckDate = Instant.parse("2026-09-08T12:00:00Z")))
     }
 
     @Test
     fun `aller-retour sans perte - reexporter apres import donne une chaine identique`() = runTest {
-        peuplerDonneesTest()
-        val exportOriginal = depot.exporterJson()
+        populateTestData()
+        val exportOriginal = repository.exportJson()
 
-        depotVierge.importerJson(exportOriginal)
-        val exportReimporte = depotVierge.exporterJson()
+        emptyRepository.importJson(exportOriginal)
+        val exportReimporte = emptyRepository.exportJson()
 
         assertEquals(exportOriginal, exportReimporte)
     }
 
     @Test
     fun `un montant a deux decimales survit a l'export et a l'import`() = runTest {
-        depot.enregistrerProfil(profilCeli)
-        depot.ajouterTransaction(Transaction(Compte.CELI, LocalDate.of(2026, 1, 15), TypeTx.DEPOT, BigDecimal("1234.56")))
+        repository.saveProfile(tfsaProfile)
+        repository.addTransaction(Transaction(Account.TFSA, LocalDate.of(2026, 1, 15), TransactionType.DEPOSIT, BigDecimal("1234.56")))
 
-        val export = depot.exporterJson()
+        val export = repository.exportJson()
 
         assertTrue(export.contains("\"montant\":\"1234.56\""))
 
-        depotVierge.importerJson(export)
-        val relue = depotVierge.transactions().single()
-        assertEquals("1234.56", relue.montant.toPlainString())
+        emptyRepository.importJson(export)
+        val readBack = emptyRepository.transactions().single()
+        assertEquals("1234.56", readBack.amount.toPlainString())
     }
 
     @Test
@@ -87,22 +87,22 @@ class ExportJsonTest {
         """.trimIndent()
 
         assertFailsWith<IllegalArgumentException> {
-            depotVierge.importerJson(exportVersionInconnue)
+            emptyRepository.importJson(exportVersionInconnue)
         }
     }
 
     @Test
     fun `un JSON malforme est refuse sans ecraser la base existante`() = runTest {
-        peuplerDonneesTest()
-        val avant = depot.exporterJson()
+        populateTestData()
+        val before = repository.exportJson()
 
         assertFailsWith<IllegalArgumentException> {
-            depot.importerJson("ceci n'est pas du JSON")
+            repository.importJson("this is not JSON")
         }
 
-        assertEquals(avant, depot.exporterJson())
-        assertEquals(profilCeli, depot.profil())
-        assertEquals(2, depot.transactions().size)
+        assertEquals(before, repository.exportJson())
+        assertEquals(tfsaProfile, repository.profile())
+        assertEquals(2, repository.transactions().size)
     }
 
     @Test
@@ -114,20 +114,20 @@ class ExportJsonTest {
              "reglages":{"urlPageArc":"https://arc.gc.ca","dateDerniereVerification":null}}
         """.trimIndent()
 
-        depot.importerJson(exportV1)
+        repository.importJson(exportV1)
 
-        // 2002 + 18, pas le 1999 ecrit dans le fichier.
-        assertEquals(2020, depot.profil()?.anneeAdmissibiliteCeli)
+        // 2002 + 18, labelStep le 1999 ecrit dans le file.
+        assertEquals(2020, repository.profile()?.tfsaEligibilityYear)
     }
 
     @Test
     fun `un echec en cours d'ecriture ne laisse pas la base a moitie videe`() = runTest {
-        peuplerDonneesTest()
-        val avant = depot.exporterJson()
+        populateTestData()
+        val before = repository.exportJson()
 
         // Version et JSON valides, mais deux transactions partagent le meme id :
-        // la deuxieme insertion viole la cle primaire apres que les tables aient
-        // deja ete videes et qu'une partie (profil, plafonds) ait deja ete ecrite.
+        // la deuxieme insertion viole la cle primaire after que les tables aient
+        // deja ete videes et qu'une part (profile, limits) ait deja ete ecrite.
         val exportEcritureEchoue = """
             {"version":1,
              "profil":{"anneeAdmissibiliteCeli":2020,"anneeNaissance":2000,"dateOuvertureCeliapp":"2023-06-01"},
@@ -141,28 +141,28 @@ class ExportJsonTest {
         """.trimIndent()
 
         assertFailsWith<Throwable> {
-            depot.importerJson(exportEcritureEchoue)
+            repository.importJson(exportEcritureEchoue)
         }
 
-        assertEquals(avant, depot.exporterJson())
-        assertEquals(profilCeli, depot.profil())
-        assertEquals(3, depot.plafonds().size)
-        assertEquals(2, depot.transactions().size)
-        assertEquals(1, depot.snapshotsArc().size)
+        assertEquals(before, repository.exportJson())
+        assertEquals(tfsaProfile, repository.profile())
+        assertEquals(3, repository.limits().size)
+        assertEquals(2, repository.transactions().size)
+        assertEquals(1, repository.craSnapshots().size)
         assertEquals(
-            Reglages(urlPageArc = "https://arc.gc.ca", dateDerniereVerification = Instant.parse("2026-09-08T12:00:00Z")),
-            depot.reglages(),
+            Settings(urlPageArc = "https://arc.gc.ca", lastCheckDate = Instant.parse("2026-09-08T12:00:00Z")),
+            repository.settings(),
         )
     }
 
     @Test
     fun `l'export est deterministe`() = runTest {
-        peuplerDonneesTest()
+        populateTestData()
 
-        val premierExport = depot.exporterJson()
-        val secondExport = depot.exporterJson()
+        val firstExport = repository.exportJson()
+        val secondExport = repository.exportJson()
 
-        assertEquals(premierExport, secondExport)
+        assertEquals(firstExport, secondExport)
     }
 
     /**
@@ -180,16 +180,16 @@ class ExportJsonTest {
 
     @Test
     fun `a version 2 backup imports and exports back byte for byte`() = runTest {
-        depotVierge.importerJson(exportVersion2)
+        emptyRepository.importJson(exportVersion2)
 
-        assertEquals(Profil(anneeNaissance = 2002, dateOuvertureCeliapp = LocalDate.of(2023, 6, 1)), depotVierge.profil())
+        assertEquals(Profile(birthYear = 2002, fhsaOpeningDate = LocalDate.of(2023, 6, 1)), emptyRepository.profile())
         assertEquals(
             listOf(
-                Transaction(Compte.CELI, LocalDate.of(2026, 1, 15), TypeTx.DEPOT, BigDecimal("1234.56"), id = 1),
-                Transaction(Compte.CELIAPP, LocalDate.of(2025, 3, 1), TypeTx.RETRAIT, BigDecimal("500.00"), id = 2),
+                Transaction(Account.TFSA, LocalDate.of(2026, 1, 15), TransactionType.DEPOSIT, BigDecimal("1234.56"), id = 1),
+                Transaction(Account.FHSA, LocalDate.of(2025, 3, 1), TransactionType.WITHDRAWAL, BigDecimal("500.00"), id = 2),
             ),
-            depotVierge.transactions().sortedBy { it.id },
+            emptyRepository.transactions().sortedBy { it.id },
         )
-        assertEquals(exportVersion2, depotVierge.exporterJson())
+        assertEquals(exportVersion2, emptyRepository.exportJson())
     }
 }

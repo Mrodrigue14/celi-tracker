@@ -13,9 +13,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val preferenceTheme = (application as CeliTrackerApplication).preferenceTheme
+        val themePreference = (application as CeliTrackerApplication).themePreference
         setContent {
-            val mode by preferenceTheme.mode.collectAsStateWithLifecycle()
+            val mode by themePreference.mode.collectAsStateWithLifecycle()
             CeliTrackerTheme(mode) {
                 CeliTrackerNavHost()
             }

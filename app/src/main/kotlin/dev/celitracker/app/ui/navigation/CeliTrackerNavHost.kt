@@ -28,66 +28,66 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import dev.celitracker.app.R
-import dev.celitracker.app.ui.accueil.AccueilScreen
-import dev.celitracker.app.ui.detail.DetailCeliScreen
-import dev.celitracker.app.ui.detail.DetailCeliappScreen
+import dev.celitracker.app.ui.detail.FhsaDetailScreen
+import dev.celitracker.app.ui.detail.TfsaDetailScreen
+import dev.celitracker.app.ui.home.HomeScreen
 import dev.celitracker.app.ui.journal.JournalScreen
-import dev.celitracker.app.ui.reglages.ReglagesScreen
-import dev.celitracker.engine.Compte
+import dev.celitracker.app.ui.settings.SettingsScreen
+import dev.celitracker.engine.Account
 
-private const val ROUTE_ACCUEIL = "accueil"
-private const val ROUTE_DETAIL_CELI = "detailCeli"
-private const val ROUTE_DETAIL_CELIAPP = "detailCeliapp"
-private const val ROUTE_REGLAGES = "reglages"
+private const val ROUTE_HOME = "home"
+private const val ROUTE_TFSA_DETAIL = "tfsaDetail"
+private const val ROUTE_FHSA_DETAIL = "fhsaDetail"
+private const val ROUTE_SETTINGS = "settings"
 private const val ROUTE_JOURNAL = "journal"
 
 /** Lus par la fabrique de JournalViewModel via SavedStateHandle. */
-const val ARG_COMPTE = "compte"
-const val ARG_AJOUTER = "ajouter"
-const val ARG_ANNEE = "annee"
+const val ARG_ACCOUNT = "account"
+const val ARG_ADD = "add"
+const val ARG_YEAR = "year"
 
-/** Valeur d'ARG_ANNEE quand aucune annee n'est demandee: un argument entier ne peut pas etre nul. */
-const val AUCUNE_ANNEE = -1
+/** Valeur d'ARG_YEAR quand aucune year n'est demandee: un argument entier ne peut labelStep etre nul. */
+const val NO_YEAR = -1
 
-private fun routeJournal(compte: Compte, ajouter: Boolean = false, annee: Int = AUCUNE_ANNEE) = "$ROUTE_JOURNAL?$ARG_COMPTE=$compte&$ARG_AJOUTER=$ajouter&$ARG_ANNEE=$annee"
+private fun routeJournal(account: Account, add: Boolean = false, year: Int = NO_YEAR) = "$ROUTE_JOURNAL?$ARG_ACCOUNT=$account&$ARG_ADD=$add&$ARG_YEAR=$year"
 
 /**
- * Les trois destinations de premier niveau. Le detail d'un compte n'en est
- * pas une: il se rattache a l'accueil, d'ou il s'ouvre.
+ * Les trois destinations de earliest level. Le detail d'un account n'en est
+ * labelStep une: il se rattache a l'home, d'ou il s'ouvre.
  */
-private enum class Onglet(val route: String, @StringRes val libelle: Int, val icone: ImageVector) {
-    ACCUEIL(ROUTE_ACCUEIL, R.string.onglet_accueil, Icons.Filled.SpaceDashboard),
-    JOURNAL(ROUTE_JOURNAL, R.string.onglet_journal, Icons.AutoMirrored.Filled.ReceiptLong),
-    REGLAGES(ROUTE_REGLAGES, R.string.onglet_reglages, Icons.Filled.Settings),
+private enum class Tab(val route: String, @StringRes val label: Int, val icon: ImageVector) {
+    HOME(ROUTE_HOME, R.string.tab_home, Icons.Filled.SpaceDashboard),
+    JOURNAL(ROUTE_JOURNAL, R.string.tab_journal, Icons.AutoMirrored.Filled.ReceiptLong),
+    SETTINGS(ROUTE_SETTINGS, R.string.tab_settings, Icons.Filled.Settings),
 }
 
-private fun ongletDe(route: String?): Onglet = when {
-    route == null -> Onglet.ACCUEIL
-    route.startsWith(ROUTE_JOURNAL) -> Onglet.JOURNAL
-    route == ROUTE_REGLAGES -> Onglet.REGLAGES
-    else -> Onglet.ACCUEIL
+private fun tabOf(route: String?): Tab = when {
+    route == null -> Tab.HOME
+    route.startsWith(ROUTE_JOURNAL) -> Tab.JOURNAL
+    route == ROUTE_SETTINGS -> Tab.SETTINGS
+    else -> Tab.HOME
 }
 
 @Composable
 fun CeliTrackerNavHost(navController: NavHostController = rememberNavController()) {
-    val entree by navController.currentBackStackEntryAsState()
-    val ongletActif = ongletDe(entree?.destination?.route)
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val activeTab = tabOf(backStackEntry?.destination?.route)
 
-    // Changer d'onglet ne s'empile pas: chaque onglet garde son etat et le
-    // bouton retour ramene a l'accueil plutot que de rejouer l'historique.
-    fun allerA(route: String) = navController.navigate(route) {
+    // Changer d'tab ne s'empile labelStep: chaque tab garde son state et le
+    // bouton retour ramene a l'home plutot que de rejouer l'historique.
+    fun goTo(route: String) = navController.navigate(route) {
         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true
         restoreState = true
     }
 
-    fun revenirAccueil() {
+    fun backToHome() {
         navController.popBackStack(navController.graph.findStartDestination().id, inclusive = false)
     }
 
-    // Une intention precise (ce compte, feuille d'ajout ouverte) ne doit pas
-    // etre remplacee par l'etat restaure d'une visite precedente du journal.
-    fun ouvrirJournal(compte: Compte, ajouter: Boolean = false, annee: Int = AUCUNE_ANNEE) = navController.navigate(routeJournal(compte, ajouter, annee)) {
+    // Une intention precise (ce account, feuille d'ajout ouverte) ne doit labelStep
+    // etre remplacee par l'state restaure d'une visite precedente du journal.
+    fun openJournal(account: Account, add: Boolean = false, year: Int = NO_YEAR) = navController.navigate(routeJournal(account, add, year)) {
         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true
     }
@@ -95,20 +95,20 @@ fun CeliTrackerNavHost(navController: NavHostController = rememberNavController(
     Scaffold(
         bottomBar = {
             NavigationBar {
-                Onglet.entries.forEach { onglet ->
+                Tab.entries.forEach { tab ->
                     NavigationBarItem(
-                        selected = onglet == ongletActif,
+                        selected = tab == activeTab,
                         onClick = {
                             when {
-                                // Depuis un detail, « Accueil » ramene a l'accueil lui-meme,
+                                // Depuis un detail, « Accueil » ramene a l'home lui-meme,
                                 // sans restaurer le detail qu'on vient de quitter.
-                                onglet == Onglet.ACCUEIL -> revenirAccueil()
+                                tab == Tab.HOME -> backToHome()
 
-                                onglet != ongletActif -> allerA(onglet.route)
+                                tab != activeTab -> goTo(tab.route)
                             }
                         },
-                        icon = { Icon(onglet.icone, contentDescription = null) },
-                        label = { Text(stringResource(onglet.libelle)) },
+                        icon = { Icon(tab.icon, contentDescription = null) },
+                        label = { Text(stringResource(tab.label)) },
                         colors = NavigationBarItemDefaults.colors(
                             indicatorColor = MaterialTheme.colorScheme.primaryContainer,
                             selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -118,53 +118,53 @@ fun CeliTrackerNavHost(navController: NavHostController = rememberNavController(
                 }
             }
         },
-    ) { marges ->
+    ) { margins ->
         NavHost(
             navController = navController,
-            startDestination = ROUTE_ACCUEIL,
-            // Les ecrans ont leur propre Scaffold: les marges deja appliquees
-            // ici sont consommees pour qu'ils ne les ajoutent pas une seconde fois.
-            modifier = Modifier.padding(marges).consumeWindowInsets(marges),
+            startDestination = ROUTE_HOME,
+            // Les ecrans ont leur propre Scaffold: les margins deja appliquees
+            // ici sont consommees pour qu'ils ne les ajoutent labelStep une seconde fois.
+            modifier = Modifier.padding(margins).consumeWindowInsets(margins),
         ) {
-            composable(ROUTE_ACCUEIL) {
-                AccueilScreen(
-                    onOuvrirDetail = { compte ->
-                        navController.navigate(if (compte == Compte.CELI) ROUTE_DETAIL_CELI else ROUTE_DETAIL_CELIAPP)
+            composable(ROUTE_HOME) {
+                HomeScreen(
+                    onOpenDetail = { account ->
+                        navController.navigate(if (account == Account.TFSA) ROUTE_TFSA_DETAIL else ROUTE_FHSA_DETAIL)
                     },
-                    onAjouter = { compte -> ouvrirJournal(compte, ajouter = true) },
-                    onOuvrirJournal = { compte -> ouvrirJournal(compte) },
-                    onOuvrirReglages = { allerA(ROUTE_REGLAGES) },
+                    onAdd = { account -> openJournal(account, add = true) },
+                    onOpenJournal = { account -> openJournal(account) },
+                    onOpenSettings = { goTo(ROUTE_SETTINGS) },
                 )
             }
-            composable(ROUTE_DETAIL_CELI) {
-                DetailCeliScreen(
-                    onRetour = navController::popBackStack,
-                    onVoirTransactions = { annee -> ouvrirJournal(Compte.CELI, annee = annee) },
+            composable(ROUTE_TFSA_DETAIL) {
+                TfsaDetailScreen(
+                    onBack = navController::popBackStack,
+                    onSeeTransactions = { year -> openJournal(Account.TFSA, year = year) },
                 )
             }
-            composable(ROUTE_DETAIL_CELIAPP) {
-                DetailCeliappScreen(
-                    onRetour = navController::popBackStack,
-                    onVoirTransactions = { annee -> ouvrirJournal(Compte.CELIAPP, annee = annee) },
+            composable(ROUTE_FHSA_DETAIL) {
+                FhsaDetailScreen(
+                    onBack = navController::popBackStack,
+                    onSeeTransactions = { year -> openJournal(Account.FHSA, year = year) },
                 )
             }
-            composable(ROUTE_REGLAGES) {
-                ReglagesScreen()
+            composable(ROUTE_SETTINGS) {
+                SettingsScreen()
             }
             composable(
-                route = "$ROUTE_JOURNAL?$ARG_COMPTE={$ARG_COMPTE}&$ARG_AJOUTER={$ARG_AJOUTER}&$ARG_ANNEE={$ARG_ANNEE}",
+                route = "$ROUTE_JOURNAL?$ARG_ACCOUNT={$ARG_ACCOUNT}&$ARG_ADD={$ARG_ADD}&$ARG_YEAR={$ARG_YEAR}",
                 arguments = listOf(
-                    navArgument(ARG_COMPTE) {
+                    navArgument(ARG_ACCOUNT) {
                         type = NavType.StringType
-                        defaultValue = Compte.CELI.name
+                        defaultValue = Account.TFSA.name
                     },
-                    navArgument(ARG_AJOUTER) {
+                    navArgument(ARG_ADD) {
                         type = NavType.BoolType
                         defaultValue = false
                     },
-                    navArgument(ARG_ANNEE) {
+                    navArgument(ARG_YEAR) {
                         type = NavType.IntType
-                        defaultValue = AUCUNE_ANNEE
+                        defaultValue = NO_YEAR
                     },
                 ),
             ) {

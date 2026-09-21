@@ -3,13 +3,13 @@ package dev.celitracker.data
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
-import dev.celitracker.engine.Compte
-import dev.celitracker.engine.PlafondAnnuel
-import dev.celitracker.engine.Profil
-import dev.celitracker.engine.Reglages
-import dev.celitracker.engine.SnapshotArc
+import dev.celitracker.engine.Account
+import dev.celitracker.engine.AnnualLimit
+import dev.celitracker.engine.CraSnapshot
+import dev.celitracker.engine.Profile
+import dev.celitracker.engine.Settings
 import dev.celitracker.engine.Transaction
-import dev.celitracker.engine.TypeTx
+import dev.celitracker.engine.TransactionType
 import kotlinx.coroutines.test.runTest
 import java.io.File
 import java.math.BigDecimal
@@ -57,40 +57,40 @@ class SchemaV2CompatibilityTest {
         connection.close()
     }
 
-    private fun openDepot() = configurerBase(Room.databaseBuilder<CeliTrackerBase>(name = file.absolutePath))
+    private fun openRepository() = configureDatabase(Room.databaseBuilder<CeliTrackerDatabase>(name = file.absolutePath))
 
     @Test
     fun `a database written by schema version 2 opens and reads unchanged`() = runTest {
         writeVersion2Database()
-        val base = openDepot()
-        val depot = Depot(base)
+        val database = openRepository()
+        val repository = Repository(database)
 
-        assertEquals(Profil(anneeNaissance = 2002, dateOuvertureCeliapp = LocalDate.of(2023, 6, 1)), depot.profil())
+        assertEquals(Profile(birthYear = 2002, fhsaOpeningDate = LocalDate.of(2023, 6, 1)), repository.profile())
         assertEquals(
             setOf(
-                PlafondAnnuel(Compte.CELI, 2026, BigDecimal("7000.00"), confirme = true),
-                PlafondAnnuel(Compte.CELIAPP, 2026, BigDecimal("8000.00"), confirme = false),
+                AnnualLimit(Account.TFSA, 2026, BigDecimal("7000.00"), confirmed = true),
+                AnnualLimit(Account.FHSA, 2026, BigDecimal("8000.00"), confirmed = false),
             ),
-            depot.plafonds().toSet(),
+            repository.limits().toSet(),
         )
         assertEquals(
             listOf(
-                Transaction(Compte.CELI, LocalDate.of(2026, 1, 15), TypeTx.DEPOT, BigDecimal("1234.56"), id = 1),
-                Transaction(Compte.CELIAPP, LocalDate.of(2025, 3, 1), TypeTx.RETRAIT, BigDecimal("500.00"), id = 2),
+                Transaction(Account.TFSA, LocalDate.of(2026, 1, 15), TransactionType.DEPOSIT, BigDecimal("1234.56"), id = 1),
+                Transaction(Account.FHSA, LocalDate.of(2025, 3, 1), TransactionType.WITHDRAWAL, BigDecimal("500.00"), id = 2),
             ),
-            depot.transactions().sortedBy { it.id },
+            repository.transactions().sortedBy { it.id },
         )
-        assertEquals(listOf(SnapshotArc(1, Compte.CELI, LocalDate.of(2026, 1, 1), BigDecimal("41800.00"))), depot.snapshotsArc())
-        assertEquals(Reglages("https://example.org/arc", Instant.parse("2026-09-08T12:00:00Z")), depot.reglages())
-        base.close()
+        assertEquals(listOf(CraSnapshot(1, Account.TFSA, LocalDate.of(2026, 1, 1), BigDecimal("41800.00"))), repository.craSnapshots())
+        assertEquals(Settings("https://example.org/arc", Instant.parse("2026-09-08T12:00:00Z")), repository.settings())
+        database.close()
     }
 
     @Test
     fun `new rows are stored under the version 2 names and values`() = runTest {
         writeVersion2Database()
-        val base = openDepot()
-        Depot(base).ajouterTransaction(Transaction(Compte.CELIAPP, LocalDate.of(2026, 2, 1), TypeTx.RETRAIT, BigDecimal("12.30")))
-        base.close()
+        val database = openRepository()
+        Repository(database).addTransaction(Transaction(Account.FHSA, LocalDate.of(2026, 2, 1), TransactionType.WITHDRAWAL, BigDecimal("12.30")))
+        database.close()
 
         val connection = BundledSQLiteDriver().open(file.absolutePath)
         val statement = connection.prepare("SELECT compte, date, type, montant FROM transactions WHERE id > 2")

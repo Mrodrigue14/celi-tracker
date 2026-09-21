@@ -3,6 +3,6 @@
     <!-- Fond de la fenetre avant que Compose dessine: sans lui, l'ouverture
          flashe en blanc sur un telephone en mode sombre. -->
     <style name="Theme.CeliTracker" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:windowBackground">@color/fond_fenetre</item>
+        <item name="android:windowBackground">@color/window_background</item>
     </style>
 </resources>

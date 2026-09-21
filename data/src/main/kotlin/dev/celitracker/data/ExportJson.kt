@@ -1,7 +1,7 @@
 package dev.celitracker.data
 
-import dev.celitracker.engine.Compte
-import dev.celitracker.engine.TypeTx
+import dev.celitracker.engine.Account
+import dev.celitracker.engine.TransactionType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -13,152 +13,152 @@ import java.time.Instant
 import java.time.LocalDate
 
 /**
- * Export/import JSON de la base, verse par [Depot]. Aucune valeur calculee
- * n'est exportee : profil, plafonds, transactions, snapshots ARC et reglages,
+ * Export/import JSON de la database, verse par [Repository]. Aucune value calculee
+ * n'est exportee : profile, limits, transactions, snapshots ARC et settings,
  * tels que persistes, rien de plus.
  */
 
-private const val VERSION_EXPORT = 2
+private const val EXPORT_VERSION = 2
 
 /**
- * La version 1 portait une annee d'admissibilite CELI saisie a la main, qui se
- * calcule maintenant depuis l'annee de naissance. Un export de version 1 reste
+ * La version 1 portait une year d'admissibilite TFSA input a la main, qui se
+ * calcule now depuis l'year de birth. Un export de version 1 reste
  * lisible : le champ en trop est ignore plutot que de rendre une ancienne
- * sauvegarde inutilisable, ce qui est tout l'interet de l'export.
+ * backup inutilisable, ce qui est whole l'interet de l'export.
  */
-private val VERSIONS_ACCEPTEES = setOf(1, VERSION_EXPORT)
+private val ACCEPTED_VERSIONS = setOf(1, EXPORT_VERSION)
 
 private val json = Json { ignoreUnknownKeys = true }
 
 @Serializable
-private data class ProfilJson(
-    @SerialName("anneeNaissance") val anneeNaissance: Int,
-    @SerialName("dateOuvertureCeliapp") val dateOuvertureCeliapp: String?,
+private data class ProfileJson(
+    @SerialName("anneeNaissance") val birthYear: Int,
+    @SerialName("dateOuvertureCeliapp") val fhsaOpeningDate: String?,
 )
 
 @Serializable
-private data class PlafondJson(
-    @SerialName("compte") val compte: String,
-    @SerialName("annee") val annee: Int,
-    @SerialName("montant") val montant: String,
-    @SerialName("confirme") val confirme: Boolean,
+private data class LimitJson(
+    @SerialName("compte") val account: String,
+    @SerialName("annee") val year: Int,
+    @SerialName("montant") val amount: String,
+    @SerialName("confirme") val confirmed: Boolean,
 )
 
 @Serializable
 private data class TransactionJson(
     val id: Long,
-    @SerialName("compte") val compte: String,
+    @SerialName("compte") val account: String,
     val date: String,
     val type: String,
-    @SerialName("montant") val montant: String,
+    @SerialName("montant") val amount: String,
 )
 
 @Serializable
-private data class SnapshotArcJson(
+private data class CraSnapshotJson(
     val id: Long,
-    @SerialName("compte") val compte: String,
-    @SerialName("dateReference") val dateReference: String,
-    @SerialName("droitsDeclares") val droitsDeclares: String,
+    @SerialName("compte") val account: String,
+    @SerialName("dateReference") val referenceDate: String,
+    @SerialName("droitsDeclares") val declaredRoom: String,
 )
 
 @Serializable
-private data class ReglagesJson(
+private data class SettingsJson(
     @SerialName("urlPageArc") val urlPageArc: String,
-    @SerialName("dateDerniereVerification") val dateDerniereVerification: String?,
+    @SerialName("dateDerniereVerification") val lastCheckDate: String?,
 )
 
 @Serializable
-private data class ExportDonnees(
+private data class ExportFile(
     val version: Int,
-    @SerialName("profil") val profil: ProfilJson?,
-    @SerialName("plafonds") val plafonds: List<PlafondJson>,
+    @SerialName("profil") val profile: ProfileJson?,
+    @SerialName("plafonds") val limits: List<LimitJson>,
     val transactions: List<TransactionJson>,
-    @SerialName("snapshotsArc") val snapshotsArc: List<SnapshotArcJson>,
-    @SerialName("reglages") val reglages: ReglagesJson,
+    @SerialName("snapshotsArc") val craSnapshots: List<CraSnapshotJson>,
+    @SerialName("reglages") val settings: SettingsJson,
 )
 
 /**
- * Serialise la base en JSON. Les montants sont des chaines,
+ * Serialise la database en JSON. Les montants sont des chaines,
  * jamais des nombres JSON : un nombre JSON transite par un `double` chez la
  * plupart des lecteurs, ce qui detruirait l'exactitude de [BigDecimal]. Les
- * collections sont triees par une cle stable pour qu'a contenu egal, deux
+ * collections sont triees par une cle stable pour qu'a content egal, deux
  * exports successifs produisent la meme chaine.
  */
-suspend fun Depot.exporterJson(): String {
-    val donnees = ExportDonnees(
-        version = VERSION_EXPORT,
-        profil = profil()?.let {
-            ProfilJson(
-                anneeNaissance = it.anneeNaissance,
-                dateOuvertureCeliapp = it.dateOuvertureCeliapp?.toString(),
+suspend fun Repository.exportJson(): String {
+    val data = ExportFile(
+        version = EXPORT_VERSION,
+        profile = profile()?.let {
+            ProfileJson(
+                birthYear = it.birthYear,
+                fhsaOpeningDate = it.fhsaOpeningDate?.toString(),
             )
         },
-        plafonds = plafonds()
-            .sortedWith(compareBy({ it.compte.storedValue() }, { it.annee }))
-            .map { PlafondJson(it.compte.storedValue(), it.annee, it.montant.toPlainString(), it.confirme) },
+        limits = limits()
+            .sortedWith(compareBy({ it.account.storedValue() }, { it.year }))
+            .map { LimitJson(it.account.storedValue(), it.year, it.amount.toPlainString(), it.confirmed) },
         transactions = transactions()
             .sortedBy { it.id }
-            .map { TransactionJson(it.id, it.compte.storedValue(), it.date.toString(), it.type.storedValue(), it.montant.toPlainString()) },
-        snapshotsArc = snapshotsArc()
+            .map { TransactionJson(it.id, it.account.storedValue(), it.date.toString(), it.type.storedValue(), it.amount.toPlainString()) },
+        craSnapshots = craSnapshots()
             .sortedBy { it.id }
-            .map { SnapshotArcJson(it.id, it.compte.storedValue(), it.dateReference.toString(), it.droitsDeclares.toPlainString()) },
-        reglages = reglages().let { ReglagesJson(it.urlPageArc, it.dateDerniereVerification?.toString()) },
+            .map { CraSnapshotJson(it.id, it.account.storedValue(), it.referenceDate.toString(), it.declaredRoom.toPlainString()) },
+        settings = settings().let { SettingsJson(it.urlPageArc, it.lastCheckDate?.toString()) },
     )
-    return json.encodeToString(ExportDonnees.serializer(), donnees)
+    return json.encodeToString(ExportFile.serializer(), data)
 }
 
 /**
- * Remplace tout le contenu de la base par celui du JSON, dans une seule
- * transaction : ce n'est pas une fusion, les tables sont videes puis
+ * Remplace whole le content de la database par celui du JSON, dans une seule
+ * transaction : ce n'est labelStep une fusion, les tables sont videes puis
  * remplies. Un import qui echoue - version inconnue, JSON malforme - ne
- * modifie jamais la base existante.
+ * modifie jamais la database existing.
  */
-suspend fun Depot.importerJson(contenu: String) {
-    val donnees = try {
-        val version = json.parseToJsonElement(contenu).jsonObject["version"]?.jsonPrimitive?.intOrNull
-        if (version !in VERSIONS_ACCEPTEES) throw ImportInvalide(RaisonImport.VERSION_INCONNUE)
-        json.decodeFromString(ExportDonnees.serializer(), contenu)
-    } catch (e: ImportInvalide) {
+suspend fun Repository.importJson(content: String) {
+    val data = try {
+        val version = json.parseToJsonElement(content).jsonObject["version"]?.jsonPrimitive?.intOrNull
+        if (version !in ACCEPTED_VERSIONS) throw InvalidImport(ImportFailureReason.UNKNOWN_VERSION)
+        json.decodeFromString(ExportFile.serializer(), content)
+    } catch (e: InvalidImport) {
         throw e
     } catch (e: Exception) {
-        throw ImportInvalide(RaisonImport.JSON_MALFORME, e)
+        throw InvalidImport(ImportFailureReason.MALFORMED_JSON, e)
     }
 
-    val profil = donnees.profil?.let {
-        ProfilEntity(
-            anneeNaissance = it.anneeNaissance,
-            dateOuvertureCeliapp = it.dateOuvertureCeliapp?.let(LocalDate::parse),
+    val profile = data.profile?.let {
+        ProfileEntity(
+            birthYear = it.birthYear,
+            fhsaOpeningDate = it.fhsaOpeningDate?.let(LocalDate::parse),
         )
     }
-    val plafonds = donnees.plafonds.map {
-        PlafondEntity(
-            compte = storedAccount(it.compte),
-            annee = it.annee,
-            montant = BigDecimal(it.montant),
-            confirme = it.confirme,
+    val limits = data.limits.map {
+        LimitEntity(
+            account = storedAccount(it.account),
+            year = it.year,
+            amount = BigDecimal(it.amount),
+            confirmed = it.confirmed,
         )
     }
-    val transactions = donnees.transactions.map {
+    val transactions = data.transactions.map {
         TransactionEntity(
             id = it.id,
-            compte = storedAccount(it.compte),
+            account = storedAccount(it.account),
             date = LocalDate.parse(it.date),
             type = storedTransactionType(it.type),
-            montant = BigDecimal(it.montant),
+            amount = BigDecimal(it.amount),
         )
     }
-    val snapshots = donnees.snapshotsArc.map {
-        SnapshotArcEntity(
+    val snapshots = data.craSnapshots.map {
+        CraSnapshotEntity(
             id = it.id,
-            compte = storedAccount(it.compte),
-            dateReference = LocalDate.parse(it.dateReference),
-            droitsDeclares = BigDecimal(it.droitsDeclares),
+            account = storedAccount(it.account),
+            referenceDate = LocalDate.parse(it.referenceDate),
+            declaredRoom = BigDecimal(it.declaredRoom),
         )
     }
-    val reglages = ReglagesEntity(
-        urlPageArc = donnees.reglages.urlPageArc,
-        dateDerniereVerification = donnees.reglages.dateDerniereVerification?.let(Instant::parse),
+    val settings = SettingsEntity(
+        urlPageArc = data.settings.urlPageArc,
+        lastCheckDate = data.settings.lastCheckDate?.let(Instant::parse),
     )
 
-    remplacerTout(profil, plafonds, transactions, snapshots, reglages)
+    replaceEverything(profile, limits, transactions, snapshots, settings)
 }

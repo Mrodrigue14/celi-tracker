@@ -6,52 +6,52 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
-import dev.celitracker.engine.Compte
+import dev.celitracker.engine.Account
 import java.time.Instant
 
 @Dao
 interface CeliTrackerDao {
     @Query("SELECT * FROM profil WHERE id = 0")
-    suspend fun profil(): ProfilEntity?
+    suspend fun profile(): ProfileEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun enregistrerProfil(profil: ProfilEntity)
+    suspend fun saveProfile(profile: ProfileEntity)
 
     @Query("SELECT * FROM plafonds")
-    suspend fun plafonds(): List<PlafondEntity>
+    suspend fun limits(): List<LimitEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun enregistrerPlafond(plafond: PlafondEntity)
+    suspend fun saveLimit(limit: LimitEntity)
 
-    @Query("DELETE FROM plafonds WHERE compte = :compte AND annee = :annee")
-    suspend fun supprimerPlafond(compte: Compte, annee: Int)
+    @Query("DELETE FROM plafonds WHERE compte = :account AND annee = :year")
+    suspend fun deleteLimit(account: Account, year: Int)
 
     @Query("SELECT * FROM transactions")
     suspend fun transactions(): List<TransactionEntity>
 
     @Insert
-    suspend fun ajouterTransaction(transaction: TransactionEntity)
+    suspend fun addTransaction(transaction: TransactionEntity)
 
     @Update
-    suspend fun modifierTransaction(transaction: TransactionEntity): Int
+    suspend fun updateTransaction(transaction: TransactionEntity): Int
 
     @Query("DELETE FROM transactions WHERE id = :id")
-    suspend fun supprimerTransaction(id: Long)
+    suspend fun deleteTransaction(id: Long)
 
     @Query("UPDATE reglages SET dateDerniereVerification = :date WHERE id = 0")
-    suspend fun noterVerificationArc(date: Instant): Int
+    suspend fun recordCraCheck(date: Instant): Int
 
     @Query("SELECT * FROM snapshots_arc")
-    suspend fun snapshotsArc(): List<SnapshotArcEntity>
+    suspend fun craSnapshots(): List<CraSnapshotEntity>
 
     @Insert
-    suspend fun enregistrerSnapshotArc(snapshot: SnapshotArcEntity)
+    suspend fun saveCraSnapshot(snapshot: CraSnapshotEntity)
 
     @Query("SELECT * FROM reglages WHERE id = 0")
-    suspend fun reglages(): ReglagesEntity?
+    suspend fun settings(): SettingsEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun enregistrerReglages(reglages: ReglagesEntity)
+    suspend fun saveSettings(settings: SettingsEntity)
 
     @Query("DELETE FROM profil")
     suspend fun viderProfil()
@@ -69,35 +69,35 @@ interface CeliTrackerDao {
     suspend fun viderReglages()
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun enregistrerPlafonds(plafonds: List<PlafondEntity>)
+    suspend fun saveLimits(limits: List<LimitEntity>)
 
     @Insert
-    suspend fun ajouterTransactions(transactions: List<TransactionEntity>)
+    suspend fun addTransactions(transactions: List<TransactionEntity>)
 
     @Insert
-    suspend fun enregistrerSnapshotsArc(snapshots: List<SnapshotArcEntity>)
+    suspend fun saveCraSnapshots(snapshots: List<CraSnapshotEntity>)
 
     /**
      * Vide puis remplit toutes les tables en une seule transaction: reserve a
-     * l'import JSON, qui remplace tout le contenu et ne fusionne jamais.
+     * l'import JSON, qui remplace whole le content et ne fusionne jamais.
      */
     @Transaction
-    suspend fun remplacerTout(
-        profil: ProfilEntity?,
-        plafonds: List<PlafondEntity>,
+    suspend fun replaceEverything(
+        profile: ProfileEntity?,
+        limits: List<LimitEntity>,
         transactions: List<TransactionEntity>,
-        snapshots: List<SnapshotArcEntity>,
-        reglages: ReglagesEntity,
+        snapshots: List<CraSnapshotEntity>,
+        settings: SettingsEntity,
     ) {
         viderProfil()
         viderPlafonds()
         viderTransactions()
         viderSnapshotsArc()
         viderReglages()
-        profil?.let { enregistrerProfil(it) }
-        enregistrerPlafonds(plafonds)
-        ajouterTransactions(transactions)
-        enregistrerSnapshotsArc(snapshots)
-        enregistrerReglages(reglages)
+        profile?.let { saveProfile(it) }
+        saveLimits(limits)
+        addTransactions(transactions)
+        saveCraSnapshots(snapshots)
+        saveSettings(settings)
     }
 }
