@@ -45,7 +45,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -63,8 +62,8 @@ import dev.celitracker.app.ui.composants.BandeauAlerte
 import dev.celitracker.app.ui.composants.ContenuLargeurLimitee
 import dev.celitracker.app.ui.composants.FORME_CARTE
 import dev.celitracker.app.ui.composants.GrilleTuiles
-import dev.celitracker.app.ui.composants.LARGEUR_MAX_CONTENU_DEUX_COLONNES
 import dev.celitracker.app.ui.composants.PastilleCompte
+import dev.celitracker.app.ui.composants.ecranLarge
 import dev.celitracker.app.ui.format.formatDate
 import dev.celitracker.app.ui.format.formatMontant
 import dev.celitracker.app.ui.theme.chiffres
@@ -96,7 +95,7 @@ fun AccueilScreen(
             TopAppBar(title = { Text(stringResource(R.string.app_name)) })
         },
     ) { innerPadding ->
-        ContenuLargeurLimitee(modifier = Modifier.padding(innerPadding), largeurMax = LARGEUR_MAX_CONTENU_DEUX_COLONNES) {
+        ContenuLargeurLimitee(modifier = Modifier.padding(innerPadding)) {
             AccueilContenu(
                 etat = etat,
                 onOuvrirDetail = onOuvrirDetail,
@@ -187,11 +186,9 @@ fun AccueilContenu(
         }
     }
 
-    // A partir de sw600dp (le seuil tablette standard d'Android), les deux
-    // comptes cote a cote profitent de la largeur plutot que d'empiler deux
-    // cartes etroites au-dessus d'un grand vide.
-    val ecranLarge = LocalConfiguration.current.screenWidthDp >= SEUIL_LARGEUR_DEUX_COLONNES_DP
-    if (ecranLarge) {
+    // Sur un ecran large, les deux comptes cote a cote profitent de la largeur
+    // plutot que d'empiler deux cartes etroites au-dessus d'un grand vide.
+    if (ecranLarge()) {
         Row(
             modifier = modifier
                 .fillMaxWidth()
@@ -215,8 +212,6 @@ fun AccueilContenu(
         }
     }
 }
-
-private const val SEUIL_LARGEUR_DEUX_COLONNES_DP = 600
 
 /** 80 % previent sur fond neutre; 95 % et plus passe a la couleur d'erreur. */
 @Composable

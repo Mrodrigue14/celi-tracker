@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.North
 import androidx.compose.material.icons.filled.South
 import androidx.compose.material.icons.filled.Warning
@@ -42,6 +43,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -65,6 +67,7 @@ import dev.celitracker.app.ui.composants.ChampDate
 import dev.celitracker.app.ui.composants.ChampMontant
 import dev.celitracker.app.ui.composants.ContenuLargeurLimitee
 import dev.celitracker.app.ui.composants.PastilleCompte
+import dev.celitracker.app.ui.composants.ecranLarge
 import dev.celitracker.app.ui.format.formatDate
 import dev.celitracker.app.ui.format.formatMontant
 import dev.celitracker.app.ui.texte.libelle
@@ -84,6 +87,7 @@ fun JournalScreen() {
     val etat by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     val liste = rememberLazyListState()
+    val deuxVolets = ecranLarge()
 
     // Le message est un imperatif joue une fois, pas un etat durable: il part
     // dans un snackbar et le ViewModel l'oublie ensuite.
@@ -119,13 +123,33 @@ fun JournalScreen() {
         },
     ) { innerPadding ->
         ContenuLargeurLimitee(modifier = Modifier.padding(innerPadding)) {
-            JournalContenu(
-                etat = etat,
-                onOuvrirTransaction = viewModel::ouvrirModification,
-                onAjouter = viewModel::ouvrirNouvelle,
-                modifier = Modifier.fillMaxSize(),
-                liste = liste,
-            )
+            val journal: @Composable (Modifier) -> Unit = { modifierJournal ->
+                JournalContenu(
+                    etat = etat,
+                    onOuvrirTransaction = viewModel::ouvrirModification,
+                    onAjouter = viewModel::ouvrirNouvelle,
+                    modifier = modifierJournal,
+                    liste = liste,
+                )
+            }
+            if (deuxVolets) {
+                Row(modifier = Modifier.fillMaxSize()) {
+                    journal(Modifier.weight(1f))
+                    VerticalDivider()
+                    VoletTransaction(
+                        formulaire = etat.formulaire,
+                        onDate = viewModel::modifierDate,
+                        onType = viewModel::modifierType,
+                        onMontant = viewModel::modifierMontant,
+                        onEnregistrer = viewModel::enregistrer,
+                        onSupprimer = viewModel::supprimer,
+                        onFermer = viewModel::fermerFormulaire,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            } else {
+                journal(Modifier.fillMaxSize())
+            }
         }
     }
 
@@ -139,16 +163,20 @@ fun JournalScreen() {
         viewModel.anneeCibleeAtteinte()
     }
 
-    etat.formulaire?.let { formulaire ->
-        FeuilleTransaction(
-            formulaire = formulaire,
-            onDate = viewModel::modifierDate,
-            onType = viewModel::modifierType,
-            onMontant = viewModel::modifierMontant,
-            onEnregistrer = viewModel::enregistrer,
-            onSupprimer = viewModel::supprimer,
-            onFermer = viewModel::fermerFormulaire,
-        )
+    // En deux volets, le formulaire est deja a droite: une feuille modale
+    // par-dessus recouvrirait la liste pour rien.
+    if (!deuxVolets) {
+        etat.formulaire?.let { formulaire ->
+            FeuilleTransaction(
+                formulaire = formulaire,
+                onDate = viewModel::modifierDate,
+                onType = viewModel::modifierType,
+                onMontant = viewModel::modifierMontant,
+                onEnregistrer = viewModel::enregistrer,
+                onSupprimer = viewModel::supprimer,
+                onFermer = viewModel::fermerFormulaire,
+            )
+        }
     }
 }
 
@@ -334,42 +362,138 @@ private fun FeuilleTransaction(
                 if (formulaire.estNouvelle) stringResource(R.string.journal_nouvelle) else stringResource(R.string.journal_modifier),
                 style = MaterialTheme.typography.titleLarge,
             )
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                TypeTx.entries.forEachIndexed { index, type ->
-                    SegmentedButton(
-                        selected = formulaire.type == type,
-                        onClick = { onType(type) },
-                        shape = SegmentedButtonDefaults.itemShape(index, TypeTx.entries.size),
-                    ) {
-                        Text(if (type == TypeTx.DEPOT) stringResource(R.string.type_depot) else stringResource(R.string.type_retrait))
-                    }
-                }
-            }
-            ChampMontant(
-                valeur = formulaire.montant,
-                onValeur = onMontant,
-                etiquette = stringResource(R.string.journal_montant),
-                estErreur = formulaire.montant.isNotEmpty() && formulaire.montantValide == null,
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.fillMaxWidth(),
+            ChampsTransaction(
+                formulaire = formulaire,
+                onDate = onDate,
+                onType = onType,
+                onMontant = onMontant,
+                onEnregistrer = onEnregistrer,
+                onSupprimer = onSupprimer,
             )
-            ChampDate(date = formulaire.date, onDate = onDate, etiquette = stringResource(R.string.journal_date))
-            formulaire.avertissement?.let { BandeauAlerte(it.resoudre(), Icons.Filled.Warning) }
-            Button(
-                onClick = onEnregistrer,
-                enabled = formulaire.valide,
-                modifier = Modifier.fillMaxWidth(),
+        }
+    }
+}
+
+/**
+ * Volet de droite des ecrans larges: le formulaire s'ouvre a cote de la liste,
+ * qui reste lisible et cliquable pendant la saisie. Sans transaction ouverte,
+ * le volet dit quoi faire plutot que de rester blanc.
+ */
+@Composable
+private fun VoletTransaction(
+    formulaire: FormulaireTransaction?,
+    onDate: (String) -> Unit,
+    onType: (TypeTx) -> Unit,
+    onMontant: (String) -> Unit,
+    onEnregistrer: () -> Unit,
+    onSupprimer: () -> Unit,
+    onFermer: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (formulaire == null) {
+        VoletSansTransaction(modifier)
+        return
+    }
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp)
+            .padding(top = 16.dp)
+            // Le bouton flottant « Ajouter » plane sur ce volet: de quoi faire
+            // remonter le dernier bouton au-dessus de lui.
+            .padding(bottom = 88.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                if (formulaire.estNouvelle) stringResource(R.string.journal_nouvelle) else stringResource(R.string.journal_modifier),
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.titleLarge,
+            )
+            IconButton(onClick = onFermer) {
+                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.action_annuler))
+            }
+        }
+        ChampsTransaction(
+            formulaire = formulaire,
+            onDate = onDate,
+            onType = onType,
+            onMontant = onMontant,
+            onEnregistrer = onEnregistrer,
+            onSupprimer = onSupprimer,
+        )
+    }
+}
+
+@Composable
+private fun VoletSansTransaction(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        PastilleCompte(
+            icone = Icons.AutoMirrored.Filled.List,
+            fond = MaterialTheme.colorScheme.surfaceVariant,
+            teinte = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            stringResource(R.string.journal_volet_vide),
+            modifier = Modifier.padding(top = 16.dp),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+/** Les memes champs, que le formulaire s'ouvre en feuille ou dans un volet. */
+@Composable
+private fun ChampsTransaction(
+    formulaire: FormulaireTransaction,
+    onDate: (String) -> Unit,
+    onType: (TypeTx) -> Unit,
+    onMontant: (String) -> Unit,
+    onEnregistrer: () -> Unit,
+    onSupprimer: () -> Unit,
+) {
+    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+        TypeTx.entries.forEachIndexed { index, type ->
+            SegmentedButton(
+                selected = formulaire.type == type,
+                onClick = { onType(type) },
+                shape = SegmentedButtonDefaults.itemShape(index, TypeTx.entries.size),
             ) {
-                Text(if (formulaire.avertissement == null) stringResource(R.string.action_enregistrer) else stringResource(R.string.action_enregistrer_quand_meme))
+                Text(if (type == TypeTx.DEPOT) stringResource(R.string.type_depot) else stringResource(R.string.type_retrait))
             }
-            formulaire.erreur?.let {
-                Text(it.resoudre(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
-            }
-            if (!formulaire.estNouvelle) {
-                TextButton(onClick = onSupprimer, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.action_supprimer), color = MaterialTheme.colorScheme.error)
-                }
-            }
+        }
+    }
+    ChampMontant(
+        valeur = formulaire.montant,
+        onValeur = onMontant,
+        etiquette = stringResource(R.string.journal_montant),
+        estErreur = formulaire.montant.isNotEmpty() && formulaire.montantValide == null,
+        style = MaterialTheme.typography.headlineSmall,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    ChampDate(date = formulaire.date, onDate = onDate, etiquette = stringResource(R.string.journal_date))
+    formulaire.avertissement?.let { BandeauAlerte(it.resoudre(), Icons.Filled.Warning) }
+    Button(
+        onClick = onEnregistrer,
+        enabled = formulaire.valide,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(if (formulaire.avertissement == null) stringResource(R.string.action_enregistrer) else stringResource(R.string.action_enregistrer_quand_meme))
+    }
+    formulaire.erreur?.let {
+        Text(it.resoudre(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+    }
+    if (!formulaire.estNouvelle) {
+        TextButton(onClick = onSupprimer, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.action_supprimer), color = MaterialTheme.colorScheme.error)
         }
     }
 }
