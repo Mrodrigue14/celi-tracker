@@ -13,24 +13,12 @@ data class FhsaYear(
     val lifetimeLimitLeft: BigDecimal,
 )
 
-/**
- * FHSA engine. Deliberately kept separate from [TfsaEngine]: the two
- * regimes diverge on every axis, and reusing the TFSA's room-restoration
- * path for the FHSA is the most likely correctness bug in this project.
- *
- * The three limits are fixed by law and are NOT indexed: unlike the
- * TFSA, there is nothing to fetch from the CRA site.
- */
+/** Never shares room-restoration logic with [TfsaEngine]: an FHSA withdrawal restores nothing. */
 object FhsaEngine {
 
     val ANNUAL_LIMIT: BigDecimal = BigDecimal("8000").toMoney()
 
-    /**
-     * Carry-forward limit, PER YEAR OF ARRIVAL. The carry-forward does
-     * not accumulate: someone who never contributes sees their annual
-     * limit stabilize at 16000 (8000 + 8000), not grow by 8000 every
-     * year.
-     */
+    /** Caps each year's carry-forward instead of accumulating: never contributing levels annual room off at 16000. */
     val MAX_CARRY_FORWARD: BigDecimal = BigDecimal("8000").toMoney()
 
     val LIFETIME_LIMIT: BigDecimal = BigDecimal("40000").toMoney()
@@ -40,7 +28,7 @@ object FhsaEngine {
         transactions: List<Transaction>,
         upTo: Int,
     ): List<FhsaYear> {
-        // Accumulation starts when the account is OPENED, not at age 18.
+        // Room accrues from the opening date, not from age 18.
         val opening = profile.fhsaOpeningDate ?: return emptyList()
         val fhsaTransactions = transactions.filter { it.account == Account.FHSA }
 
@@ -54,15 +42,10 @@ object FhsaEngine {
 
             val lifetimeLeftBefore = (LIFETIME_LIMIT - cumulativeContributions)
                 .coerceAtLeast(BigDecimal.ZERO)
-            // The inner min() is redundant as long as carryForwardIn is
-            // already bounded upstream, but it makes the invariant explicit
-            // rather than implicit: the carry-forward does not accumulate,
-            // and that is the regime's trap.
             val usableCarryForward = minOf(carryForwardIn, MAX_CARRY_FORWARD)
             val yearRoom = minOf(ANNUAL_LIMIT + usableCarryForward, lifetimeLeftBefore)
 
-            // min(..., MAX_CARRY_FORWARD), NOT an accumulation: that is the
-            // whole difference with the TFSA and the RRSP.
+            // Capped, not accumulated, unlike the TFSA.
             val carryForwardOut = minOf(
                 (yearRoom - deposits).coerceAtLeast(BigDecimal.ZERO),
                 MAX_CARRY_FORWARD,
@@ -75,8 +58,7 @@ object FhsaEngine {
                 carryForwardIn = carryForwardIn.toMoney(),
                 yearRoom = yearRoom.toMoney(),
                 deposits = deposits.toMoney(),
-                // Recorded for balance display, but never enters any room
-                // calculation: an FHSA withdrawal never restores anything.
+                // Display only: an FHSA withdrawal never restores room.
                 withdrawals = withdrawals.toMoney(),
                 carryForwardOut = carryForwardOut.toMoney(),
                 lifetimeLimitLeft = (LIFETIME_LIMIT - cumulativeContributions)
@@ -88,20 +70,7 @@ object FhsaEngine {
         return result
     }
 
-    /**
-     * End of the maximum participation period: December 31 of the year
-     * in which the FIRST of the following three events occurs.
-     *
-     *   1. the 15th anniversary of the earliest FHSA's opening
-     *   2. the holder's 71st birthday
-     *   3. the year following the earliest qualifying withdrawal
-     *
-     * Branch 3 is NOT implemented: it requires distinguishing a
-     * qualifying withdrawal (a first home purchase) from an ordinary
-     * one, which the model does not track. The real deadline can
-     * therefore be earlier than the one returned here. This exclusion
-     * is deliberate and documented in the spec.
-     */
+    /** Ignores the "year after a qualifying withdrawal" end condition, which the model cannot detect: the real deadline may be earlier. */
     fun participationPeriodEnd(profile: Profile): LocalDate? {
         val opening = profile.fhsaOpeningDate ?: return null
         val fifteenthYear = opening.year + 15

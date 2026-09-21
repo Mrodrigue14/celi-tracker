@@ -8,15 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 
-/*
- * Application palette. Blue (trust) carries the TFSA and the app identity;
- * teal carries the FHSA, so each account is recognizable by its
- * color. Red is reserved for alerts: using it elsewhere would make it
- * lose its meaning.
- *
- * In dark mode, a surface's elevation reads from its brightness, not from its shadow,
- * which disappears against a near-black background.
- */
+// Blue is the TFSA and the app identity, teal the FHSA; red is reserved for alerts.
+// In dark mode, elevation reads from surface brightness because shadows vanish on near-black.
 
 private val LightColors = lightColorScheme(
     primary = Color(0xFF1E4FB8),
@@ -82,7 +75,6 @@ private val DarkColors = darkColorScheme(
     surfaceContainerHighest = Color(0xFF262C38),
 )
 
-/** Follows the phone by default; settings can force light or dark mode. */
 @Composable
 fun CeliTrackerTheme(mode: ThemeMode = ThemeMode.SYSTEM, content: @Composable () -> Unit) {
     val dark = when (mode) {
@@ -93,8 +85,5 @@ fun CeliTrackerTheme(mode: ThemeMode = ThemeMode.SYSTEM, content: @Composable ()
     MaterialTheme(colorScheme = if (dark) DarkColors else LightColors, content = content)
 }
 
-/**
- * Tabular figures from the regular typeface: amounts line up from one
- * row to the next without the typewriter look of a monospace font.
- */
+/** Keeps amounts aligned without the typewriter look of a monospace font. */
 fun TextStyle.tabularFigures(): TextStyle = copy(fontFeatureSettings = "tnum")

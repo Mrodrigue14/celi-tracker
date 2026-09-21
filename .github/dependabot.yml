@@ -10,10 +10,8 @@ updates:
         patterns: ["*"]
         update-types: ["minor", "patch"]
     ignore:
-      # Major upgrades of the toolchain (AGP, Kotlin, Gradle wrapper,
-      # Room, Compose) require a manual migration and break the build if
-      # applied blindly. Security advisories still show up in the
-      # Dependabot alerts under the Security tab.
+      # Major upgrades (AGP, Kotlin, Gradle wrapper, Room, Compose) need a manual migration.
+      # Security advisories still show up in the Dependabot alerts.
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
 

@@ -1,12 +1,6 @@
-# Kotlin style, read by ktlint as well as the IDE.
-#
-# `intellij_idea` rather than `ktlint_official`: measured on the existing code
-# before reformatting, ktlint_official required 1510 fixes,
-# android_studio 2277 and intellij_idea 993.
+# intellij_idea over ktlint_official (1510 fixes) and android_studio (2277): 993 fixes on the existing code.
 [*.{kt,kts}]
 ktlint_code_style = intellij_idea
 
-# @Composable functions are named in PascalCase: that's the Compose
-# convention, not a style violation.
 [app/src/**.{kt,kts}]
 ktlint_function_naming_ignore_when_annotated_with = Composable

@@ -1,5 +1,4 @@
-# The Gradle wrapper scripts must keep LF line endings: CI runs on Ubuntu and
-# a gradlew with CRLF is not executable there.
+# gradlew must keep LF: with CRLF it is not executable on the Ubuntu CI runner.
 * text=auto eol=lf
 *.jar binary
 *.bat text eol=crlf

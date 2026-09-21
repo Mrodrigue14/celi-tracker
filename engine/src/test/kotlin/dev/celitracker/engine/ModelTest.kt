@@ -17,15 +17,12 @@ class ModelTest {
             amount = BigDecimal("1234.56"),
         )
 
-        // If someone replaces BigDecimal with Double, this string equality
-        // breaks (1234.5600000000001) and the test goes red.
+        // A Double would print 1234.5600000000001.
         assertEquals("1234.56", tx.amount.toPlainString())
     }
 
     @Test
     fun `money normalizes the scale to two decimals`() {
-        // BigDecimal.equals compares the scale: without normalization,
-        // BigDecimal("6000") != BigDecimal("6000.00").
         assertEquals(BigDecimal("6000.00"), BigDecimal("6000").toMoney())
         assertEquals(BigDecimal("6000.00"), BigDecimal("6000.000").toMoney())
     }
@@ -58,7 +55,7 @@ class ModelTest {
 
     @Test
     fun `the eligibility year never precedes the creation of the TFSA`() {
-        // 18 years old in 1978, but the TFSA did not exist until 2009.
+        // 1960 + 18 = 1978, before 2009.
         assertEquals(2009, Profile(birthYear = 1960, fhsaOpeningDate = null).tfsaEligibilityYear)
     }
 

@@ -2,15 +2,7 @@ package dev.celitracker.engine
 
 import java.math.BigDecimal
 
-/**
- * TFSA contribution room for a given year.
- *
- * [limitMissing] flags a year whose limit is absent from the table or
- * not yet confirmed. Its limit is then treated as zero: the engine
- * never invents room, and the error leans on the safe side (room is
- * underestimated rather than overestimated, so there is never an
- * incentive to over-contribute).
- */
+/** A [limitMissing] year counts as zero: room is underestimated rather than overestimated. */
 data class TfsaYear(
     val year: Int,
     val limit: BigDecimal,
@@ -21,14 +13,7 @@ data class TfsaYear(
     val limitMissing: Boolean,
 )
 
-/**
- * TFSA engine. A pure function: same inputs, same outputs, no state
- * kept between calls.
- *
- * DO NOT merge with [FhsaEngine]. The two regimes diverge on every
- * axis, starting with the fact that a TFSA withdrawal restores room
- * while an FHSA withdrawal never does.
- */
+/** Never merged with [FhsaEngine]: only a TFSA withdrawal restores room. */
 object TfsaEngine {
 
     fun roomByYear(
@@ -52,13 +37,11 @@ object TfsaEngine {
             val deposits = sumTransactions(tfsaTransactions, year, TransactionType.DEPOSIT)
             val withdrawals = sumTransactions(tfsaTransactions, year, TransactionType.WITHDRAWAL)
 
-            // Withdrawals from the PREVIOUS year come back on January 1st;
-            // those from the current year do not count yet.
+            // Last year's withdrawals come back on January 1; this year's do not count yet.
             val startRoom = previousEndRoom + limit + previousWithdrawals
 
-            // No coerceAtLeast(ZERO) here: a negative balance IS the
-            // over-contribution and must carry over to the next year.
-            // The original spreadsheet used MAX(..., 0), which erased it.
+            // No coerceAtLeast(ZERO): a negative balance is the over-contribution and must carry over
+            // (the original spreadsheet's MAX(..., 0) erased it).
             val endRoom = startRoom - deposits
 
             result += TfsaYear(

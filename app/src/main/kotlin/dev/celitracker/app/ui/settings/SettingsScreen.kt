@@ -162,7 +162,6 @@ private suspend fun readFile(context: Context, uri: Uri): String = withContext(D
     stream.use { it.reader().readText() }
 }
 
-/** Import replaces everything: it requires confirmation, it doesn't trigger from a stray swipe. */
 @Composable
 private fun ImportConfirmation(onConfirm: () -> Unit, onCancel: () -> Unit) {
     AlertDialog(
@@ -197,9 +196,6 @@ fun SettingsContent(
     onImport: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Three groups of settings: what describes me, where the limits come
-    // from, and the copy of my data. On a wide screen, limits take the
-    // right pane and the other two stay on the left.
     val profileAndAppearance: @Composable (Modifier) -> Unit = { groupModifier ->
         Column(modifier = groupModifier.padding(horizontal = 16.dp)) {
             SectionTitle(stringResource(R.string.settings_profile), Modifier.padding(top = 24.dp, bottom = 12.dp))
@@ -281,9 +277,6 @@ fun SettingsContent(
                     Text(if (state.checkInProgress) stringResource(R.string.settings_reading) else stringResource(R.string.settings_check))
                 }
             }
-            // An escape hatch for when the current address stops working,
-            // for example after a site reorganization or an address
-            // entered wrong in the past.
             TextButton(
                 onClick = onRestoreCraPageUrl,
                 enabled = !state.checkInProgress,
@@ -367,7 +360,6 @@ fun SettingsContent(
     }
 }
 
-/** The choice is kept on the device: no need to redo it on every open. */
 @Composable
 private fun Appearance(mode: ThemeMode, onChoose: (ThemeMode) -> Unit) {
     SectionTitle(stringResource(R.string.settings_appearance), Modifier.padding(top = 24.dp, bottom = 12.dp))
@@ -388,13 +380,7 @@ private fun Appearance(mode: ThemeMode, onChoose: (ThemeMode) -> Unit) {
     )
 }
 
-/**
- * Android backup already copies the database to the Google account and
- * restores it on a device transfer. It has two blind spots: it doesn't
- * always trigger when the app is installed via APK, and its content
- * isn't inspectable. The JSON file, on the other hand, can be checked
- * BEFORE it's needed.
- */
+/** Android backup can miss APK installs and cannot be inspected: the JSON file can be checked beforehand. */
 @Composable
 private fun BackupAndRestore(onExport: () -> Unit, onImport: () -> Unit) {
     SectionTitle(stringResource(R.string.settings_backup), Modifier.padding(top = 24.dp, bottom = 12.dp))
@@ -412,10 +398,7 @@ private fun BackupAndRestore(onExport: () -> Unit, onImport: () -> Unit) {
     }
 }
 
-/**
- * Limits read from the CRA website stay inert until they're confirmed:
- * it's a proposal, not a change to room.
- */
+/** CRA limits stay out of the calculation until the user confirms them. */
 @Composable
 private fun CraProposals(
     proposals: List<AnnualLimit>,
@@ -451,7 +434,6 @@ private fun CraProposals(
     }
 }
 
-/** Visible failure, not a silent degraded mode: manual entry stays right below. */
 @Composable
 private fun CraReadFailure(reason: String) {
     Column(
@@ -481,11 +463,7 @@ private fun CraReadFailure(reason: String) {
     }
 }
 
-/**
- * Collapsed by default: they don't count toward room and would push the
- * rest of the settings far below thumb reach. The open/closed state is
- * purely visual, so it lives in the screen, not in the ViewModel.
- */
+/** The expanded state is visual only, so it stays out of the ViewModel. */
 @Composable
 private fun EarlierLimits(limits: List<AnnualLimit>) {
     if (limits.isEmpty()) return
@@ -505,7 +483,6 @@ private fun EarlierLimits(limits: List<AnnualLimit>) {
     }
 }
 
-/** Result of a calculation, so displayed rather than entered. */
 @Composable
 private fun TfsaEligibility(year: Int?, modifier: Modifier = Modifier) {
     Row(

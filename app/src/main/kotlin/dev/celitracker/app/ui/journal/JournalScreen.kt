@@ -92,8 +92,7 @@ fun JournalScreen() {
     val list = rememberLazyListState()
     val twoPanes = isWideScreen()
 
-    // The message is a one-shot imperative, not durable state: it goes
-    // into a snackbar and the ViewModel then forgets it.
+    // One-shot message: shown in a snackbar, then the ViewModel forgets it.
     val context = LocalContext.current
     LaunchedEffect(state.message) {
         val message = state.message ?: return@LaunchedEffect
@@ -114,9 +113,7 @@ fun JournalScreen() {
         },
         snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
-            // Empty journal: the empty state already has its own button, a
-            // second one would be redundant. The floating button comes back
-            // as soon as there's a first transaction.
+            // The empty state has its own button.
             if (state.transactions.isNotEmpty()) {
                 ExtendedFloatingActionButton(
                     text = { Text(stringResource(R.string.action_add)) },
@@ -158,8 +155,7 @@ fun JournalScreen() {
         }
     }
 
-    // Arriving from the detail screen: bring the requested year to the top
-    // of the list, once, as soon as its transactions are loaded.
+    // Waits for the transactions: the year's header does not exist before.
     LaunchedEffect(state.targetYear, state.transactions) {
         val year = state.targetYear ?: return@LaunchedEffect
         if (state.transactions.isEmpty()) return@LaunchedEffect
@@ -168,8 +164,7 @@ fun JournalScreen() {
         viewModel.targetYearReached()
     }
 
-    // In two-pane mode, the form is already on the right: a modal sheet
-    // on top would cover the list for nothing.
+    // Two-pane mode already shows the form on the right.
     if (!twoPanes) {
         state.form?.let { form ->
             TransactionSheet(
@@ -185,7 +180,6 @@ fun JournalScreen() {
     }
 }
 
-/** Both accounts within thumb's reach, instead of a separate journal per detail screen. */
 @Composable
 private fun AccountChoice(account: Account, onChange: (Account) -> Unit, modifier: Modifier = Modifier) {
     SegmentedChoice(
@@ -194,7 +188,6 @@ private fun AccountChoice(account: Account, onChange: (Account) -> Unit, modifie
         onChoose = onChange,
         label = { it.label() },
         modifier = modifier,
-        // Each account keeps its color, here as on the home screen.
         activeColor = {
             if (it == Account.TFSA) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
         },
@@ -231,10 +224,7 @@ fun JournalContent(
     }
 }
 
-/**
- * Position of [year]'s header in the list: each year occupies one header
- * row then one row per transaction, in display order.
- */
+/** Each year is one header row followed by one row per transaction. */
 internal fun headerPosition(transactions: List<Transaction>, year: Int): Int {
     var position = 0
     transactions.groupBy { it.date.year }.forEach { (group, rows) ->
@@ -283,8 +273,6 @@ private fun TransactionRow(transaction: Transaction, onClick: () -> Unit) {
                 description = if (isDeposit) stringResource(R.string.type_deposit) else stringResource(R.string.type_withdrawal),
             )
             Column(modifier = Modifier.weight(1f)) {
-                // Tabular figures: amounts line up from one row to the next,
-                // making the column readable at a glance.
                 Text(
                     transaction.amount.formatAmount(),
                     style = MaterialTheme.typography.titleMedium.tabularFigures(),
@@ -316,8 +304,7 @@ private fun TransactionSheet(
     onDelete: () -> Unit,
     onClose: () -> Unit,
 ) {
-    // Opened at full height: half expanded, the save button fell below
-    // the edge of the screen.
+    // Full height: half expanded, the save button fell below the screen edge.
     ModalBottomSheet(
         onDismissRequest = onClose,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -346,11 +333,6 @@ private fun TransactionSheet(
     }
 }
 
-/**
- * Right pane on wide screens: the form opens next to the list, which
- * stays readable and clickable during input. With no transaction open,
- * the pane says what to do instead of staying blank.
- */
 @Composable
 private fun TransactionPane(
     form: TransactionForm?,
@@ -372,8 +354,7 @@ private fun TransactionPane(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp)
             .padding(top = 16.dp)
-            // The floating "Add" button hovers over this pane: enough
-            // padding to lift the last button above it.
+            // Lifts the last button above the floating Add button.
             .padding(bottom = 88.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -398,7 +379,6 @@ private fun TransactionPane(
     }
 }
 
-/** The same fields, whether the form opens in a sheet or in a pane. */
 @Composable
 private fun TransactionFields(
     form: TransactionForm,

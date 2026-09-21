@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Window background before Compose draws: without it, the launch
-         flashes white on a phone in dark mode. -->
+    <!-- Shown before Compose draws: avoids a white flash at launch in dark mode. -->
     <style name="Theme.CeliTracker" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/window_background</item>
     </style>

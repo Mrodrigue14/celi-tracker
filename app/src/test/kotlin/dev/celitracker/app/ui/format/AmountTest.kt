@@ -40,7 +40,6 @@ class AmountTest {
     fun `the currency stays the Canadian dollar regardless of language`() {
         val amount = BigDecimal("1234.50")
 
-        // In American English, without a fixed currency, this would be US dollars.
         assertEquals("CA$1,234.50", amount.formatAmount(Locale.US))
         assertTrue(amount.formatAmount(Locale.CANADA_FRENCH).startsWith("1"))
         assertTrue(amount.formatAmount(Locale.CANADA_FRENCH).endsWith("$"))

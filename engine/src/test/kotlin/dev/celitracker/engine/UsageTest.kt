@@ -55,7 +55,7 @@ class UsageTest {
 
     @Test
     fun `TFSA usage comes from january 1 room and the year's deposits`() {
-        // Born in 2008: TFSA-eligible in 2026.
+        // 2008 + 18 = 2026.
         val profile = Profile(birthYear = 2008, fhsaOpeningDate = null)
         val limits = listOf(AnnualLimit(Account.TFSA, 2026, BigDecimal("7000.00")))
         val deposit = Transaction(Account.TFSA, LocalDate.of(2026, 3, 1), TransactionType.DEPOSIT, BigDecimal("6000.00"))

@@ -77,10 +77,7 @@ interface CeliTrackerDao {
     @Insert
     suspend fun saveCraSnapshots(snapshots: List<CraSnapshotEntity>)
 
-    /**
-     * Clears and refills every table in a single transaction: used only by
-     * the JSON import, which replaces the whole content and never merges.
-     */
+    /** One transaction, so a failed import never leaves a half-emptied database. */
     @Transaction
     suspend fun replaceEverything(
         profile: ProfileEntity?,

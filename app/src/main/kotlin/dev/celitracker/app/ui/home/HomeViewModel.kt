@@ -18,11 +18,7 @@ class HomeViewModel(private val repository: Repository) : ViewModel() {
     private val _uiState = MutableStateFlow(emptyState().copy(loaded = false))
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    /**
-     * Called on every backStackEntry on the screen (not only when the
-     * ViewModel is created): the profile or limits may have changed in
-     * settings since the last visit, and nothing is cached here.
-     */
+    /** Called on every back stack entry, not only on creation: settings may have changed the profile or limits. */
     fun load() {
         viewModelScope.launch {
             val profile = repository.profile()

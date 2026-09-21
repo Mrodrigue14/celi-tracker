@@ -6,18 +6,14 @@ import dev.celitracker.engine.TransactionType
 import java.math.BigDecimal
 import java.time.LocalDate
 
-/** Fields as String for the same reason as SettingsUiState: keep partial input. */
+/** Fields are Strings so partial input survives each keystroke. */
 data class TransactionForm(
     val id: Long = 0,
     val date: String = "",
     val type: TransactionType = TransactionType.DEPOSIT,
     val amount: String = "",
     val error: UiText? = null,
-    /**
-     * Set when saving this transaction would push room usage to 95% or
-     * more. The first tap on Save shows it, the second tap saves anyway:
-     * over-contributing is allowed, but never by accident.
-     */
+    /** Shown on the first Save tap when usage reaches 95%; a second tap saves anyway. */
     val warning: UiText? = null,
 ) {
     val isNew: Boolean get() = id == 0L

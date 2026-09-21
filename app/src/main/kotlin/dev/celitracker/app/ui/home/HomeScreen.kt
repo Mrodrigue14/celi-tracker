@@ -108,10 +108,6 @@ fun HomeScreen(
     }
 }
 
-/**
- * Pure: receives state and lambdas, never the ViewModel. Previewable without
- * an Android dependency.
- */
 @Composable
 fun HomeContent(
     state: HomeUiState,
@@ -157,8 +153,7 @@ fun HomeContent(
             if (state.tfsaCurrentYear?.limitMissing == true) {
                 AlertBanner(stringResource(R.string.alert_limit_unconfirmed), Icons.Filled.Info)
             }
-            // The penalty computed to the month already fully captures an overcontribution:
-            // the usage banner is added only when there isn't one already.
+            // The monthly penalty already covers an overcontribution, so no usage banner then.
             val excess = state.currentTfsaExcess
             if (excess != null) {
                 AlertBanner(stringResource(R.string.alert_overcontribution, excess.penalty.formatAmount()), Icons.Filled.Warning)
@@ -196,8 +191,6 @@ fun HomeContent(
         }
     }
 
-    // On a wide screen, the two accounts side by side make use of the width
-    // instead of stacking two narrow cards above a lot of empty space.
     if (isWideScreen()) {
         Row(
             modifier = modifier
@@ -223,7 +216,6 @@ fun HomeContent(
     }
 }
 
-/** 80% warns on a neutral background color; 95% and above switches to the error color. */
 @Composable
 private fun UsageAlert(usage: Usage?, year: Int) {
     val u = usage ?: return
@@ -248,7 +240,6 @@ private fun UsageAlert(usage: Usage?, year: Int) {
     }
 }
 
-/** No account, so no card full of dashes: an invitation to add one. */
 @Composable
 private fun NoFhsa(onOpenSettings: () -> Unit, modifier: Modifier = Modifier) {
     Row(
@@ -282,11 +273,6 @@ private fun NoFhsa(onOpenSettings: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * One card per account: a strip of its color on top, the amount that matters
- * shown large, the usage ring beside it, secondary values as tiles.
- * [alerts] comes last: it only appears when there's something to say.
- */
 @Composable
 private fun AccountCard(
     name: String,
@@ -339,8 +325,6 @@ private fun AccountCard(
             }
             TileGrid(tiles)
             alerts()
-            // The two most frequent actions, visible on the card rather
-            // than hidden behind the detail screen.
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 FilledTonalButton(
                     onClick = onAdd,

@@ -6,12 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.setMain
 
-/**
- * Sets `Dispatchers.Main` once for the whole test JVM, and never
- * resets it. Each class used to reset it at the end, while
- * coroutines from another class were still running on Room's real IO
- * dispatcher: tests then failed at random, depending on execution order.
- */
+/** Never reset: a per-class reset raced with coroutines from other classes still running on Room's IO dispatcher. */
 object TestMainDispatcher {
     private val dispatcher = UnconfinedTestDispatcher()
 

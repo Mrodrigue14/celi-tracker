@@ -29,14 +29,7 @@ abstract class CeliTrackerDatabase : RoomDatabase() {
     class DropEligibilityYearColumn : AutoMigrationSpec
 }
 
-/**
- * Applies the shared configuration (bundled SQLite driver, coroutine context
- * for queries) to a [builder] already created by the caller with the
- * `Room.databaseBuilder` overload for its platform, then builds the database.
- * This way `:data` never references any `Room.databaseBuilder` overload
- * itself: it is up to each consumer (JVM or Android) to create the builder
- * with its own.
- */
+/** The caller creates [builder] with its platform's `Room.databaseBuilder` overload, so `:data` references none. */
 fun configureDatabase(builder: RoomDatabase.Builder<CeliTrackerDatabase>): CeliTrackerDatabase = builder
     .setDriver(BundledSQLiteDriver())
     .setQueryCoroutineContext(Dispatchers.IO)

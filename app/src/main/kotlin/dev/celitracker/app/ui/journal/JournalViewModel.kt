@@ -23,10 +23,6 @@ import kotlinx.coroutines.launch
 import java.math.RoundingMode
 import java.time.LocalDate
 
-/**
- * [openAdd] comes from the "Add" button on the home screen: the screen
- * opens directly on the input sheet instead of requiring a second gesture.
- */
 class JournalViewModel(
     private val repository: Repository,
     initialAccount: Account,
@@ -51,7 +47,6 @@ class JournalViewModel(
         }
     }
 
-    /** Switching from TFSA to FHSA stays on the same screen: it's a filter, not a destination. */
     fun changeAccount(choice: Account) {
         if (choice == account) return
         _uiState.update { it.copy(account = choice, transactions = emptyList(), form = null) }
@@ -74,7 +69,7 @@ class JournalViewModel(
         )
     }
 
-    /** The screen has scrolled to the requested year: don't return to it on every reload. */
+    /** Consumed once: otherwise every reload scrolls back to the year. */
     fun targetYearReached() = _uiState.update { it.copy(targetYear = null) }
 
     fun messageShown() = _uiState.update { it.copy(message = null) }
@@ -108,11 +103,7 @@ class JournalViewModel(
         }
     }
 
-    /**
-     * Usage for [transaction]'s year, including this transaction itself
-     * (replacing its previous version if this is an edit). Used both for
-     * the warning before saving and for the message afterward.
-     */
+    /** Includes [transaction] itself, replacing its previous version on edit. */
     private suspend fun usageAfter(transaction: Transaction): Usage? {
         val profile = repository.profile() ?: return null
         val transactions = repository.transactions().filter { it.id != transaction.id } + transaction
@@ -123,10 +114,7 @@ class JournalViewModel(
         }
     }
 
-    /**
-     * Text to confirm if this deposit pushes the year's usage to 95% or
-     * beyond. A withdrawal never asks for it: it doesn't consume any room.
-     */
+    /** Withdrawals never warn: they consume no room. */
     private fun warning(transaction: Transaction, after: Usage?): UiText? {
         if (transaction.type != TransactionType.DEPOSIT || after == null) return null
         val year = transaction.date.year
@@ -158,8 +146,7 @@ class JournalViewModel(
         _uiState.update { it.copy(transactions = transactions, form = null, message = message) }
     }
 
-    // Any input clears the previous error and warning: they applied to
-    // the old value.
+    // The old error and warning applied to the previous input.
     private fun updateForm(modification: TransactionForm.() -> TransactionForm) = _uiState.update { state ->
         state.copy(form = state.form?.modification()?.copy(error = null, warning = null))
     }

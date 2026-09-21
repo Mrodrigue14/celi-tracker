@@ -22,7 +22,6 @@ class ThousandsGrouperTest {
     fun `an original position becomes its position after grouping`() {
         val grouper = ThousandsGrouper("1234567", ',')
 
-        // "1,234,567": positions of the original digits 1 2 3 4 5 6 7 -> 0 2 3 4 6 7 8, ending at 9.
         assertEquals(0, grouper.toGrouped(0))
         assertEquals(2, grouper.toGrouped(1))
         assertEquals(6, grouper.toGrouped(4))
@@ -33,9 +32,6 @@ class ThousandsGrouperTest {
     fun `a cursor placed on a separator falls back onto the last digit already typed`() {
         val grouper = ThousandsGrouper("1234567", ',')
 
-        // Position 1 is the comma itself ("1,234,567"[1] == ','), between
-        // the first digit and the second: it falls back before the second
-        // rather than jumping the cursor ahead of a digit not yet typed.
         assertEquals(0, grouper.toOriginal(1))
     }
 

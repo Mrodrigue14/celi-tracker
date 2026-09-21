@@ -1,6 +1,4 @@
-# --- Personal data: never commit ---
-# The contribution log is nominative financial data. It lives on the phone
-# and in backups, never in the repository.
+# The contribution log is nominative financial data: it lives on the phone and in backups.
 *.db
 *.db-shm
 *.db-wal
@@ -8,7 +6,6 @@ celi-export*.json
 celiapp-export*.json
 /local-data/
 
-# --- Android / Gradle ---
 .gradle/
 build/
 local.properties
@@ -20,9 +17,8 @@ captures/
 .cxx/
 .kotlin/
 
-# --- IDE ---
 .idea/
 *.iml
 
-# Subagent workspace (scratch, never versioned)
+# Subagent scratch workspace
 /.superpowers/

@@ -45,19 +45,14 @@ import dev.celitracker.app.R
 import dev.celitracker.app.ui.theme.tabularFigures
 import kotlin.math.roundToInt
 
-/** Single corner radius for cards and tiles, for a consistent shape everywhere. */
 val CARD_SHAPE = RoundedCornerShape(20.dp)
 
 val TILE_SHAPE = RoundedCornerShape(14.dp)
 
-/**
- * Progress ring for the year's room. Past 100%, it switches to
- * the error color: an over-contribution is visible before it is read.
- */
+/** Turns to the error color past 100%: an over-contribution must show at a glance. */
 @Composable
 fun RoomRing(fraction: Float, color: Color, modifier: Modifier = Modifier) {
     val target = fraction.coerceIn(0f, 1f)
-    // The animation says "here is what changed" when the screen opens.
     val labelled by animateFloatAsState(target, animationSpec = tween(700), label = "ring")
     val exceeded = fraction > 1f
     val stroke = if (exceeded) MaterialTheme.colorScheme.error else color
@@ -87,7 +82,6 @@ fun RoomRing(fraction: Float, color: Color, modifier: Modifier = Modifier) {
     }
 }
 
-/** Round tinted badge carrying an icon. */
 @Composable
 fun IconBadge(icon: ImageVector, backgroundColor: Color, tint: Color, description: String? = null) {
     Box(
@@ -100,18 +94,12 @@ fun IconBadge(icon: ImageVector, backgroundColor: Color, tint: Color, descriptio
     }
 }
 
-/** Section title, in the screen's accent color. */
 @Composable
 fun SectionTitle(text: String, modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.primary) {
     Text(text, modifier = modifier, style = MaterialTheme.typography.labelLarge, color = color)
 }
 
-/**
- * A secondary value on the card: the number first, its label below.
- * `fillMaxHeight` on the Column: a caller that stretches it (TileGrid, so
- * that a label spanning two lines does not crush its neighbor) needs the background
- * to follow, not just the text.
- */
+/** `fillMaxHeight` keeps the background full height when a taller neighbor stretches the tile. */
 @Composable
 fun Tile(value: String, label: String, modifier: Modifier = Modifier) {
     Column(
@@ -126,13 +114,7 @@ fun Tile(value: String, label: String, modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * Grid of tiles in two columns; a lone tile on its row keeps its
- * half-width. `IntrinsicSize.Min` on each row: a label that
- * overflows onto two lines (a long date in English, for example) grows
- * BOTH tiles on the row to the same height rather than making one
- * taller than the other.
- */
+/** `IntrinsicSize.Min` so a label wrapping to two lines grows both tiles of its row to the same height. */
 @Composable
 fun TileGrid(tiles: List<Pair<String, String>>, modifier: Modifier = Modifier) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -147,28 +129,16 @@ fun TileGrid(tiles: List<Pair<String, String>>, modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * Material 3 "expanded" threshold. Below it, two side-by-side panes would each
- * be narrower than a phone: screens stay in a single pane.
- */
+/** Material 3 "expanded" width class: below it, two panes would each be narrower than a phone. */
 private const val TWO_PANE_THRESHOLD_DP = 840
 
-/** True when the screen has room to place two panes side by side. */
 @Composable
 fun isWideScreen(): Boolean = LocalConfiguration.current.screenWidthDp >= TWO_PANE_THRESHOLD_DP
 
-/** Single pane: beyond this, lines stretch out long enough to hurt readability. */
 private val MAX_WIDTH_ONE_PANE = 720.dp
 
-/** Two panes: each then keeps a comfortable width. */
 private val MAX_WIDTH_TWO_PANES = 1100.dp
 
-/**
- * Caps the width of a screen's main content and centers it. On a
- * phone, the limit never kicks in (no phone reaches 720 dp wide).
- * On a tablet, it leaves room for the two panes without stretching
- * the cards from edge to edge on a very large screen.
- */
 @Composable
 fun WidthLimitedContent(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
     val maxWidth = if (isWideScreen()) MAX_WIDTH_TWO_PANES else MAX_WIDTH_ONE_PANE
@@ -177,10 +147,6 @@ fun WidthLimitedContent(modifier: Modifier = Modifier, content: @Composable BoxS
     }
 }
 
-/**
- * The two panes of a wide screen, separated by a divider. Each screen decides
- * its own single-pane layout: they have nothing in common.
- */
 @Composable
 fun TwoPanes(
     left: @Composable (Modifier) -> Unit,
@@ -195,7 +161,6 @@ fun TwoPanes(
     }
 }
 
-/** A screen or pane with no content: what is missing and, if applicable, the action to fix it. */
 @Composable
 fun EmptyState(
     icon: ImageVector,
@@ -221,7 +186,6 @@ fun EmptyState(
     }
 }
 
-/** An exclusive choice among a few options, as full-width segmented buttons. */
 @Composable
 fun <T> SegmentedChoice(
     options: List<T>,
@@ -245,10 +209,7 @@ fun <T> SegmentedChoice(
     }
 }
 
-/**
- * Alert banner. [severe] true takes the error color, reserved for what
- * costs money; false is a plain warning on a neutral background.
- */
+/** The error color is reserved for what costs money; [severe] false gives a plain warning. */
 @Composable
 fun AlertBanner(text: String, icon: ImageVector, modifier: Modifier = Modifier, severe: Boolean = true) {
     val backgroundColor = if (severe) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.tertiaryContainer

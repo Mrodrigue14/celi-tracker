@@ -9,32 +9,21 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
-/** At most one check per month: the page only changes once a year. */
+/** The page only changes once a year. */
 private const val DAYS_BETWEEN_CHECKS = 30L
 
 sealed interface CraCheckResult {
-    /** Limit parsed and saved as a proposal, awaiting confirmation. */
     data class Proposed(val limit: AnnualLimit) : CraCheckResult
 
-    /** The needed limits are already known, or the last check is too recent. */
     data object NotNeeded : CraCheckResult
 
-    /** Page unreachable or unreadable: the caller must show the manual fallback. */
     data class Failed(val reason: CraFailureReason) : CraCheckResult
 }
 
-/**
- * Reads the CRA page and proposes the missing TFSA limit, without ever
- * modifying contribution room: the proposal is saved with `confirmed = false`
- * and stays inert until the user has validated it.
- *
- * [download] is injected so the rule and the write path can be tested
- * without network access; the Android app supplies the real download.
- */
+/** The proposal is saved with `confirmed = false` and stays inert until the user validates it. */
 suspend fun Repository.checkCraLimits(
     download: suspend (String) -> String,
     today: LocalDate,
-    /** An explicit request from the user bypasses the once-a-month limit. */
     ignoreFrequency: Boolean = false,
 ): CraCheckResult {
     val tfsaLimits = limits().filter { it.account == Account.TFSA }
@@ -48,8 +37,7 @@ suspend fun Repository.checkCraLimits(
     }
     if (settings.craPageUrl.isBlank()) return CraCheckResult.Failed(CraFailureReason.MISSING_ADDRESS)
 
-    // The date is recorded even when the read fails: otherwise a broken page
-    // would be re-downloaded every time the app opens.
+    // Recorded even when the read fails, or a broken page is re-downloaded at every launch.
     val page = try {
         download(settings.craPageUrl)
     } catch (e: Exception) {
@@ -74,11 +62,7 @@ sealed interface CraAddressResult {
     data class Rejected(val reason: AddressRejectionReason) : CraAddressResult
 }
 
-/**
- * Only saves a new address after trying it: its page must yield the TFSA
- * limit. Otherwise the address already in place, the last one that worked,
- * stays as is, and the link to the CRA is never lost.
- */
+/** The new address is saved only if its page yields the TFSA limit, so the last working one is never lost. */
 suspend fun Repository.changeCraPageUrl(url: String, download: suspend (String) -> String): CraAddressResult {
     if (!isValidCraPageUrl(url)) {
         return CraAddressResult.Rejected(AddressRejectionReason.OUTSIDE_CANADA)

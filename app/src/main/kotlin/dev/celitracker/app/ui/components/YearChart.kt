@@ -47,24 +47,15 @@ import kotlin.math.floor
 import kotlin.math.log10
 import kotlin.math.pow
 
-/** Beyond this, a label per bar would overflow: only every other one is kept. */
 private const val MAX_BARS_ALL_LABELLED = 8
 
 private val CHART_HEIGHT = 150.dp
 
 private val AXIS_WIDTH = 44.dp
 
-/** Space left above the tallest bar to write its value. */
 private val TOP_MARGIN = 20.dp
 
-/**
- * One bar per year, the most recent one highlighted and labeled with its value.
- * Three reference lines (zero, half, axisMax) and their rounded amounts give a sense of
- * scale without cluttering the chart: the exact amounts are on the cards.
- *
- * Amounts only become floating-point numbers to place the bars
- * and reference lines, never for a room calculation.
- */
+/** Amounts become Doubles only to place bars and lines, never for a room calculation. */
 @Composable
 fun YearChart(
     values: List<Pair<Int, BigDecimal>>,
@@ -88,7 +79,6 @@ fun YearChart(
 
     Column(modifier = modifier.semantics { contentDescription = summary }) {
         Row {
-            // Axis: the reference amounts, aligned with their lines.
             Canvas(modifier = Modifier.width(AXIS_WIDTH).height(CHART_HEIGHT)) {
                 val top = TOP_MARGIN.toPx()
                 listOf(1.0, 0.5, 0.0).forEach { part ->
@@ -136,8 +126,7 @@ fun YearChart(
                         }
                     }
                 }
-                // A touchable zone per bar, spanning the full height: a small bar
-                // must stay as easy to tap as a large one.
+                // Full-height tap zone per bar so a small bar is as easy to tap as a large one.
                 if (onYearClick != null) {
                     Row(modifier = Modifier.matchParentSize()) {
                         values.forEach { (year, amount) ->
@@ -170,11 +159,7 @@ fun YearChart(
     }
 }
 
-/**
- * Top of the axis: the highest amount rounded up to the next step
- * of a power of ten. Tight steps avoid a large gap above the
- * bars, and each one splits in two so the middle reference stays a round number.
- */
+/** Tight steps avoid a large gap above the bars; each halves to a round middle reference. */
 private val STEPS = listOf(1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0)
 
 internal fun roundedAxisMax(maximum: Double): Double {
@@ -184,10 +169,6 @@ internal fun roundedAxisMax(maximum: Double): Double {
     return factor * power
 }
 
-/**
- * A year of detail: the year's result highlighted, what produced it
- * in tiles below.
- */
 @Composable
 fun YearCard(
     year: Int,
@@ -197,7 +178,7 @@ fun YearCard(
     modifier: Modifier = Modifier,
     inProgress: Boolean = false,
     note: String? = null,
-    /** `null` when the year has no transaction: no link to an empty list. */
+    /** Null when the year has no transaction, so no link to an empty list. */
     onSeeTransactions: (() -> Unit)? = null,
 ) {
     Column(

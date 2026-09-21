@@ -10,11 +10,6 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 
-/**
- * Room entities. They never leave this module: [dev.celitracker.data.Repository]
- * only exposes the types from `:engine`.
- */
-
 @Entity(tableName = "profil")
 data class ProfileEntity(
     @PrimaryKey val id: Int = 0,
@@ -54,10 +49,7 @@ data class SettingsEntity(
     @ColumnInfo(name = "dateDerniereVerification") val lastCheckDate: Instant?,
 )
 
-/**
- * Conversions to TEXT: SQLite has no exact decimal type, and a REAL would
- * reintroduce the floating-point drift that BigDecimal eliminates.
- */
+/** Amounts are TEXT, never REAL: SQLite has no exact decimal type and a REAL brings back floating-point drift. */
 class Converters {
     @TypeConverter
     fun accountToText(account: Account): String = account.storedValue()
@@ -96,11 +88,7 @@ class Converters {
     fun textToInstant(text: String?): Instant? = text?.let { Instant.parse(it) }
 }
 
-/**
- * Values written to the database and to backup files since the first version.
- * They are spelled out here so that renaming an enum constant in code never
- * changes what is stored.
- */
+/** Stored since the first version; spelled out so renaming an enum constant never changes them. */
 internal fun Account.storedValue(): String = when (this) {
     Account.TFSA -> "CELI"
     Account.FHSA -> "CELIAPP"

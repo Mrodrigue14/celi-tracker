@@ -5,7 +5,6 @@ import kotlin.test.assertEquals
 
 class ThemePreferenceTest {
 
-    /** Values already written on users' devices by earlier versions. */
     private val stored = mapOf(ThemeMode.SYSTEM to "SYSTEME", ThemeMode.LIGHT to "CLAIR", ThemeMode.DARK to "SOMBRE")
 
     @Test

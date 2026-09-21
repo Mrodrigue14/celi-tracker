@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  A shield (the tax shelter) and three rising bars (savings growing).
-  Everything fits within the 66 dp safe zone at the center of the adaptive icon.
--->
+<!-- Everything stays within the 66 dp safe zone at the center of the adaptive icon. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"

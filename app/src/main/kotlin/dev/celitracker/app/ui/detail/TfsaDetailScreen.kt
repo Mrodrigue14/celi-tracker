@@ -55,7 +55,6 @@ fun TfsaDetailScreen(onBack: () -> Unit, onSeeTransactions: (Int) -> Unit) {
     }
 }
 
-/** From most general to most detailed: the trend, then each year, most recent first. */
 @Composable
 fun TfsaDetailContent(state: TfsaDetailUiState, onSeeTransactions: (Int) -> Unit, modifier: Modifier = Modifier) {
     YearDetailList(
@@ -88,7 +87,6 @@ private fun TfsaYearCard(row: TfsaYear, inProgress: Boolean, onSeeTransactions: 
             row.deposits.formatAmount() to stringResource(R.string.detail_deposits),
             row.withdrawals.formatAmount() to stringResource(R.string.detail_withdrawals),
         ),
-        // A missing limit is counted as zero: the room is underestimated, not made up.
         note = if (row.limitMissing) stringResource(R.string.detail_limit_unconfirmed, row.year) else null,
     )
 }
