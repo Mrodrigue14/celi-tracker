@@ -17,12 +17,7 @@ import dev.celitracker.engine.Account
 import java.math.BigDecimal
 import java.time.LocalDate
 
-/**
- * A text with no language: a resource and its arguments. ViewModels
- * produce them, the screen puts it in the device's language at the
- * moment it is displayed. An amount, an account, or a date passes through as an argument and
- * is formatted at resolution time, in the same language as the sentence.
- */
+/** Resource plus arguments, resolved at display time so amounts and dates follow the sentence's language. */
 data class UiText(@StringRes val id: Int, val arguments: List<Any> = emptyList())
 
 fun uiText(@StringRes id: Int, vararg arguments: Any) = UiText(id, arguments.toList())

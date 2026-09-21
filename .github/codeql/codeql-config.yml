@@ -1,7 +1,4 @@
 name: "celi-tracker CodeQL config"
 
-# Full suite: security (security-extended) + code quality. Much broader
-# than the default query set -- this is the main lever for
-# strengthening the analysis coverage.
 queries:
   - uses: security-and-quality

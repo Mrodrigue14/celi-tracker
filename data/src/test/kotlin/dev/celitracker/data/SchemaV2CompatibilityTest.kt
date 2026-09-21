@@ -19,12 +19,7 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Pins the on-disk format that installed copies of the app already hold: table
- * and column names, stored enum values and the schema identity hash of version
- * 2. Renaming a Kotlin property or enum constant without keeping its stored
- * name fails here instead of on a user's phone.
- */
+/** Installed copies already hold this on-disk format: a drift must fail here, not on a user's phone. */
 class SchemaV2CompatibilityTest {
 
     private val file = File.createTempFile("celi-tracker-schema-v2", ".db").apply { delete() }
@@ -34,7 +29,7 @@ class SchemaV2CompatibilityTest {
         file.delete()
     }
 
-    /** The exact tables of `data/schemas/.../2.json`, filled the way version 2 wrote them. */
+    /** Tables copied from `data/schemas/.../2.json`. */
     private fun writeVersion2Database() {
         val connection = BundledSQLiteDriver().open(file.absolutePath)
         listOf(

@@ -4,15 +4,7 @@ import dev.celitracker.engine.Account
 import dev.celitracker.engine.AnnualLimit
 import dev.celitracker.engine.PUBLISHED_TFSA_LIMITS
 
-/**
- * Writes the TFSA limits published by the CRA that are still missing from
- * the database. A year already saved is never overwritten: a manual
- * correction remains the source of truth for the user.
- *
- * They are saved confirmed: they come from an official table transcribed
- * into the repository, not from an automatic read whose result still needs
- * validation.
- */
+/** Never overwrites a saved year (a manual correction wins). Seeded limits are confirmed: the table is official. */
 suspend fun Repository.seedPublishedLimits() {
     val knownYears = limits().filter { it.account == Account.TFSA }.map { it.year }.toSet()
     saveLimits(

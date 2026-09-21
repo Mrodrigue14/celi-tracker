@@ -24,17 +24,11 @@ class SettingsViewModelTest {
     private val fixture = TestRepository()
     private val repository = fixture.repository
 
-    /** Stubbed download: no test in this class touches the network. */
     private val craPage: suspend (String) -> String = {
         """<p>Le plafond de cotisation à un CELI <span class="nowrap">pour 2027</span> est de 7 500 $.</p>"""
     }
 
-    /**
-     * For tests that aren't about the CRA. Without this, the reading
-     * triggered when the ViewModel is constructed also writes to
-     * `message`, and a StateFlow only keeps the latest value: the
-     * message the test expects can disappear before it's seen.
-     */
+    /** The startup CRA reading also writes `message`, and a StateFlow keeps only the latest value. */
     private val offline: suspend (String) -> String = { throw java.io.IOException("offline") }
 
     companion object {
@@ -55,7 +49,6 @@ class SettingsViewModelTest {
         assertEquals(uiText(R.string.message_profile_saved), state.message)
         val profile = repository.profile()
         assertEquals(1995, profile?.birthYear)
-        // Derived from birth, never entered.
         assertEquals(2013, profile?.tfsaEligibilityYear)
     }
 
@@ -91,34 +84,33 @@ class SettingsViewModelTest {
     fun `the limit read from the CRA website awaits confirmation`() = runTest {
         val viewModel = SettingsViewModel(repository, craPage)
 
-        val state = viewModel.uiState.first { it.proposals.isNotEmpty() }
+        val state = viewModel.uiState.first { it.unconfirmedLimits.isNotEmpty() }
 
-        val proposed = state.proposals.single()
+        val proposed = state.unconfirmedLimits.single()
         assertEquals(2027, proposed.year)
         assertEquals(BigDecimal("7500.00"), proposed.amount)
-        // The proposal doesn't count as a limit in the table.
         assertTrue(state.confirmedLimits.isEmpty())
     }
 
     @Test
     fun `confirming a proposal makes it enter the table`() = runTest {
         val viewModel = SettingsViewModel(repository, craPage)
-        val proposed = viewModel.uiState.first { it.proposals.isNotEmpty() }.proposals.single()
+        val proposed = viewModel.uiState.first { it.unconfirmedLimits.isNotEmpty() }.unconfirmedLimits.single()
 
         viewModel.confirmProposal(proposed)
         val state = viewModel.uiState.first { it.confirmedLimits.isNotEmpty() }
 
         assertEquals(listOf(2027), state.confirmedLimits.map { it.year })
-        assertTrue(state.proposals.isEmpty())
+        assertTrue(state.unconfirmedLimits.isEmpty())
     }
 
     @Test
     fun `rejecting a proposal erases it`() = runTest {
         val viewModel = SettingsViewModel(repository, craPage)
-        val proposed = viewModel.uiState.first { it.proposals.isNotEmpty() }.proposals.single()
+        val proposed = viewModel.uiState.first { it.unconfirmedLimits.isNotEmpty() }.unconfirmedLimits.single()
 
         viewModel.rejectProposal(proposed)
-        val state = viewModel.uiState.first { it.proposals.isEmpty() }
+        val state = viewModel.uiState.first { it.unconfirmedLimits.isEmpty() }
 
         assertTrue(state.limits.isEmpty())
     }

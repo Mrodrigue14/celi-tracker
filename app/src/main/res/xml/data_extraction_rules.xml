@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  API 31 and above. Same scope as backup_rules.xml.
-
-  Device-to-device transfer stays local to the two phones and does not go
-  through any third-party service: it carries less risk than the cloud
-  backup while still covering the phone-replacement case.
-
-  An inclusion list is already a whitelist.
--->
+<!-- API 31 and above, same scope as backup_rules.xml. Device-to-device transfer never goes through a third party. -->
 <data-extraction-rules>
     <cloud-backup>
         <include domain="database" path="." />

@@ -17,10 +17,8 @@ inputs:
     required: false
     default: "true"
 
-# The internal actions are pinned to their commit SHA (tag in a comment):
-# without that, pinning THIS composite action would give no guarantee, since
-# it would pull mutable components. Dependabot updates the SHA + comment
-# automatically.
+# Pinned to commit SHAs (tag in the trailing comment): otherwise pinning this composite action
+# would still pull mutable components. Dependabot updates the SHA and the comment.
 runs:
   using: composite
   steps:

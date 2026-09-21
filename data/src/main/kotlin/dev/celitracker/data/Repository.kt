@@ -10,19 +10,11 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 
-/**
- * CRA page that states the current year's TFSA limit. A piece of data, not a
- * constant frozen in the calling code: a site reorganization is fixed in
- * settings, without a new version of the app.
- */
+/** Only a default: a site reorganization is fixed in settings, without a new app version. */
 const val DEFAULT_CRA_PAGE_URL =
     "https://www.canada.ca/fr/agence-revenu/services/impot/particuliers/sujets/" +
         "compte-epargne-libre-impot/cotiser/calculer-droits.html"
 
-/**
- * Only exposes types from `:engine`, never Room entities. No calculated
- * value is persisted: contribution room is recalculated on read by `:engine`.
- */
 class Repository(private val database: CeliTrackerDatabase) {
     private val dao get() = database.dao()
 
@@ -67,11 +59,7 @@ class Repository(private val database: CeliTrackerDatabase) {
         if (updatedRows != 1) rejectInput(InputRejectionReason.TRANSACTION_NOT_FOUND)
     }
 
-    /**
-     * Rejects inconsistent input here, not in the engine: a transaction
-     * earlier than the eligibility year would produce different results
-     * depending on which engine is consulted.
-     */
+    /** Rejected here, not in the engines: they would disagree on a transaction before eligibility. */
     private suspend fun validate(transaction: Transaction) {
         if (transaction.amount <= BigDecimal.ZERO) rejectInput(InputRejectionReason.NON_POSITIVE_AMOUNT)
         val profile = profile() ?: rejectInput(InputRejectionReason.MISSING_PROFILE)
@@ -110,18 +98,13 @@ class Repository(private val database: CeliTrackerDatabase) {
         dao.saveSettings(SettingsEntity(craPageUrl = settings.craPageUrl, lastCheckDate = settings.lastCheckDate))
     }
 
-    /**
-     * Writes only the check date, without re-reading or rewriting the
-     * address: an in-progress CRA read must not overwrite an address the
-     * user just changed.
-     */
+    /** Writes only the date: a CRA read in progress must not overwrite an address the user just changed. */
     suspend fun recordCraCheck(date: Instant) {
         if (dao.recordCraCheck(date) == 0) {
             dao.saveSettings(SettingsEntity(craPageUrl = settings().craPageUrl, lastCheckDate = date))
         }
     }
 
-    /** Reserved for `importJson`: replaces the entire content in one transaction. */
     internal suspend fun replaceEverything(
         profile: ProfileEntity?,
         limits: List<LimitEntity>,

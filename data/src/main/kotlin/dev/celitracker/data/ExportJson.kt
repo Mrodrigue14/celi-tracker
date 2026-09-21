@@ -12,20 +12,9 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 
-/**
- * JSON export/import for the database, driven by [Repository]. No calculated
- * value is exported: profile, limits, transactions, CRA snapshots and
- * settings, exactly as persisted, nothing more.
- */
-
 private const val EXPORT_VERSION = 2
 
-/**
- * Version 1 carried a TFSA eligibility year entered by hand, which is now
- * calculated from the birth year. A version 1 export stays readable: the
- * extra field is ignored rather than making an old backup unusable, which
- * would defeat the whole point of exporting.
- */
+/** Version 1 also carried the eligibility year, now computed; that field is ignored so old backups stay readable. */
 private val ACCEPTED_VERSIONS = setOf(1, EXPORT_VERSION)
 
 private val json = Json { ignoreUnknownKeys = true }
@@ -77,13 +66,7 @@ private data class ExportFile(
     @SerialName("reglages") val settings: SettingsJson,
 )
 
-/**
- * Serializes the database to JSON. Amounts are strings, never JSON numbers:
- * a JSON number passes through a `double` in most readers, which would
- * destroy [BigDecimal]'s precision. Collections are sorted by a stable key
- * so that, for the same content, two successive exports produce the same
- * string.
- */
+/** Amounts are strings, never JSON numbers: most readers go through a `double`. Sorted so equal content exports equal strings. */
 suspend fun Repository.exportJson(): String {
     val data = ExportFile(
         version = EXPORT_VERSION,
@@ -107,12 +90,7 @@ suspend fun Repository.exportJson(): String {
     return json.encodeToString(ExportFile.serializer(), data)
 }
 
-/**
- * Replaces the entire content of the database with that of the JSON, in a
- * single transaction: this is not a merge, the tables are cleared then
- * refilled. An import that fails - unknown version, malformed JSON - never
- * modifies the existing database.
- */
+/** Replaces everything in one transaction, never merges; a failed import leaves the database untouched. */
 suspend fun Repository.importJson(content: String) {
     val data = try {
         val version = json.parseToJsonElement(content).jsonObject["version"]?.jsonPrimitive?.intOrNull

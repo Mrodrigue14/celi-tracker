@@ -1,11 +1,5 @@
 name: Pipeline SAST (poutine)
 
-# Static analysis of the CI/CD workflows themselves (GitHub Actions) with
-# BoostSecurity's poutine: detects pipeline misconfigurations --
-# command injection, dangerous use of pull_request_target, Dependabot
-# "pwn request", unpinned actions, etc. Results are published in
-# Security -> Code scanning (SARIF format). Does not fail the build: it
-# surfaces findings for triage.
 on:
   push:
     branches: [ main ]
@@ -21,8 +15,7 @@ on:
       - 'LICENSE'
       - '.gitignore'
       - '.gitattributes'
-  # Periodic scan: re-checks the existing workflows with the latest
-  # poutine rules, even without a new push (Monday 04:00 UTC).
+  # Re-scans with the latest poutine rules, even without a push.
   schedule:
     - cron: '0 4 * * 1'
   workflow_dispatch:

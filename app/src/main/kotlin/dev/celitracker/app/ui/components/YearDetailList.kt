@@ -17,19 +17,10 @@ import dev.celitracker.app.R
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 
-/** The chart is read at a glance; the cards carry the detail. */
 private const val CHART_PANE_SHARE = 0.42f
 
-/**
- * Structure shared by the TFSA and FHSA detail screens: the chart, then a
- * card per year, most recent first; tapping a bar scrolls to its card.
- * Only the content changes from one account to the other: the rules stay each in
- * their own engine.
- *
- * On a wide screen, the chart gets its own pane on the left: it stays
- * in view while the years scroll on the right, instead of scrolling away
- * as soon as the first card appears.
- */
+private const val YEARS_TITLE_ITEM_COUNT = 1
+
 @Composable
 fun <T> YearDetailList(
     rows: List<T>,
@@ -45,9 +36,8 @@ fun <T> YearDetailList(
     val yearInProgress = rows.lastOrNull()?.let(year)
     val displayed = rows.reversed()
     val twoPanes = isWideScreen() && rows.isNotEmpty()
-    // The "Year by year" title always precedes the first card; the
-    // chart only counts if it stayed in the list.
-    val itemsBeforeYears = if (twoPanes) 1 else 2
+    val chartItemCount = if (twoPanes) 0 else 1
+    val itemsBeforeYears = chartItemCount + YEARS_TITLE_ITEM_COUNT
 
     fun goTo(target: Int) {
         val position = displayed.indexOfFirst { year(it) == target }

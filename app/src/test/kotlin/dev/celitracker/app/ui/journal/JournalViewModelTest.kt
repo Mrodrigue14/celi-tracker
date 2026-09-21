@@ -246,11 +246,11 @@ class JournalViewModelTest {
 
     @Test
     fun `the year requested from the detail screen is targeted only once`() = runTest {
-        val viewModel = JournalViewModel(repository, Account.TFSA, targetYear = 2024)
-        assertEquals(2024, viewModel.uiState.value.targetYear)
+        val viewModel = JournalViewModel(repository, Account.TFSA, scrollToYear = 2024)
+        assertEquals(2024, viewModel.uiState.value.scrollToYear)
 
-        viewModel.targetYearReached()
+        viewModel.scrollToYearDone()
 
-        assertNull(viewModel.uiState.value.targetYear)
+        assertNull(viewModel.uiState.value.scrollToYear)
     }
 }

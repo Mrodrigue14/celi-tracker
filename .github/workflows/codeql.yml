@@ -3,16 +3,13 @@ name: "CodeQL"
 on:
   push:
     branches: [ main ]
-    # Documentation-only changes: no code analysis needed.
-    # The weekly scan (schedule) runs regardless.
     paths-ignore:
       - '**/*.md'
       - 'LICENSE'
       - '.gitignore'
       - '.gitattributes'
-  # NO paths-ignore here: `Analyze (java-kotlin)` is a check REQUIRED by
-  # `main`'s branch protection. If skipped, it reports no status and blocks the PR
-  # indefinitely. The filter stays on `push`, where there is nothing to reanalyze.
+  # No paths-ignore here: `Analyze (java-kotlin)` is a required check in main's branch protection,
+  # and a skipped workflow never reports a status, which blocks the PR.
   pull_request:
     branches: [ main ]
   schedule:
@@ -38,9 +35,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # Composite action rather than a standalone setup-java: it brings the
-      # Gradle cache. Read-only: this workflow consumes the cache written by
-      # build.yml without inflating the repository's budget.
       - name: Setup Java + Gradle
         uses: ./.github/actions/setup-java-gradle
 
@@ -49,7 +43,6 @@ jobs:
         with:
           languages: java-kotlin
           build-mode: autobuild
-          # security-and-quality suite.
           config-file: ./.github/codeql/codeql-config.yml
 
       - name: Perform CodeQL Analysis

@@ -10,16 +10,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
 
-/**
- * [currentYear] and [currentMonth] are INPUTS (the moment of reading), not
- * derived values: like the `upTo` of the engines, they come from the
- * ViewModel so this state remains a pure function of its fields, testable
- * without a clock.
- *
- * Any other value is a computed property, never a constructor field: a
- * `copy()` must never be able to produce a state that's inconsistent
- * between the lists and a total derived from them.
- */
+/** [currentYear] and [currentMonth] are inputs, so the state stays testable without a clock. */
 data class HomeUiState(
     val profile: Profile?,
     val currentYear: Int,
@@ -27,11 +18,7 @@ data class HomeUiState(
     val tfsaRoom: List<TfsaYear> = emptyList(),
     val fhsaRoom: List<FhsaYear> = emptyList(),
     val tfsaExcesses: List<MonthlyExcess> = emptyList(),
-    /**
-     * False until the database has answered. Without it, "no profile" and
-     * "not yet loaded" were indistinguishable, and the empty home screen
-     * would flash on every open.
-     */
+    /** False until the database has answered, or the empty home screen flashes on every open. */
     val loaded: Boolean = true,
 ) {
     val hasProfile: Boolean get() = profile != null
@@ -43,14 +30,9 @@ data class HomeUiState(
     val currentTfsaExcess: MonthlyExcess? get() =
         tfsaExcesses.find { it.year == currentYear && it.month == currentMonth }
 
-    /**
-     * null if no FHSA is open. The FHSA engine is deliberately kept
-     * separate from the TFSA: no overcontribution penalty is exposed here,
-     * `Overcontribution.tfsaExcesses` only covers the TFSA.
-     */
     val fhsaParticipationDeadline: LocalDate? get() = profile?.let(FhsaEngine::participationPeriodEnd)
 
-    /** Unknown if a limit is missing: the room would then be underestimated, and the alert would be wrong. */
+    /** Unknown when a limit is missing: the room would be underestimated and the alert wrong. */
     val tfsaUsage: Usage? get() =
         if (tfsaRoom.any { it.limitMissing }) {
             null
@@ -62,14 +44,10 @@ data class HomeUiState(
 
     val fhsaRemainingRoom: BigDecimal? get() = fhsaCurrentYear?.let { it.yearRoom - it.deposits }
 
-    /** Share of the year's room already contributed, for the home screen ring. */
     val tfsaUsedFraction: Float? get() = tfsaCurrentYear?.let { fraction(it.deposits, it.startRoom) }
 
     val fhsaUsedFraction: Float? get() = fhsaCurrentYear?.let { fraction(it.deposits, it.yearRoom) }
 }
 
-/**
- * Only place an amount becomes a Float: to draw an arc, never for a room
- * calculation. Greater than 1 in case of overcontribution.
- */
+/** Only for drawing an arc, never for room math. Above 1 on overcontribution. */
 private fun fraction(part: BigDecimal, whole: BigDecimal): Float? = if (whole.signum() <= 0) null else part.divide(whole, 4, RoundingMode.HALF_UP).toFloat()

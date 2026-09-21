@@ -55,7 +55,6 @@ fun FhsaDetailScreen(onBack: () -> Unit, onSeeTransactions: (Int) -> Unit) {
     }
 }
 
-/** From most general to most detailed: the trend, then each year, most recent first. */
 @Composable
 fun FhsaDetailContent(state: FhsaDetailUiState, onSeeTransactions: (Int) -> Unit, modifier: Modifier = Modifier) {
     YearDetailList(

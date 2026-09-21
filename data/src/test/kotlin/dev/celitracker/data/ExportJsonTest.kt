@@ -44,7 +44,7 @@ class ExportJsonTest {
 
     private suspend fun populateTestData() {
         repository.saveProfile(tfsaProfile)
-        // Inserted in deliberately shuffled order to verify sorting at export time.
+        // Shuffled on purpose: the export must sort.
         repository.saveLimit(AnnualLimit(Account.FHSA, 2026, BigDecimal("8000.00"), confirmed = true))
         repository.saveLimit(AnnualLimit(Account.TFSA, 2026, BigDecimal("7000.00"), confirmed = true))
         repository.saveLimit(AnnualLimit(Account.TFSA, 2020, BigDecimal("6000.00"), confirmed = false))
@@ -125,10 +125,7 @@ class ExportJsonTest {
         populateTestData()
         val before = repository.exportJson()
 
-        // Valid version and JSON, but two transactions share the same id: the
-        // second insert violates the primary key after the tables have
-        // already been cleared and part of the data (profile, limits) has
-        // already been written.
+        // Duplicate transaction id: the insert fails after the tables are cleared and profile and limits written.
         val exportFailingWrite = """
             {"version":1,
              "profil":{"anneeAdmissibiliteCeli":2020,"anneeNaissance":2000,"dateOuvertureCeliapp":"2023-06-01"},
@@ -166,10 +163,7 @@ class ExportJsonTest {
         assertEquals(firstExport, secondExport)
     }
 
-    /**
-     * A version 2 backup file as the app writes it today. Users keep these
-     * files; field names and stored values must survive any renaming in code.
-     */
+    /** Users keep such files: field names and stored values must survive any renaming in code. */
     private val exportVersion2 =
         """{"version":2,"profil":{"anneeNaissance":2002,"dateOuvertureCeliapp":"2023-06-01"},""" +
             """"plafonds":[{"compte":"CELI","annee":2026,"montant":"7000.00","confirme":true},""" +

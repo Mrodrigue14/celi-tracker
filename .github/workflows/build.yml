@@ -3,24 +3,16 @@ name: Build
 on:
   push:
     branches: [ main ]
-    # Do not run the build for purely documentation changes: they
-    # cannot break the code. A push that ALSO touches code still triggers
-    # the workflow.
     paths-ignore:
       - '**/*.md'
       - 'LICENSE'
       - '.gitignore'
-  # NO paths-ignore here: this job is meant to be a check REQUIRED by
-  # `main`'s branch protection. A skipped workflow reports no status, and a
-  # required check that never reports stays "Expected" -- the PR becomes
-  # impossible to merge. The filter stays on `push`: after merging a
-  # documentation-only PR, there is effectively nothing to re-test.
+  # No paths-ignore here: "Build & test" is a required check in main's branch protection,
+  # and a skipped workflow never reports a status, which blocks the PR.
   pull_request:
     branches: [ main ]
   workflow_dispatch:
 
-# Cancels a run made obsolete by a new push on the same ref
-# (event_name is in the key so a scheduled run does not cancel a push run).
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
@@ -34,28 +26,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # Only workflow allowed to WRITE the Gradle cache (see composite action).
       - name: Setup Java + Gradle
         uses: ./.github/actions/setup-java-gradle
         with:
           cache-read-only: "false"
 
-      # Style comes before tests: it takes a few seconds and fails on
-      # mechanical issues, while the test suite takes minutes.
+      # Runs before the tests: seconds, against minutes.
       - name: Style Kotlin
         run: ./gradlew ktlintCheck
 
-      # The calculation engine is a pure Kotlin module: its tests run without
-      # an Android SDK or emulator. It's the app's correctness core, so
-      # the CI barrier focuses on it first.
-      # koverVerify runs the tests then checks the coverage floor.
-      # -PwarningsAsErrors=true: strict in CI, lenient locally.
       - name: Tests + coverage
         run: ./gradlew koverVerify :engine:koverHtmlReport -PwarningsAsErrors=true
 
-      # Android Lint catches resource and manifest errors that neither the
-      # tests nor koverVerify see. Malformed backup rules got caught by
-      # CodeQL by accident once: that's not its job, that's lint's job.
+      # Catches resource and manifest errors that neither the tests nor koverVerify see.
       - name: Lint Android
         run: ./gradlew :app:lintDebug
 

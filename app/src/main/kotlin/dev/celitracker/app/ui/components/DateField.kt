@@ -30,12 +30,10 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
+private val CLEAR_ICON_WIDTH = 56.dp
+
 private const val MIN_CALENDAR_WIDTH = 360
 
-/**
- * Date field shared by the screens. It is read-only and opens the
- * calendar: a date is picked, it is not typed character by character.
- */
 @Composable
 fun DateField(
     date: String,
@@ -43,16 +41,13 @@ fun DateField(
     label: String,
     modifier: Modifier = Modifier,
     isError: Boolean = false,
-    /** For an optional date: a clear icon lets it be removed once chosen. */
     clearable: Boolean = false,
 ) {
     var calendarOpen by remember { mutableStateOf(false) }
     val showClearIcon = clearable && date.isNotEmpty()
     val validDate = remember(date) { runCatching { LocalDate.parse(date) }.getOrNull() }
 
-    // Material's calendar takes a fixed width of 360 dp and clips its
-    // own buttons below that. In a narrower window (old screen,
-    // split-screen mode), the date is therefore typed on the keyboard.
+    // Material's calendar clips its buttons below 360 dp, so narrow windows fall back to typing.
     if (LocalConfiguration.current.screenWidthDp < MIN_CALENDAR_WIDTH) {
         OutlinedTextField(
             value = date,
@@ -84,11 +79,11 @@ fun DateField(
             },
             modifier = Modifier.fillMaxWidth(),
         )
-        // The zone that opens the calendar leaves the clear icon clickable.
+        // Overlay because a read-only field swallows clicks; end padding keeps the clear icon reachable.
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .padding(end = if (showClearIcon) 56.dp else 0.dp)
+                .padding(end = if (showClearIcon) CLEAR_ICON_WIDTH else 0.dp)
                 .clickable { calendarOpen = true },
         )
     }
@@ -114,8 +109,7 @@ private fun CalendarDialog(initialDate: LocalDate?, onPicked: (LocalDate) -> Uni
     DatePickerDialog(
         onDismissRequest = onClose,
         confirmButton = {
-            // The picker returns a UTC instant: reading it back in UTC avoids
-            // going back a day depending on the device's time zone.
+            // The picker returns a UTC instant: read it in UTC or the date shifts a day in some time zones.
             TextButton(
                 onClick = {
                     val millis = state.selectedDateMillis ?: return@TextButton

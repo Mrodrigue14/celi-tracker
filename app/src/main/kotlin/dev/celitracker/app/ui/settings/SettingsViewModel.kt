@@ -24,10 +24,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
-/**
- * [downloadPage] is injected rather than hardcoded: this lets the CRA
- * reading logic be tested without a network.
- */
 class SettingsViewModel(
     private val repository: Repository,
     private val downloadPage: suspend (String) -> String,
@@ -41,13 +37,7 @@ class SettingsViewModel(
         checkCra(explicitRequest = false)
     }
 
-    /**
-     * With [replaceInputs] false, loading only fills fields that are
-     * still empty: reading the database is asynchronous and would
-     * otherwise overwrite what the user just typed. An import, on the
-     * other hand, replaces all the content, including the displayed
-     * fields.
-     */
+    /** Only empty fields are filled unless [replaceInputs]: the async read would overwrite typing. */
     fun load(replaceInputs: Boolean = false) {
         viewModelScope.launch {
             val profile = repository.profile()
@@ -93,8 +83,7 @@ class SettingsViewModel(
         val year = state.validNewLimitYear ?: return
         val amount = state.validNewLimitAmount ?: return
         viewModelScope.launch {
-            // confirmed = true: direct manual entry, not a CRA reading
-            // awaiting validation.
+            // Manual entry is confirmed, unlike a CRA reading.
             repository.saveLimit(AnnualLimit(account = Account.TFSA, year = year, amount = amount, confirmed = true))
             val limits = tfsaLimits()
             _uiState.update {
@@ -108,10 +97,7 @@ class SettingsViewModel(
         }
     }
 
-    /**
-     * Reads the limit published by the CRA. An explicit request ignores
-     * the once-a-month reading limit; opening the screen does not.
-     */
+    /** Only an explicit request ignores the once-a-month limit. */
     fun checkCra(explicitRequest: Boolean) {
         viewModelScope.launch {
             _uiState.update { it.copy(checkInProgress = true, craError = null) }
@@ -156,13 +142,10 @@ class SettingsViewModel(
         }
     }
 
-    /**
-     * The address is tried before being saved. If rejected, the field
-     * reverts to the current address, the last one that worked.
-     */
+    /** A rejected address reverts to the last one that worked. */
     fun saveCraPageUrl() = changeAddress(_uiState.value.craPageUrl.trim())
 
-    /** The default address goes through the same check: it too may have changed. */
+    /** The default address is checked too: it may have changed. */
     fun restoreCraPageUrl() = changeAddress(DEFAULT_CRA_PAGE_URL)
 
     private fun changeAddress(input: String) {
@@ -183,10 +166,7 @@ class SettingsViewModel(
         }
     }
 
-    /**
-     * The screen provides the file read and write: Android storage APIs
-     * stay out of the ViewModel.
-     */
+    /** The screen supplies the file access, keeping Android storage APIs out of the ViewModel. */
     fun exportData(write: suspend (String) -> Unit) {
         viewModelScope.launch {
             val message = try {
@@ -199,7 +179,7 @@ class SettingsViewModel(
         }
     }
 
-    /** Import replaces all the content; the screen confirms before calling this. */
+    /** Replaces all content: the screen confirms first. */
     fun importData(read: suspend () -> String) {
         viewModelScope.launch {
             val message = try {

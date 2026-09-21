@@ -10,12 +10,7 @@ import java.time.LocalDate
 
 private const val MIN_BIRTH_YEAR = 1900
 
-/**
- * Input fields as String (the TextFields' source of truth) rather than
- * already-parsed Int/BigDecimal: without this, partial input ("202")
- * would be lost on every keystroke until it became a valid integer.
- * Validity is a computed property, never a separate field.
- */
+/** Fields are Strings so partial input ("202") survives each keystroke. */
 data class SettingsUiState(
     val birthYear: String = "",
     val fhsaOpeningDate: String = "",
@@ -28,16 +23,11 @@ data class SettingsUiState(
     val craError: UiText? = null,
     val message: UiText? = null,
 ) {
-    /** Read from the CRA website, awaiting confirmation. */
-    val proposals: List<AnnualLimit> get() = limits.filter { !it.confirmed }
+    val unconfirmedLimits: List<AnnualLimit> get() = limits.filter { !it.confirmed }
 
     val confirmedLimits: List<AnnualLimit> get() = limits.filter { it.confirmed }
 
-    /**
-     * Limits from before eligibility don't count toward room: they stay
-     * in the database, but collapsed on screen. Without a birth year,
-     * everything is relevant.
-     */
+    /** Limits before eligibility count for nothing: kept in the database, collapsed on screen. */
     val relevantLimits: List<AnnualLimit> get() =
         confirmedLimits.filter { limit -> tfsaEligibilityYear?.let { limit.year >= it } ?: true }
 
@@ -46,17 +36,12 @@ data class SettingsUiState(
     val validBirthYear: Int? get() =
         birthYear.toIntOrNull()?.takeIf { it in MIN_BIRTH_YEAR..LocalDate.now().year }
 
-    /**
-     * Derived from the birth year, never entered directly. The
-     * calculation comes from [Profile] so it exists in only one place.
-     */
     val tfsaEligibilityYear: Int? get() =
         validBirthYear?.let { Profile(birthYear = it, fhsaOpeningDate = null).tfsaEligibilityYear }
 
     val validOpeningDate: LocalDate? get() =
         if (fhsaOpeningDate.isBlank()) null else runCatching { LocalDate.parse(fhsaOpeningDate) }.getOrNull()
 
-    /** Empty = no FHSA, valid. Non-empty and unparsable = input error. */
     val invalidOpeningDate: Boolean get() =
         fhsaOpeningDate.isNotBlank() && validOpeningDate == null
 

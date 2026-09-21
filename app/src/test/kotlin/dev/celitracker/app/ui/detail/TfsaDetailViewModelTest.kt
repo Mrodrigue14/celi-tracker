@@ -39,9 +39,8 @@ class TfsaDetailViewModelTest {
 
     @Test
     fun `a missing limit is flagged as limitMissing`() = runTest {
-        // Born 19 years ago: TFSA-eligible since last year.
+        // Aged 19: eligible since last year.
         repository.saveProfile(Profile(currentYear - 19, null))
-        // No limit recorded for currentYear - 1 or currentYear.
 
         val viewModel = TfsaDetailViewModel(repository).also { it.load() }
         val state = viewModel.uiState.first { it.rows.isNotEmpty() }

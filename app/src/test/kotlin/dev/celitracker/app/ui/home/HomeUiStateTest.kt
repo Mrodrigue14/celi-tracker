@@ -60,8 +60,7 @@ class HomeUiStateTest {
     fun `fhsaParticipationDeadline is derived from the profile, not a stored field`() {
         val state = HomeUiState(profile = profile, currentYear = 2026, currentMonth = 9)
 
-        // Opened in 2023: 15 years -> 2038; birth 1995: 71 years -> 2066.
-        // The earliest of the two wins.
+        // Opened 2023 gives 2038, birth 1995 gives 2066: the earlier wins.
         assertEquals(LocalDate.of(2038, 12, 31), state.fhsaParticipationDeadline)
     }
 

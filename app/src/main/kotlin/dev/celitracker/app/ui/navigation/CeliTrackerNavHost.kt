@@ -41,20 +41,16 @@ private const val ROUTE_FHSA_DETAIL = "fhsaDetail"
 private const val ROUTE_SETTINGS = "settings"
 private const val ROUTE_JOURNAL = "journal"
 
-/** Read by the JournalViewModel factory through SavedStateHandle. */
 const val ARG_ACCOUNT = "account"
 const val ARG_ADD = "add"
 const val ARG_YEAR = "year"
 
-/** Value of ARG_YEAR when no year is requested: an int argument cannot be null. */
+/** Stands in for a missing year: a navigation int argument cannot be null. */
 const val NO_YEAR = -1
 
 private fun journalRoute(account: Account, add: Boolean = false, year: Int = NO_YEAR) = "$ROUTE_JOURNAL?$ARG_ACCOUNT=$account&$ARG_ADD=$add&$ARG_YEAR=$year"
 
-/**
- * The three top-level destinations. An account's detail screen is not
- * one of them: it attaches to home, from which it opens.
- */
+/** Top-level destinations only: account detail screens hang off Home. */
 private enum class Tab(val route: String, @StringRes val label: Int, val icon: ImageVector) {
     HOME(ROUTE_HOME, R.string.tab_home, Icons.Filled.SpaceDashboard),
     JOURNAL(ROUTE_JOURNAL, R.string.tab_journal, Icons.AutoMirrored.Filled.ReceiptLong),
@@ -73,8 +69,7 @@ fun CeliTrackerNavHost(navController: NavHostController = rememberNavController(
     val backStackEntry by navController.currentBackStackEntryAsState()
     val activeTab = tabOf(backStackEntry?.destination?.route)
 
-    // Switching tabs does not stack: each tab keeps its state and the
-    // back button returns to home rather than replaying the history.
+    // Tabs do not stack: each keeps its state and back returns to home.
     fun goTo(route: String) = navController.navigate(route) {
         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true
@@ -85,8 +80,7 @@ fun CeliTrackerNavHost(navController: NavHostController = rememberNavController(
         navController.popBackStack(navController.graph.findStartDestination().id, inclusive = false)
     }
 
-    // A precise intent (this account, add sheet open) must not
-    // be replaced by the restored state of a previous visit to the journal.
+    // No restoreState: a precise request (this account, add sheet open) must not lose to the last journal visit.
     fun openJournal(account: Account, add: Boolean = false, year: Int = NO_YEAR) = navController.navigate(journalRoute(account, add, year)) {
         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true
@@ -100,8 +94,7 @@ fun CeliTrackerNavHost(navController: NavHostController = rememberNavController(
                         selected = tab == activeTab,
                         onClick = {
                             when {
-                                // From a detail screen, "Home" returns to home itself,
-                                // without restoring the detail screen just left.
+                                // From a detail screen, Home pops back instead of restoring that screen.
                                 tab == Tab.HOME -> backToHome()
 
                                 tab != activeTab -> goTo(tab.route)
@@ -122,8 +115,7 @@ fun CeliTrackerNavHost(navController: NavHostController = rememberNavController(
         NavHost(
             navController = navController,
             startDestination = ROUTE_HOME,
-            // Screens have their own Scaffold: the margins already applied
-            // here are consumed so they do not add them a second time.
+            // Screens have their own Scaffold: consume the insets so they are not applied twice.
             modifier = Modifier.padding(margins).consumeWindowInsets(margins),
         ) {
             composable(ROUTE_HOME) {
