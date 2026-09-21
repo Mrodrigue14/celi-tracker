@@ -143,7 +143,7 @@
     <string name="settings_export">Export</string>
     <string name="settings_import">Import</string>
     <string name="settings_import_title">Replace all data?</string>
-    <string name="settings_import_text">Importing overwrites the profile, the limits and the transaction journal with the file\'s content. It doesn\'t merge.</string>
+    <string name="settings_import_text">Importing overwrites the profile, the limits, the transaction journal and the CRA figures with the file\'s content. It doesn\'t merge.</string>
     <string name="settings_import_replace">Replace</string>
 
     <!-- Settings messages -->

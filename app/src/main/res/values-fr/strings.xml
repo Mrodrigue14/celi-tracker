@@ -146,7 +146,7 @@
     <string name="settings_export">Exporter</string>
     <string name="settings_import">Importer</string>
     <string name="settings_import_title">Remplacer toutes les données ?</string>
-    <string name="settings_import_text">L\'import écrase le profil, les plafonds et le journal des transactions par le contenu du fichier. Ce n\'est pas une fusion.</string>
+    <string name="settings_import_text">L\'import écrase le profil, les plafonds, le journal des transactions et les chiffres de l\'ARC par le contenu du fichier. Ce n\'est pas une fusion.</string>
     <string name="settings_import_replace">Remplacer</string>
 
     <!-- Settings messages -->
