@@ -13,7 +13,11 @@ private const val FICHIER = "affichage"
 private const val CLE_THEME = "theme"
 
 /** The value written to the preferences file; must not change once shipped. */
-internal fun ModeTheme.valeurEnregistree(): String = name
+internal fun ModeTheme.valeurEnregistree(): String = when (this) {
+    ModeTheme.SYSTEME -> "SYSTEME"
+    ModeTheme.CLAIR -> "CLAIR"
+    ModeTheme.SOMBRE -> "SOMBRE"
+}
 
 internal fun modeThemeEnregistre(valeur: String?): ModeTheme = ModeTheme.entries.find { it.valeurEnregistree() == valeur } ?: ModeTheme.SYSTEME
 

@@ -2,6 +2,7 @@ package dev.celitracker.data
 
 import dev.celitracker.engine.Compte
 import dev.celitracker.engine.TypeTx
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.intOrNull
@@ -31,49 +32,49 @@ private val json = Json { ignoreUnknownKeys = true }
 
 @Serializable
 private data class ProfilJson(
-    val anneeNaissance: Int,
-    val dateOuvertureCeliapp: String?,
+    @SerialName("anneeNaissance") val anneeNaissance: Int,
+    @SerialName("dateOuvertureCeliapp") val dateOuvertureCeliapp: String?,
 )
 
 @Serializable
 private data class PlafondJson(
-    val compte: String,
-    val annee: Int,
-    val montant: String,
-    val confirme: Boolean,
+    @SerialName("compte") val compte: String,
+    @SerialName("annee") val annee: Int,
+    @SerialName("montant") val montant: String,
+    @SerialName("confirme") val confirme: Boolean,
 )
 
 @Serializable
 private data class TransactionJson(
     val id: Long,
-    val compte: String,
+    @SerialName("compte") val compte: String,
     val date: String,
     val type: String,
-    val montant: String,
+    @SerialName("montant") val montant: String,
 )
 
 @Serializable
 private data class SnapshotArcJson(
     val id: Long,
-    val compte: String,
-    val dateReference: String,
-    val droitsDeclares: String,
+    @SerialName("compte") val compte: String,
+    @SerialName("dateReference") val dateReference: String,
+    @SerialName("droitsDeclares") val droitsDeclares: String,
 )
 
 @Serializable
 private data class ReglagesJson(
-    val urlPageArc: String,
-    val dateDerniereVerification: String?,
+    @SerialName("urlPageArc") val urlPageArc: String,
+    @SerialName("dateDerniereVerification") val dateDerniereVerification: String?,
 )
 
 @Serializable
 private data class ExportDonnees(
     val version: Int,
-    val profil: ProfilJson?,
-    val plafonds: List<PlafondJson>,
+    @SerialName("profil") val profil: ProfilJson?,
+    @SerialName("plafonds") val plafonds: List<PlafondJson>,
     val transactions: List<TransactionJson>,
-    val snapshotsArc: List<SnapshotArcJson>,
-    val reglages: ReglagesJson,
+    @SerialName("snapshotsArc") val snapshotsArc: List<SnapshotArcJson>,
+    @SerialName("reglages") val reglages: ReglagesJson,
 )
 
 /**
@@ -93,14 +94,14 @@ suspend fun Depot.exporterJson(): String {
             )
         },
         plafonds = plafonds()
-            .sortedWith(compareBy({ it.compte.name }, { it.annee }))
-            .map { PlafondJson(it.compte.name, it.annee, it.montant.toPlainString(), it.confirme) },
+            .sortedWith(compareBy({ it.compte.storedValue() }, { it.annee }))
+            .map { PlafondJson(it.compte.storedValue(), it.annee, it.montant.toPlainString(), it.confirme) },
         transactions = transactions()
             .sortedBy { it.id }
-            .map { TransactionJson(it.id, it.compte.name, it.date.toString(), it.type.name, it.montant.toPlainString()) },
+            .map { TransactionJson(it.id, it.compte.storedValue(), it.date.toString(), it.type.storedValue(), it.montant.toPlainString()) },
         snapshotsArc = snapshotsArc()
             .sortedBy { it.id }
-            .map { SnapshotArcJson(it.id, it.compte.name, it.dateReference.toString(), it.droitsDeclares.toPlainString()) },
+            .map { SnapshotArcJson(it.id, it.compte.storedValue(), it.dateReference.toString(), it.droitsDeclares.toPlainString()) },
         reglages = reglages().let { ReglagesJson(it.urlPageArc, it.dateDerniereVerification?.toString()) },
     )
     return json.encodeToString(ExportDonnees.serializer(), donnees)
@@ -131,7 +132,7 @@ suspend fun Depot.importerJson(contenu: String) {
     }
     val plafonds = donnees.plafonds.map {
         PlafondEntity(
-            compte = Compte.valueOf(it.compte),
+            compte = storedAccount(it.compte),
             annee = it.annee,
             montant = BigDecimal(it.montant),
             confirme = it.confirme,
@@ -140,16 +141,16 @@ suspend fun Depot.importerJson(contenu: String) {
     val transactions = donnees.transactions.map {
         TransactionEntity(
             id = it.id,
-            compte = Compte.valueOf(it.compte),
+            compte = storedAccount(it.compte),
             date = LocalDate.parse(it.date),
-            type = TypeTx.valueOf(it.type),
+            type = storedTransactionType(it.type),
             montant = BigDecimal(it.montant),
         )
     }
     val snapshots = donnees.snapshotsArc.map {
         SnapshotArcEntity(
             id = it.id,
-            compte = Compte.valueOf(it.compte),
+            compte = storedAccount(it.compte),
             dateReference = LocalDate.parse(it.dateReference),
             droitsDeclares = BigDecimal(it.droitsDeclares),
         )
