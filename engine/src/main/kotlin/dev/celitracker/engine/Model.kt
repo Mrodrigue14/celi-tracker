@@ -9,14 +9,15 @@ enum class Account { TFSA, FHSA }
 
 enum class TransactionType { DEPOSIT, WITHDRAWAL }
 
+const val UNSAVED_ID = 0L
+
 /** The amount is ALWAYS positive; [type] is what carries the sign. */
 data class Transaction(
     val account: Account,
     val date: LocalDate,
     val type: TransactionType,
     val amount: BigDecimal,
-    /** 0 means not yet persisted. */
-    val id: Long = 0,
+    val id: Long = UNSAVED_ID,
 )
 
 /** False when read from the CRA site and not yet validated: it never enters the room calculation. */

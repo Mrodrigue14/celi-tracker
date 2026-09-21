@@ -6,7 +6,7 @@ import dev.celitracker.engine.Transaction
 
 data class JournalUiState(
     val account: Account = Account.TFSA,
-    val targetYear: Int? = null,
+    val scrollToYear: Int? = null,
     val transactions: List<Transaction> = emptyList(),
     val form: TransactionForm? = null,
     val message: UiText? = null,

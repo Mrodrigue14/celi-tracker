@@ -23,7 +23,7 @@ data class SettingsUiState(
     val craError: UiText? = null,
     val message: UiText? = null,
 ) {
-    val proposals: List<AnnualLimit> get() = limits.filter { !it.confirmed }
+    val unconfirmedLimits: List<AnnualLimit> get() = limits.filter { !it.confirmed }
 
     val confirmedLimits: List<AnnualLimit> get() = limits.filter { it.confirmed }
 

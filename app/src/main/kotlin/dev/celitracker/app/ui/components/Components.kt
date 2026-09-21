@@ -53,7 +53,7 @@ val TILE_SHAPE = RoundedCornerShape(14.dp)
 @Composable
 fun RoomRing(fraction: Float, color: Color, modifier: Modifier = Modifier) {
     val target = fraction.coerceIn(0f, 1f)
-    val labelled by animateFloatAsState(target, animationSpec = tween(700), label = "ring")
+    val animatedFraction by animateFloatAsState(target, animationSpec = tween(700), label = "ring")
     val exceeded = fraction > 1f
     val stroke = if (exceeded) MaterialTheme.colorScheme.error else color
     val track = MaterialTheme.colorScheme.surfaceVariant
@@ -69,7 +69,7 @@ fun RoomRing(fraction: Float, color: Color, modifier: Modifier = Modifier) {
         Canvas(modifier = Modifier.size(84.dp)) {
             val thickness = Stroke(width = 9.dp.toPx(), cap = StrokeCap.Round)
             drawArc(track, startAngle = -90f, sweepAngle = 360f, useCenter = false, style = thickness)
-            drawArc(stroke, startAngle = -90f, sweepAngle = 360f * labelled, useCenter = false, style = thickness)
+            drawArc(stroke, startAngle = -90f, sweepAngle = 360f * animatedFraction, useCenter = false, style = thickness)
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(

@@ -53,7 +53,7 @@ private val CHART_HEIGHT = 150.dp
 
 private val AXIS_WIDTH = 44.dp
 
-private val TOP_MARGIN = 20.dp
+private val VALUE_LABEL_HEADROOM = 20.dp
 
 /** Amounts become Doubles only to place bars and lines, never for a room calculation. */
 @Composable
@@ -80,7 +80,7 @@ fun YearChart(
     Column(modifier = modifier.semantics { contentDescription = summary }) {
         Row {
             Canvas(modifier = Modifier.width(AXIS_WIDTH).height(CHART_HEIGHT)) {
-                val top = TOP_MARGIN.toPx()
+                val top = VALUE_LABEL_HEADROOM.toPx()
                 listOf(1.0, 0.5, 0.0).forEach { part ->
                     val y = top + (size.height - top) * (1 - part).toFloat()
                     val text = measurer.measure(compact.format(axisMax * part), axisStyle)
@@ -89,7 +89,7 @@ fun YearChart(
             }
             Box(modifier = Modifier.weight(1f)) {
                 Canvas(modifier = Modifier.fillMaxWidth().height(CHART_HEIGHT)) {
-                    val top = TOP_MARGIN.toPx()
+                    val top = VALUE_LABEL_HEADROOM.toPx()
                     val zone = size.height - top
                     val dashes = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 4.dp.toPx()))
                     listOf(1.0, 0.5, 0.0).forEach { part ->
@@ -160,12 +160,12 @@ fun YearChart(
 }
 
 /** Tight steps avoid a large gap above the bars; each halves to a round middle reference. */
-private val STEPS = listOf(1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0)
+private val AXIS_STEP_FACTORS = listOf(1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0)
 
 internal fun roundedAxisMax(maximum: Double): Double {
     if (maximum <= 0) return 1.0
     val power = 10.0.pow(floor(log10(maximum)))
-    val factor = STEPS.first { it * power >= maximum }
+    val factor = AXIS_STEP_FACTORS.first { it * power >= maximum }
     return factor * power
 }
 

@@ -84,9 +84,9 @@ class SettingsViewModelTest {
     fun `the limit read from the CRA website awaits confirmation`() = runTest {
         val viewModel = SettingsViewModel(repository, craPage)
 
-        val state = viewModel.uiState.first { it.proposals.isNotEmpty() }
+        val state = viewModel.uiState.first { it.unconfirmedLimits.isNotEmpty() }
 
-        val proposed = state.proposals.single()
+        val proposed = state.unconfirmedLimits.single()
         assertEquals(2027, proposed.year)
         assertEquals(BigDecimal("7500.00"), proposed.amount)
         assertTrue(state.confirmedLimits.isEmpty())
@@ -95,22 +95,22 @@ class SettingsViewModelTest {
     @Test
     fun `confirming a proposal makes it enter the table`() = runTest {
         val viewModel = SettingsViewModel(repository, craPage)
-        val proposed = viewModel.uiState.first { it.proposals.isNotEmpty() }.proposals.single()
+        val proposed = viewModel.uiState.first { it.unconfirmedLimits.isNotEmpty() }.unconfirmedLimits.single()
 
         viewModel.confirmProposal(proposed)
         val state = viewModel.uiState.first { it.confirmedLimits.isNotEmpty() }
 
         assertEquals(listOf(2027), state.confirmedLimits.map { it.year })
-        assertTrue(state.proposals.isEmpty())
+        assertTrue(state.unconfirmedLimits.isEmpty())
     }
 
     @Test
     fun `rejecting a proposal erases it`() = runTest {
         val viewModel = SettingsViewModel(repository, craPage)
-        val proposed = viewModel.uiState.first { it.proposals.isNotEmpty() }.proposals.single()
+        val proposed = viewModel.uiState.first { it.unconfirmedLimits.isNotEmpty() }.unconfirmedLimits.single()
 
         viewModel.rejectProposal(proposed)
-        val state = viewModel.uiState.first { it.proposals.isEmpty() }
+        val state = viewModel.uiState.first { it.unconfirmedLimits.isEmpty() }
 
         assertTrue(state.limits.isEmpty())
     }

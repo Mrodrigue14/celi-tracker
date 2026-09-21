@@ -19,6 +19,8 @@ import java.math.BigDecimal
 
 private const val CHART_PANE_SHARE = 0.42f
 
+private const val YEARS_TITLE_ITEM_COUNT = 1
+
 @Composable
 fun <T> YearDetailList(
     rows: List<T>,
@@ -34,8 +36,8 @@ fun <T> YearDetailList(
     val yearInProgress = rows.lastOrNull()?.let(year)
     val displayed = rows.reversed()
     val twoPanes = isWideScreen() && rows.isNotEmpty()
-    // Items ahead of the first year card: the years title, plus the chart when it is in the list.
-    val itemsBeforeYears = if (twoPanes) 1 else 2
+    val chartItemCount = if (twoPanes) 0 else 1
+    val itemsBeforeYears = chartItemCount + YEARS_TITLE_ITEM_COUNT
 
     fun goTo(target: Int) {
         val position = displayed.indexOfFirst { year(it) == target }

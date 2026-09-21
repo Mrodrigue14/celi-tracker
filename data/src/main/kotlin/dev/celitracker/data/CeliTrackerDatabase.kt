@@ -24,7 +24,6 @@ import kotlinx.coroutines.Dispatchers
 abstract class CeliTrackerDatabase : RoomDatabase() {
     abstract fun dao(): CeliTrackerDao
 
-    /** The eligibility year is now calculated from the birth year. */
     @DeleteColumn(tableName = "profil", columnName = "anneeAdmissibiliteCeli")
     class DropEligibilityYearColumn : AutoMigrationSpec
 }

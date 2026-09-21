@@ -156,12 +156,12 @@ fun JournalScreen() {
     }
 
     // Waits for the transactions: the year's header does not exist before.
-    LaunchedEffect(state.targetYear, state.transactions) {
-        val year = state.targetYear ?: return@LaunchedEffect
+    LaunchedEffect(state.scrollToYear, state.transactions) {
+        val year = state.scrollToYear ?: return@LaunchedEffect
         if (state.transactions.isEmpty()) return@LaunchedEffect
         val position = headerPosition(state.transactions, year)
         if (position >= 0) list.scrollToItem(position)
-        viewModel.targetYearReached()
+        viewModel.scrollToYearDone()
     }
 
     // Two-pane mode already shows the form on the right.

@@ -30,6 +30,8 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
+private val CLEAR_ICON_WIDTH = 56.dp
+
 private const val MIN_CALENDAR_WIDTH = 360
 
 @Composable
@@ -81,7 +83,7 @@ fun DateField(
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .padding(end = if (showClearIcon) 56.dp else 0.dp)
+                .padding(end = if (showClearIcon) CLEAR_ICON_WIDTH else 0.dp)
                 .clickable { calendarOpen = true },
         )
     }

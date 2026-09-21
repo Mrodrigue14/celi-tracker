@@ -27,10 +27,10 @@ class JournalViewModel(
     private val repository: Repository,
     initialAccount: Account,
     openAdd: Boolean = false,
-    targetYear: Int? = null,
+    scrollToYear: Int? = null,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(JournalUiState(account = initialAccount, targetYear = targetYear))
+    private val _uiState = MutableStateFlow(JournalUiState(account = initialAccount, scrollToYear = scrollToYear))
 
     private val account: Account get() = _uiState.value.account
     val uiState: StateFlow<JournalUiState> = _uiState.asStateFlow()
@@ -70,7 +70,7 @@ class JournalViewModel(
     }
 
     /** Consumed once: otherwise every reload scrolls back to the year. */
-    fun targetYearReached() = _uiState.update { it.copy(targetYear = null) }
+    fun scrollToYearDone() = _uiState.update { it.copy(scrollToYear = null) }
 
     fun messageShown() = _uiState.update { it.copy(message = null) }
 
@@ -86,7 +86,7 @@ class JournalViewModel(
         val amount = form.validAmount ?: return
         val transaction = Transaction(account, date, form.type, amount, form.id)
         viewModelScope.launch {
-            val after = usageAfter(transaction)
+            val after = usageIncluding(transaction)
             if (form.warning == null) {
                 warning(transaction, after)?.let { text ->
                     _uiState.update { it.copy(form = it.form?.copy(warning = text)) }
@@ -103,8 +103,7 @@ class JournalViewModel(
         }
     }
 
-    /** Includes [transaction] itself, replacing its previous version on edit. */
-    private suspend fun usageAfter(transaction: Transaction): Usage? {
+    private suspend fun usageIncluding(transaction: Transaction): Usage? {
         val profile = repository.profile() ?: return null
         val transactions = repository.transactions().filter { it.id != transaction.id } + transaction
         val year = transaction.date.year

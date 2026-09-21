@@ -51,25 +51,24 @@ internal fun String.limitToTwoDecimals(): String {
 }
 
 internal class ThousandsGrouper(digits: String, separator: Char) {
-    /** positions[i] is the index in [text] just before original digit i. */
-    private val positions = IntArray(digits.length + 1)
+    private val groupedIndexBeforeDigit = IntArray(digits.length + 1)
     val text: String
 
     init {
         val grouped = StringBuilder()
         digits.forEachIndexed { i, digit ->
             if (i > 0 && (digits.length - i) % 3 == 0) grouped.append(separator)
-            positions[i] = grouped.length
+            groupedIndexBeforeDigit[i] = grouped.length
             grouped.append(digit)
         }
-        positions[digits.length] = grouped.length
+        groupedIndexBeforeDigit[digits.length] = grouped.length
         text = grouped.toString()
     }
 
-    fun toGrouped(originalIndex: Int): Int = positions[originalIndex.coerceIn(0, positions.lastIndex)]
+    fun toGrouped(originalIndex: Int): Int = groupedIndexBeforeDigit[originalIndex.coerceIn(0, groupedIndexBeforeDigit.lastIndex)]
 
     /** A cursor on a separator maps to the digit before it. */
-    fun toOriginal(groupedIndex: Int): Int = positions.indexOfLast { it <= groupedIndex }.coerceAtLeast(0)
+    fun toOriginal(groupedIndex: Int): Int = groupedIndexBeforeDigit.indexOfLast { it <= groupedIndex }.coerceAtLeast(0)
 }
 
 private class AmountTransformation(private val locale: Locale) : VisualTransformation {

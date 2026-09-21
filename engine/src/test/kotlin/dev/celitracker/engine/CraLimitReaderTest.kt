@@ -25,11 +25,16 @@ class CraLimitReaderTest {
     }
 
     @Test
-    fun `the non-breaking space in thousands is accepted`() {
-        val withNonBreakingSpace = craPage.replace("7 000", "7 000")
-
-        assertEquals(BigDecimal("7000.00"), readTfsaLimitFromCraPage(withNonBreakingSpace)?.amount)
+    fun `a non-breaking space in thousands is accepted`() {
+        assertEquals(BigDecimal("7000.00"), readTfsaLimitFromCraPage(pageWithThousandsSeparator("\u00A0"))?.amount)
     }
+
+    @Test
+    fun `a narrow non-breaking space in thousands is accepted`() {
+        assertEquals(BigDecimal("7000.00"), readTfsaLimitFromCraPage(pageWithThousandsSeparator("\u202F"))?.amount)
+    }
+
+    private fun pageWithThousandsSeparator(separator: String) = craPage.replace(Regex("7.000"), "7" + separator + "000")
 
     @Test
     fun `the limit read is never confirmed`() {

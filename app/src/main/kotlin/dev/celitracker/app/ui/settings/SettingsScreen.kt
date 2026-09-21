@@ -237,7 +237,7 @@ fun SettingsContent(
     val limits: @Composable (Modifier) -> Unit = { groupModifier ->
         Column(modifier = groupModifier.padding(horizontal = 16.dp)) {
             CraProposals(
-                proposals = state.proposals,
+                unconfirmedLimits = state.unconfirmedLimits,
                 onConfirm = onConfirmProposal,
                 onReject = onRejectProposal,
             )
@@ -401,14 +401,14 @@ private fun BackupAndRestore(onExport: () -> Unit, onImport: () -> Unit) {
 /** CRA limits stay out of the calculation until the user confirms them. */
 @Composable
 private fun CraProposals(
-    proposals: List<AnnualLimit>,
+    unconfirmedLimits: List<AnnualLimit>,
     onConfirm: (AnnualLimit) -> Unit,
     onReject: (AnnualLimit) -> Unit,
 ) {
-    if (proposals.isEmpty()) return
+    if (unconfirmedLimits.isEmpty()) return
 
     SectionTitle(stringResource(R.string.settings_cra_proposed), Modifier.padding(top = 24.dp, bottom = 12.dp))
-    proposals.forEach { limit ->
+    unconfirmedLimits.forEach { limit ->
         Column(modifier = Modifier.padding(bottom = 12.dp)) {
             Text(
                 stringResource(R.string.settings_proposed_limit_row, limit.year, limit.amount.formatAmount()),

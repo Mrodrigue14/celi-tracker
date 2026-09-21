@@ -14,6 +14,10 @@ fun isValidCraPageUrl(url: String): Boolean {
     return address.scheme == "https" && (host == "canada.ca" || host.endsWith(".canada.ca"))
 }
 
+private const val NO_BREAK_SPACE = '\u00A0'
+
+private const val NARROW_NO_BREAK_SPACE = '\u202F'
+
 private val HTML_TAG = Regex("<[^>]*>")
 
 private val WHITESPACE = Regex("\\s+")
@@ -23,9 +27,8 @@ fun readTfsaLimitFromCraPage(html: String): AnnualLimit? {
     val text = html
         .replace(HTML_TAG, " ")
         .replace("&nbsp;", " ")
-        // The CRA separates thousands with non-breaking spaces, regular or narrow.
-        .replace(' ', ' ')
-        .replace(' ', ' ')
+        .replace(NO_BREAK_SPACE, ' ')
+        .replace(NARROW_NO_BREAK_SPACE, ' ')
         .replace(WHITESPACE, " ")
 
     val match = LIMIT_PATTERN.find(text) ?: return null
