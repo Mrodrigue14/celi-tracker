@@ -14,7 +14,7 @@ enum class InputRejectionReason {
 /** An IllegalArgumentException, so it is caught like a failed `require`. */
 class InvalidInput(val reason: InputRejectionReason) : IllegalArgumentException(reason.name)
 
-enum class ImportFailureReason { UNKNOWN_VERSION, MALFORMED_JSON }
+enum class ImportFailureReason { UNKNOWN_VERSION, MALFORMED_JSON, INVALID_TRANSACTION }
 
 class InvalidImport(val reason: ImportFailureReason, cause: Throwable? = null) : IllegalArgumentException(reason.name, cause)
 

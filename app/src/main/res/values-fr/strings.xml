@@ -172,6 +172,7 @@
     <string name="address_rejected_no_limit">Cette page ne donne pas le plafond du CELI.</string>
     <string name="import_unknown_version">le fichier vient d\'une version inconnue de l\'application.</string>
     <string name="import_malformed_json">le fichier n\'est pas un export valide.</string>
+    <string name="import_invalid_transaction">le fichier contient une transaction que l\'appli refuserait : datée avant l\'admissibilité au CELI ou l\'ouverture du CELIAPP, ou d\'un montant nul ou négatif.</string>
     <string name="import_unreadable_file">le fichier est illisible.</string>
     <string name="settings_appearance">Apparence</string>
     <string name="theme_system">Système</string>

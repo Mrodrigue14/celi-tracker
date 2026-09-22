@@ -147,6 +147,62 @@ class ExportJsonTest {
         )
     }
 
+    // Born 2002, so TFSA room starts in 2020; FHSA opened 2023-06-01.
+    private val importedProfile = """{"anneeNaissance":2002,"dateOuvertureCeliapp":"2023-06-01"}"""
+
+    private fun exportWith(profile: String, transaction: String) = """
+        {"version":2,"profil":$profile,"plafonds":[],"transactions":[$transaction],"snapshotsArc":[],
+         "reglages":{"urlPageArc":"https://arc.gc.ca","dateDerniereVerification":null}}
+    """.trimIndent()
+
+    private fun transaction(account: String, date: String, amount: String = "100.00") = """{"id":1,"compte":"$account","date":"$date","type":"DEPOT","montant":"$amount"}"""
+
+    private suspend fun assertRefusedWithoutChange(content: String) {
+        populateTestData()
+        val before = repository.exportJson()
+
+        val failure = assertFailsWith<InvalidImport> { repository.importJson(content) }
+
+        assertEquals(ImportFailureReason.INVALID_TRANSACTION, failure.reason)
+        assertEquals(before, repository.exportJson())
+    }
+
+    @Test
+    fun `a TFSA transaction before eligibility refuses the import and leaves the database untouched`() = runTest {
+        assertRefusedWithoutChange(exportWith(importedProfile, transaction("CELI", "2019-12-31")))
+    }
+
+    @Test
+    fun `an FHSA transaction before the opening date refuses the import`() = runTest {
+        assertRefusedWithoutChange(exportWith(importedProfile, transaction("CELIAPP", "2023-05-31")))
+    }
+
+    @Test
+    fun `an FHSA transaction without an opened FHSA refuses the import`() = runTest {
+        val noFhsa = """{"anneeNaissance":2002,"dateOuvertureCeliapp":null}"""
+
+        assertRefusedWithoutChange(exportWith(noFhsa, transaction("CELIAPP", "2024-01-15")))
+    }
+
+    @Test
+    fun `a transaction without a profile refuses the import`() = runTest {
+        assertRefusedWithoutChange(exportWith("null", transaction("CELI", "2024-01-15")))
+    }
+
+    @Test
+    fun `a zero amount refuses the import`() = runTest {
+        assertRefusedWithoutChange(exportWith(importedProfile, transaction("CELI", "2024-01-15", amount = "0.00")))
+    }
+
+    @Test
+    fun `transactions on the first allowed day import`() = runTest {
+        repository.importJson(
+            exportWith(importedProfile, transaction("CELI", "2020-01-01") + "," + transaction("CELIAPP", "2023-06-01").replace("\"id\":1", "\"id\":2")),
+        )
+
+        assertEquals(2, repository.transactions().size)
+    }
+
     @Test
     fun `the export is deterministic`() = runTest {
         populateTestData()

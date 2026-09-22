@@ -1,5 +1,7 @@
 package dev.celitracker.data
 
+import dev.celitracker.engine.Profile
+import dev.celitracker.engine.Transaction
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -123,6 +125,10 @@ suspend fun Repository.importJson(content: String) {
             amount = BigDecimal(it.amount),
         )
     }
+    val importedProfile = profile?.let { Profile(it.birthYear, it.fhsaOpeningDate) }
+    val refused = transactions.any { transactionRejection(Transaction(it.account, it.date, it.type, it.amount, it.id), importedProfile) != null }
+    if (refused) throw InvalidImport(ImportFailureReason.INVALID_TRANSACTION)
+
     val snapshots = data.craSnapshots.map {
         CraSnapshotEntity(
             id = it.id,
