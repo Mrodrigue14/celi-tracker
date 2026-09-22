@@ -1,11 +1,9 @@
 package dev.celitracker.data
 
-import androidx.room.Room
 import dev.celitracker.engine.Account
 import dev.celitracker.engine.AnnualLimit
 import dev.celitracker.engine.PUBLISHED_TFSA_LIMITS
 import kotlinx.coroutines.test.runTest
-import java.io.File
 import java.math.BigDecimal
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -14,15 +12,11 @@ import kotlin.test.assertTrue
 
 class DefaultLimitsTest {
 
-    private val file = File.createTempFile("celi-tracker-limits", ".db")
-    private val database = configureDatabase(Room.databaseBuilder<CeliTrackerDatabase>(name = file.absolutePath))
-    private val repository = Repository(database)
+    private val database = TestDatabase()
+    private val repository = database.repository
 
     @AfterTest
-    fun close() {
-        database.close()
-        file.delete()
-    }
+    fun close() = database.close()
 
     @Test
     fun `published limits are recorded and confirmed`() = runTest {

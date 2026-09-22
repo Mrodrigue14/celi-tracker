@@ -1,6 +1,5 @@
 package dev.celitracker.data
 
-import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import dev.celitracker.engine.Account
 import dev.celitracker.engine.AnnualLimit
@@ -10,7 +9,6 @@ import dev.celitracker.engine.Settings
 import dev.celitracker.engine.Transaction
 import dev.celitracker.engine.TransactionType
 import kotlinx.coroutines.test.runTest
-import java.io.File
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
@@ -23,15 +21,11 @@ import kotlin.test.assertTrue
 
 class RepositoryTest {
 
-    private val file = File.createTempFile("celi-tracker-test", ".db")
-    private val database = configureDatabase(Room.databaseBuilder<CeliTrackerDatabase>(name = file.absolutePath))
-    private val repository = Repository(database)
+    private val database = TestDatabase()
+    private val repository = database.repository
 
     @AfterTest
-    fun close() {
-        database.close()
-        file.delete()
-    }
+    fun close() = database.close()
 
     private val tfsaProfile = Profile(
         birthYear = 2002, // eligible for the TFSA in 2020
@@ -106,9 +100,9 @@ class RepositoryTest {
     fun `the transactions amount column is of type TEXT`() = runTest {
         repository.saveProfile(tfsaProfile)
         repository.addTransaction(Transaction(Account.TFSA, LocalDate.of(2026, 1, 15), TransactionType.DEPOSIT, BigDecimal("100.00")))
-        database.close()
+        database.closeRoom()
 
-        val connection = BundledSQLiteDriver().open(file.absolutePath)
+        val connection = BundledSQLiteDriver().open(database.file.absolutePath)
         val types = mutableMapOf<String, String>()
         connection.prepare("PRAGMA table_info(transactions)").use { stmt ->
             while (stmt.step()) {

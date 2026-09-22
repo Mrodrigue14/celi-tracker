@@ -1,6 +1,5 @@
 package dev.celitracker.data
 
-import androidx.room.Room
 import dev.celitracker.engine.Account
 import dev.celitracker.engine.AnnualLimit
 import dev.celitracker.engine.CraSnapshot
@@ -9,7 +8,6 @@ import dev.celitracker.engine.Settings
 import dev.celitracker.engine.Transaction
 import dev.celitracker.engine.TransactionType
 import kotlinx.coroutines.test.runTest
-import java.io.File
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
@@ -21,20 +19,16 @@ import kotlin.test.assertTrue
 
 class ExportJsonTest {
 
-    private val file = File.createTempFile("celi-tracker-export-test", ".db")
-    private val database = configureDatabase(Room.databaseBuilder<CeliTrackerDatabase>(name = file.absolutePath))
-    private val repository = Repository(database)
+    private val database = TestDatabase()
+    private val repository = database.repository
 
-    private val emptyFile = File.createTempFile("celi-tracker-export-test-empty", ".db")
-    private val emptyDatabase = configureDatabase(Room.databaseBuilder<CeliTrackerDatabase>(name = emptyFile.absolutePath))
-    private val emptyRepository = Repository(emptyDatabase)
+    private val emptyDatabase = TestDatabase()
+    private val emptyRepository = emptyDatabase.repository
 
     @AfterTest
     fun close() {
         database.close()
-        file.delete()
         emptyDatabase.close()
-        emptyFile.delete()
     }
 
     private val tfsaProfile = Profile(

@@ -37,11 +37,11 @@ class Repository(private val database: CeliTrackerDatabase) {
     suspend fun limits(): List<AnnualLimit> = dao.limits().map { AnnualLimit(it.account, it.year, it.amount, it.confirmed) }
 
     suspend fun saveLimits(limits: List<AnnualLimit>) {
-        dao.saveLimits(limits.map { LimitEntity(it.account, it.year, it.amount, it.confirmed) })
+        dao.saveLimits(limits.map { it.toEntity() })
     }
 
     suspend fun saveLimit(limit: AnnualLimit) {
-        dao.saveLimit(LimitEntity(limit.account, limit.year, limit.amount, limit.confirmed))
+        dao.saveLimit(limit.toEntity())
     }
 
     suspend fun deleteLimit(account: Account, year: Int) = dao.deleteLimit(account, year)
@@ -76,6 +76,8 @@ class Repository(private val database: CeliTrackerDatabase) {
     }
 
     private fun Transaction.toEntity() = TransactionEntity(id, account, date, type, amount)
+
+    private fun AnnualLimit.toEntity() = LimitEntity(account, year, amount, confirmed)
 
     suspend fun deleteTransaction(id: Long) = dao.deleteTransaction(id)
 

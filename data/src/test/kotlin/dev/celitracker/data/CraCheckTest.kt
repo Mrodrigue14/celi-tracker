@@ -1,11 +1,9 @@
 package dev.celitracker.data
 
-import androidx.room.Room
 import dev.celitracker.engine.Account
 import dev.celitracker.engine.AnnualLimit
 import dev.celitracker.engine.Settings
 import kotlinx.coroutines.test.runTest
-import java.io.File
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -17,16 +15,12 @@ import kotlin.test.assertTrue
 
 class CraCheckTest {
 
-    private val file = File.createTempFile("celi-tracker-arc", ".db")
-    private val database = configureDatabase(Room.databaseBuilder<CeliTrackerDatabase>(name = file.absolutePath))
-    private val repository = Repository(database)
+    private val database = TestDatabase()
+    private val repository = database.repository
     private val today = LocalDate.of(2026, 9, 17)
 
     @AfterTest
-    fun close() {
-        database.close()
-        file.delete()
-    }
+    fun close() = database.close()
 
     private val craPage = """
         <p>Le plafond de cotisation à un compte d'épargne libre <span class="nowrap">d'impôt (CELI)</span>
