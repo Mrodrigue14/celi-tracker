@@ -79,4 +79,12 @@ class UsageTest {
 
         assertNull(tfsaUsage(profile, emptyList(), listOf(deposit), 2026))
     }
+
+    @Test
+    fun `a limit missing after the requested year does not hide that year's usage`() {
+        val limits = AcceptanceScenario.limits.filter { it.year != 2026 }
+        val rows = TfsaEngine.roomByYear(AcceptanceScenario.profile, limits, AcceptanceScenario.deposits, 2026)
+
+        assertEquals(money("29000.00"), tfsaUsage(rows, 2024)?.room)
+    }
 }

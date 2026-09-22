@@ -24,5 +24,7 @@ private fun String.toDecimalOrNull(): BigDecimal? = replace(',', '.').toBigDecim
 
 fun String.toEnteredAmount(): BigDecimal? = toDecimalOrNull()?.takeIf { it > BigDecimal.ZERO }
 
+fun String.toEnteredDate(): LocalDate? = runCatching { LocalDate.parse(this) }.getOrNull()
+
 /** Zero is valid: fully used room is a real figure. */
 fun String.toEnteredRoom(): BigDecimal? = toDecimalOrNull()?.takeIf { it >= BigDecimal.ZERO }

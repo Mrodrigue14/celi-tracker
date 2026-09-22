@@ -25,6 +25,10 @@ fun fhsaSnapshotComparison(snapshots: List<CraSnapshot>, rows: List<FhsaYear>): 
     return SnapshotComparison(snapshot, row.yearRoom)
 }
 
+/** The same order decides which figure the comparison uses and how the settings list them. */
+fun List<CraSnapshot>.newestFirst(): List<CraSnapshot> = sortedWith(compareByDescending<CraSnapshot> { it.referenceDate }.thenByDescending { it.id })
+
 private fun latestSnapshot(snapshots: List<CraSnapshot>, account: Account): CraSnapshot? = snapshots
     .filter { it.account == account }
-    .maxWithOrNull(compareBy({ it.referenceDate }, { it.id }))
+    .newestFirst()
+    .firstOrNull()

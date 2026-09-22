@@ -8,22 +8,16 @@ import dev.celitracker.engine.FhsaEngine
 import dev.celitracker.engine.Profile
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+@ExtendWith(TestMainDispatcher::class)
 class FhsaDetailViewModelTest {
-
     private val fixture = TestRepository()
     private val repository = fixture.repository
     private val currentYear = LocalDate.now().year
-
-    companion object {
-        @JvmStatic
-        @BeforeAll
-        fun before() = TestMainDispatcher.install()
-    }
 
     @Test
     fun `without an FHSA open, no rows`() = runTest {

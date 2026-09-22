@@ -8,15 +8,9 @@ import kotlin.test.assertNull
 
 class SnapshotComparisonTest {
 
-    private val profile = Profile(birthYear = 2001, fhsaOpeningDate = LocalDate.of(2023, 4, 1))
+    private val profile = AcceptanceScenario.profile.copy(fhsaOpeningDate = LocalDate.of(2023, 4, 1))
 
-    private val limits = listOf(2019 to "6000", 2020 to "6000", 2021 to "6000", 2022 to "6000", 2023 to "6500", 2024 to "7000", 2025 to "7000", 2026 to "7000")
-        .map { (year, amount) -> AnnualLimit(Account.TFSA, year, BigDecimal(amount).toMoney()) }
-
-    private val deposits = listOf("2021-03-10" to "5000", "2023-06-15" to "3500", "2024-11-02" to "1200")
-        .map { (date, amount) -> Transaction(Account.TFSA, LocalDate.parse(date), TransactionType.DEPOSIT, BigDecimal(amount)) }
-
-    private val tfsaRows = TfsaEngine.roomByYear(profile, limits, deposits, 2026)
+    private val tfsaRows = TfsaEngine.roomByYear(profile, AcceptanceScenario.limits, AcceptanceScenario.deposits, 2026)
 
     private val fhsaRows = FhsaEngine.roomByYear(profile, emptyList(), 2026)
 
@@ -32,8 +26,8 @@ class SnapshotComparisonTest {
 
     @Test
     fun `deposits made during the year do not move the comparison`() {
-        val withDepositThisYear = deposits + Transaction(Account.TFSA, LocalDate.of(2026, 2, 1), TransactionType.DEPOSIT, BigDecimal("3000"))
-        val rows = TfsaEngine.roomByYear(profile, limits, withDepositThisYear, 2026)
+        val withDepositThisYear = AcceptanceScenario.deposits + Transaction(Account.TFSA, LocalDate.of(2026, 2, 1), TransactionType.DEPOSIT, BigDecimal("3000"))
+        val rows = TfsaEngine.roomByYear(profile, AcceptanceScenario.limits, withDepositThisYear, 2026)
 
         val comparison = tfsaSnapshotComparison(listOf(snapshot(Account.TFSA, "2026-06-01", "41800")), rows)
 
@@ -85,14 +79,14 @@ class SnapshotComparisonTest {
 
     @Test
     fun `no comparison when a limit is missing up to the reference year`() {
-        val rows = TfsaEngine.roomByYear(profile, limits.filter { it.year != 2022 }, deposits, 2026)
+        val rows = TfsaEngine.roomByYear(profile, AcceptanceScenario.limits.filter { it.year != 2022 }, AcceptanceScenario.deposits, 2026)
 
         assertNull(tfsaSnapshotComparison(listOf(snapshot(Account.TFSA, "2026-03-01", "41800")), rows))
     }
 
     @Test
     fun `a missing limit after the reference year does not block the comparison`() {
-        val rows = TfsaEngine.roomByYear(profile, limits.filter { it.year != 2026 }, deposits, 2026)
+        val rows = TfsaEngine.roomByYear(profile, AcceptanceScenario.limits.filter { it.year != 2026 }, AcceptanceScenario.deposits, 2026)
 
         assertEquals(BigDecimal("29000.00"), tfsaSnapshotComparison(listOf(snapshot(Account.TFSA, "2024-06-01", "29000")), rows)?.calculatedRoom)
     }

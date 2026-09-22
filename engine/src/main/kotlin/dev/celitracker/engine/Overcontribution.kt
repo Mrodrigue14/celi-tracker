@@ -15,22 +15,20 @@ object Overcontribution {
 
     private val MONTHLY_PENALTY_RATE = BigDecimal("0.01")
 
+    /** [rows] come from [TfsaEngine.roomByYear] up to [upTo]'s year. */
     fun tfsaExcesses(
-        profile: Profile,
-        limits: List<AnnualLimit>,
+        rows: List<TfsaYear>,
         transactions: List<Transaction>,
         upTo: YearMonth,
     ): List<MonthlyExcess> {
-        // Same lower bound as TfsaEngine, which cannot see earlier transactions: without it they would be
-        // billed as an excess while having no effect on room.
+        // Transactions before the first row have no effect on room: billing them as an excess would be wrong.
+        val firstYear = rows.firstOrNull()?.year ?: return emptyList()
         val tfsaTransactions = transactions
-            .filter { it.account == Account.TFSA && it.date.year >= profile.tfsaEligibilityYear }
+            .filter { it.account == Account.TFSA && it.date.year >= firstYear }
             .sortedBy { it.date }
         val earliest = tfsaTransactions.firstOrNull() ?: return emptyList()
 
-        val startRoomByYear = TfsaEngine
-            .roomByYear(profile, limits, transactions, upTo.year)
-            .associate { it.year to it.startRoom }
+        val startRoomByYear = rows.associate { it.year to it.startRoom }
 
         val transactionsByMonth = tfsaTransactions.groupBy { YearMonth.from(it.date) }
 

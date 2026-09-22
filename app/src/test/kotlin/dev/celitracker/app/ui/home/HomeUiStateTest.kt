@@ -2,7 +2,6 @@ package dev.celitracker.app.ui.home
 
 import dev.celitracker.engine.Account
 import dev.celitracker.engine.CraSnapshot
-import dev.celitracker.engine.FhsaYear
 import dev.celitracker.engine.MonthlyExcess
 import dev.celitracker.engine.Profile
 import dev.celitracker.engine.TfsaYear

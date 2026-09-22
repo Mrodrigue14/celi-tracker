@@ -9,7 +9,9 @@ import dev.celitracker.engine.SnapshotComparison
 import dev.celitracker.engine.TfsaYear
 import dev.celitracker.engine.Usage
 import dev.celitracker.engine.fhsaSnapshotComparison
+import dev.celitracker.engine.fhsaUsage
 import dev.celitracker.engine.tfsaSnapshotComparison
+import dev.celitracker.engine.tfsaUsage
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -41,17 +43,11 @@ data class HomeUiState(
 
     val fhsaParticipationDeadline: LocalDate? get() = profile?.let(FhsaEngine::participationPeriodEnd)
 
-    /** Unknown when a limit is missing: the room would be underestimated and the alert wrong. */
-    val tfsaUsage: Usage? get() =
-        if (tfsaRoom.any { it.limitMissing }) {
-            null
-        } else {
-            tfsaCurrentYear?.let { Usage(room = it.startRoom, contributed = it.deposits) }
-        }
+    val tfsaUsage: Usage? get() = tfsaUsage(tfsaRoom, currentYear)
 
-    val fhsaUsage: Usage? get() = fhsaCurrentYear?.let { Usage(room = it.yearRoom, contributed = it.deposits) }
+    val fhsaUsage: Usage? get() = fhsaUsage(fhsaRoom, currentYear)
 
-    val fhsaRemainingRoom: BigDecimal? get() = fhsaCurrentYear?.let { it.yearRoom - it.deposits }
+    val fhsaRemainingRoom: BigDecimal? get() = fhsaCurrentYear?.remainingRoom
 
     val tfsaUsedFraction: Float? get() = tfsaCurrentYear?.let { fraction(it.deposits, it.startRoom) }
 

@@ -14,24 +14,18 @@ import dev.celitracker.engine.TransactionType
 import dev.celitracker.engine.UNSAVED_ID
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 
+@ExtendWith(TestMainDispatcher::class)
 class HomeViewModelTest {
-
     private val fixture = TestRepository()
     private val repository = fixture.repository
     private val currentYear = LocalDate.now().year
-
-    companion object {
-        @JvmStatic
-        @BeforeAll
-        fun before() = TestMainDispatcher.install()
-    }
 
     @Test
     fun `without a profile, the state stays empty once the database has loaded`() = runTest {

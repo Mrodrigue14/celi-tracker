@@ -1,6 +1,7 @@
 package dev.celitracker.app.ui.journal
 
 import dev.celitracker.app.ui.format.toEnteredAmount
+import dev.celitracker.app.ui.format.toEnteredDate
 import dev.celitracker.app.ui.text.UiText
 import dev.celitracker.engine.TransactionType
 import dev.celitracker.engine.UNSAVED_ID
@@ -19,7 +20,7 @@ data class TransactionForm(
 ) {
     val isNew: Boolean get() = id == UNSAVED_ID
 
-    val validDate: LocalDate? get() = runCatching { LocalDate.parse(date) }.getOrNull()
+    val validDate: LocalDate? get() = date.toEnteredDate()
 
     val validAmount: BigDecimal? get() = amount.toEnteredAmount()
 

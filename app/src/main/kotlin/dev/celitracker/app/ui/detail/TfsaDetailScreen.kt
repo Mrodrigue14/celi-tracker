@@ -1,57 +1,31 @@
 package dev.celitracker.app.ui.detail
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import dev.celitracker.app.CeliTrackerApplication
 import dev.celitracker.app.R
-import dev.celitracker.app.ui.components.WidthLimitedContent
+import dev.celitracker.app.ui.appViewModel
 import dev.celitracker.app.ui.components.YearCard
 import dev.celitracker.app.ui.components.YearDetailList
 import dev.celitracker.app.ui.format.formatAmount
+import dev.celitracker.app.ui.theme.colors
+import dev.celitracker.engine.Account
 import dev.celitracker.engine.TfsaYear
 import java.math.BigDecimal
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TfsaDetailScreen(onBack: () -> Unit, onSeeTransactions: (Int) -> Unit) {
-    val application = LocalContext.current.applicationContext as CeliTrackerApplication
-    val viewModel: TfsaDetailViewModel = viewModel(factory = application.viewModelFactory)
+    val viewModel: TfsaDetailViewModel = appViewModel()
     LaunchedEffect(Unit) { viewModel.load() }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.detail_title_tfsa)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
-                    }
-                },
-            )
-        },
-    ) { innerPadding ->
-        WidthLimitedContent(modifier = Modifier.padding(innerPadding)) {
-            TfsaDetailContent(state = state, onSeeTransactions = onSeeTransactions, modifier = Modifier.fillMaxSize())
-        }
+    DetailScaffold(title = stringResource(R.string.detail_title_tfsa), onBack = onBack) {
+        TfsaDetailContent(state = state, onSeeTransactions = onSeeTransactions, modifier = Modifier.fillMaxSize())
     }
 }
 
@@ -62,14 +36,12 @@ fun TfsaDetailContent(state: TfsaDetailUiState, onSeeTransactions: (Int) -> Unit
         year = { it.year },
         chartTitle = stringResource(R.string.detail_room_year_end),
         chartValue = { it.endRoom },
-        color = MaterialTheme.colorScheme.primary,
+        color = Account.TFSA.colors().accent,
+        yearsWithTransactions = state.yearsWithTransactions,
+        onSeeTransactions = onSeeTransactions,
         modifier = modifier,
-    ) { row, inProgress ->
-        TfsaYearCard(
-            row,
-            inProgress = inProgress,
-            onSeeTransactions = row.year.takeIf { it in state.yearsWithTransactions }?.let { year -> { onSeeTransactions(year) } },
-        )
+    ) { row, inProgress, onSeeYearTransactions ->
+        TfsaYearCard(row, inProgress = inProgress, onSeeTransactions = onSeeYearTransactions)
     }
 }
 

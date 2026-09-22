@@ -36,10 +36,11 @@ data class Profile(
     val birthYear: Int,
     val fhsaOpeningDate: LocalDate?,
 ) {
-    /** Derived, never entered. Assumes Canadian residency since age 18. */
-    val tfsaEligibilityYear: Int
-        get() = maxOf(birthYear + TFSA_ELIGIBILITY_AGE, FIRST_TFSA_YEAR)
+    val tfsaEligibilityYear: Int get() = tfsaEligibilityYear(birthYear)
 }
+
+/** Derived, never entered. Assumes Canadian residency since age 18. */
+fun tfsaEligibilityYear(birthYear: Int): Int = maxOf(birthYear + TFSA_ELIGIBILITY_AGE, FIRST_TFSA_YEAR)
 
 data class CraSnapshot(
     val id: Long,
