@@ -89,4 +89,5 @@ fun AddressRejectionReason.textRes(): Int = when (this) {
 fun ImportFailureReason.textRes(): Int = when (this) {
     ImportFailureReason.UNKNOWN_VERSION -> R.string.import_unknown_version
     ImportFailureReason.MALFORMED_JSON -> R.string.import_malformed_json
+    ImportFailureReason.INVALID_TRANSACTION -> R.string.import_invalid_transaction
 }

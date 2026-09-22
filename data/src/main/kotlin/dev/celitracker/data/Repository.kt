@@ -59,20 +59,8 @@ class Repository(private val database: CeliTrackerDatabase) {
         if (updatedRows != 1) rejectInput(InputRejectionReason.TRANSACTION_NOT_FOUND)
     }
 
-    /** Rejected here, not in the engines: they would disagree on a transaction before eligibility. */
     private suspend fun validate(transaction: Transaction) {
-        if (transaction.amount <= BigDecimal.ZERO) rejectInput(InputRejectionReason.NON_POSITIVE_AMOUNT)
-        val profile = profile() ?: rejectInput(InputRejectionReason.MISSING_PROFILE)
-        when (transaction.account) {
-            Account.TFSA -> if (transaction.date.isBefore(LocalDate.of(profile.tfsaEligibilityYear, 1, 1))) {
-                rejectInput(InputRejectionReason.TFSA_BEFORE_ELIGIBILITY)
-            }
-
-            Account.FHSA -> {
-                val opening = profile.fhsaOpeningDate ?: rejectInput(InputRejectionReason.FHSA_NOT_OPENED)
-                if (transaction.date.isBefore(opening)) rejectInput(InputRejectionReason.FHSA_BEFORE_OPENING)
-            }
-        }
+        transactionRejection(transaction, profile())?.let(::rejectInput)
     }
 
     private fun Transaction.toEntity() = TransactionEntity(id, account, date, type, amount)
@@ -116,4 +104,24 @@ class Repository(private val database: CeliTrackerDatabase) {
         snapshots: List<CraSnapshotEntity>,
         settings: SettingsEntity,
     ) = dao.replaceEverything(profile, limits, transactions, snapshots, settings)
+}
+
+/**
+ * Null when [transaction] may be recorded for [profile]. Saving and importing share it, and it lives here rather
+ * than in the engines: they would disagree on a transaction before eligibility.
+ */
+internal fun transactionRejection(transaction: Transaction, profile: Profile?): InputRejectionReason? {
+    if (transaction.amount <= BigDecimal.ZERO) return InputRejectionReason.NON_POSITIVE_AMOUNT
+    if (profile == null) return InputRejectionReason.MISSING_PROFILE
+    return when (transaction.account) {
+        Account.TFSA ->
+            InputRejectionReason.TFSA_BEFORE_ELIGIBILITY
+                .takeIf { transaction.date.isBefore(LocalDate.of(profile.tfsaEligibilityYear, 1, 1)) }
+
+        Account.FHSA -> when {
+            profile.fhsaOpeningDate == null -> InputRejectionReason.FHSA_NOT_OPENED
+            transaction.date.isBefore(profile.fhsaOpeningDate) -> InputRejectionReason.FHSA_BEFORE_OPENING
+            else -> null
+        }
+    }
 }

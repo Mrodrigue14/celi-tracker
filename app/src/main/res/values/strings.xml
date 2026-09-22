@@ -169,6 +169,7 @@
     <string name="address_rejected_no_limit">This page doesn\'t state the TFSA limit.</string>
     <string name="import_unknown_version">the file comes from an unknown version of the app.</string>
     <string name="import_malformed_json">the file isn\'t a valid export.</string>
+    <string name="import_invalid_transaction">the file holds a transaction the app would refuse: dated before TFSA eligibility or the FHSA opening, or with an amount of zero or less.</string>
     <string name="import_unreadable_file">the file can\'t be read.</string>
     <string name="settings_appearance">Appearance</string>
     <string name="theme_system">System</string>
