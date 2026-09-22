@@ -1,7 +1,5 @@
 package dev.celitracker.data
 
-import dev.celitracker.engine.Account
-import dev.celitracker.engine.TransactionType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json

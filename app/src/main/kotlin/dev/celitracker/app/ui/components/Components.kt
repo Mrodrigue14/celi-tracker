@@ -209,11 +209,19 @@ fun <T> SegmentedChoice(
     }
 }
 
-/** The error color is reserved for what costs money; [severe] false gives a plain warning. */
+/** The error color is reserved for what costs money; anything else is a [NoticeBanner]. */
 @Composable
-fun AlertBanner(text: String, icon: ImageVector, modifier: Modifier = Modifier, severe: Boolean = true) {
-    val backgroundColor = if (severe) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.tertiaryContainer
-    val ink = if (severe) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onTertiaryContainer
+fun AlertBanner(text: String, icon: ImageVector, modifier: Modifier = Modifier) {
+    Banner(text, icon, MaterialTheme.colorScheme.errorContainer, MaterialTheme.colorScheme.onErrorContainer, modifier)
+}
+
+@Composable
+fun NoticeBanner(text: String, icon: ImageVector, modifier: Modifier = Modifier) {
+    Banner(text, icon, MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer, modifier)
+}
+
+@Composable
+private fun Banner(text: String, icon: ImageVector, backgroundColor: Color, ink: Color, modifier: Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()

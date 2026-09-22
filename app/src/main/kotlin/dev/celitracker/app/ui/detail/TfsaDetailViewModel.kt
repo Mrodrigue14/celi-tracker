@@ -26,7 +26,7 @@ class TfsaDetailViewModel(private val repository: Repository) : ViewModel() {
             val limits = repository.limits()
             val transactions = repository.transactions()
             _uiState.value = TfsaDetailUiState(
-                yearsWithTransactions = transactions.filter { it.account == Account.TFSA }.map { it.date.year }.toSet(),
+                yearsWithTransactions = transactions.yearsWith(Account.TFSA),
                 rows = TfsaEngine.roomByYear(profile, limits, transactions, LocalDate.now().year),
             )
         }

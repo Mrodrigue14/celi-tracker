@@ -28,8 +28,10 @@ fun <T> YearDetailList(
     chartTitle: String,
     chartValue: (T) -> BigDecimal,
     color: Color,
+    yearsWithTransactions: Set<Int>,
+    onSeeTransactions: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    card: @Composable (row: T, inProgress: Boolean) -> Unit,
+    card: @Composable (row: T, inProgress: Boolean, onSeeTransactions: (() -> Unit)?) -> Unit,
 ) {
     val list = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -70,7 +72,9 @@ fun <T> YearDetailList(
                 }
             }
             items(displayed, key = { year(it) }) { row ->
-                card(row, year(row) == yearInProgress)
+                val rowYear = year(row)
+                val onSeeYear = if (rowYear in yearsWithTransactions) ({ onSeeTransactions(rowYear) }) else null
+                card(row, rowYear == yearInProgress, onSeeYear)
             }
         }
     }

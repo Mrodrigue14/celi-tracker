@@ -28,22 +28,22 @@ class HomeViewModel(private val repository: Repository) : ViewModel() {
             }
             val limits = repository.limits()
             val transactions = repository.transactions()
-            val currentYear = LocalDate.now().year
+            val today = LocalDate.now()
+            val tfsaRoom = TfsaEngine.roomByYear(profile, limits, transactions, today.year)
             _uiState.value = HomeUiState(
                 profile = profile,
-                currentYear = currentYear,
-                currentMonth = YearMonth.now().monthValue,
-                tfsaRoom = TfsaEngine.roomByYear(profile, limits, transactions, currentYear),
-                fhsaRoom = FhsaEngine.roomByYear(profile, transactions, currentYear),
-                tfsaExcesses = Overcontribution.tfsaExcesses(profile, limits, transactions, YearMonth.now()),
+                currentYear = today.year,
+                currentMonth = today.monthValue,
+                tfsaRoom = tfsaRoom,
+                fhsaRoom = FhsaEngine.roomByYear(profile, transactions, today.year),
+                tfsaExcesses = Overcontribution.tfsaExcesses(tfsaRoom, transactions, YearMonth.from(today)),
                 craSnapshots = repository.craSnapshots(),
             )
         }
     }
 
-    private fun emptyState() = HomeUiState(
-        profile = null,
-        currentYear = LocalDate.now().year,
-        currentMonth = YearMonth.now().monthValue,
-    )
+    private fun emptyState(): HomeUiState {
+        val today = LocalDate.now()
+        return HomeUiState(profile = null, currentYear = today.year, currentMonth = today.monthValue)
+    }
 }

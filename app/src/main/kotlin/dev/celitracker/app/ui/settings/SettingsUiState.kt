@@ -1,12 +1,13 @@
 package dev.celitracker.app.ui.settings
 
 import dev.celitracker.app.ui.format.toEnteredAmount
+import dev.celitracker.app.ui.format.toEnteredDate
 import dev.celitracker.app.ui.format.toEnteredRoom
 import dev.celitracker.app.ui.text.UiText
 import dev.celitracker.engine.Account
 import dev.celitracker.engine.AnnualLimit
 import dev.celitracker.engine.CraSnapshot
-import dev.celitracker.engine.Profile
+import dev.celitracker.engine.tfsaEligibilityYear
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
@@ -44,10 +45,10 @@ data class SettingsUiState(
         birthYear.toIntOrNull()?.takeIf { it in MIN_BIRTH_YEAR..LocalDate.now().year }
 
     val tfsaEligibilityYear: Int? get() =
-        validBirthYear?.let { Profile(birthYear = it, fhsaOpeningDate = null).tfsaEligibilityYear }
+        validBirthYear?.let(::tfsaEligibilityYear)
 
     val validOpeningDate: LocalDate? get() =
-        if (fhsaOpeningDate.isBlank()) null else runCatching { LocalDate.parse(fhsaOpeningDate) }.getOrNull()
+        fhsaOpeningDate.toEnteredDate()
 
     val invalidOpeningDate: Boolean get() =
         fhsaOpeningDate.isNotBlank() && validOpeningDate == null
@@ -62,7 +63,7 @@ data class SettingsUiState(
 
     /** A future date would stay the latest snapshot until a later one is entered. */
     val validSnapshotDate: LocalDate? get() =
-        runCatching { LocalDate.parse(snapshotDate) }.getOrNull()?.takeIf { !it.isAfter(LocalDate.now()) }
+        snapshotDate.toEnteredDate()?.takeIf { !it.isAfter(LocalDate.now()) }
 
     val invalidSnapshotDate: Boolean get() = snapshotDate.isNotBlank() && validSnapshotDate == null
 

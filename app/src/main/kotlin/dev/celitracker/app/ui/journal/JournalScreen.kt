@@ -1,9 +1,7 @@
 package dev.celitracker.app.ui.journal
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,7 +15,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -35,15 +32,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -51,23 +44,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import dev.celitracker.app.CeliTrackerApplication
 import dev.celitracker.app.R
+import dev.celitracker.app.ui.appViewModel
 import dev.celitracker.app.ui.components.AccountChoice
 import dev.celitracker.app.ui.components.AlertBanner
 import dev.celitracker.app.ui.components.AmountField
 import dev.celitracker.app.ui.components.DateField
 import dev.celitracker.app.ui.components.EmptyState
 import dev.celitracker.app.ui.components.IconBadge
+import dev.celitracker.app.ui.components.MessageSnackbarEffect
 import dev.celitracker.app.ui.components.SegmentedChoice
 import dev.celitracker.app.ui.components.TwoPanes
 import dev.celitracker.app.ui.components.WidthLimitedContent
@@ -86,20 +75,13 @@ import java.time.LocalDate
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JournalScreen() {
-    val application = LocalContext.current.applicationContext as CeliTrackerApplication
-    val viewModel: JournalViewModel = viewModel(factory = application.viewModelFactory)
+    val viewModel: JournalViewModel = appViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     val list = rememberLazyListState()
     val twoPanes = isWideScreen()
 
-    // One-shot message: shown in a snackbar, then the ViewModel forgets it.
-    val context = LocalContext.current
-    LaunchedEffect(state.message) {
-        val message = state.message ?: return@LaunchedEffect
-        snackbar.showSnackbar(message.resolve(context))
-        viewModel.messageShown()
-    }
+    MessageSnackbarEffect(state.message, snackbar, viewModel::messageShown)
 
     Scaffold(
         topBar = {
@@ -257,7 +239,7 @@ private fun TransactionRow(transaction: Transaction, onClick: () -> Unit) {
                 } else {
                     MaterialTheme.colorScheme.onTertiaryContainer
                 },
-                description = if (isDeposit) stringResource(R.string.type_deposit) else stringResource(R.string.type_withdrawal),
+                description = transaction.type.label(),
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -265,7 +247,7 @@ private fun TransactionRow(transaction: Transaction, onClick: () -> Unit) {
                     style = MaterialTheme.typography.titleMedium.tabularFigures(),
                 )
                 Text(
-                    if (isDeposit) stringResource(R.string.type_deposit) else stringResource(R.string.type_withdrawal),
+                    transaction.type.label(),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -379,7 +361,7 @@ private fun TransactionFields(
         options = TransactionType.entries,
         selection = form.type,
         onChoose = onType,
-        label = { if (it == TransactionType.DEPOSIT) stringResource(R.string.type_deposit) else stringResource(R.string.type_withdrawal) },
+        label = { it.label() },
     )
     AmountField(
         value = form.amount,

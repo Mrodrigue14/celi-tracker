@@ -26,6 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import dev.celitracker.app.R
 import dev.celitracker.app.ui.format.formatDate
+import dev.celitracker.app.ui.format.toEnteredDate
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -45,7 +46,7 @@ fun DateField(
 ) {
     var calendarOpen by remember { mutableStateOf(false) }
     val showClearIcon = clearable && date.isNotEmpty()
-    val validDate = remember(date) { runCatching { LocalDate.parse(date) }.getOrNull() }
+    val validDate = remember(date) { date.toEnteredDate() }
 
     // Material's calendar clips its buttons below 360 dp, so narrow windows fall back to typing.
     if (LocalConfiguration.current.screenWidthDp < MIN_CALENDAR_WIDTH) {

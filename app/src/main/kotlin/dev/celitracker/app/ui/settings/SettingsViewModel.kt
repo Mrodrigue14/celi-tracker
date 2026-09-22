@@ -19,6 +19,7 @@ import dev.celitracker.engine.AnnualLimit
 import dev.celitracker.engine.CraSnapshot
 import dev.celitracker.engine.Profile
 import dev.celitracker.engine.UNSAVED_ID
+import dev.celitracker.engine.newestFirst
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,11 +37,11 @@ class SettingsViewModel(
 
     init {
         load()
-        checkCra(explicitRequest = false)
+        checkCraIfDue()
     }
 
-    /** Only empty fields are filled unless [replaceInputs]: the async read would overwrite typing. */
-    fun load(replaceInputs: Boolean = false) {
+    /** Only empty fields are filled: the async read would overwrite typing. */
+    private fun load() {
         viewModelScope.launch {
             val profile = repository.profile()
             val limits = tfsaLimits()
@@ -49,8 +50,8 @@ class SettingsViewModel(
             val opening = profile?.fhsaOpeningDate?.toString() ?: ""
             _uiState.update {
                 it.copy(
-                    birthYear = if (replaceInputs) birth else it.birthYear.ifBlank { birth },
-                    fhsaOpeningDate = if (replaceInputs) opening else it.fhsaOpeningDate.ifBlank { opening },
+                    birthYear = it.birthYear.ifBlank { birth },
+                    fhsaOpeningDate = it.fhsaOpeningDate.ifBlank { opening },
                     limits = limits,
                     snapshots = craSnapshots(),
                     craPageUrl = it.craPageUrl.ifBlank { settings.craPageUrl },
@@ -128,8 +129,12 @@ class SettingsViewModel(
         }
     }
 
-    /** Only an explicit request ignores the once-a-month limit. */
-    fun checkCra(explicitRequest: Boolean) {
+    /** An explicit request ignores the once-a-month limit and says when nothing is new. */
+    fun checkCraNow() = checkCra(explicitRequest = true)
+
+    private fun checkCraIfDue() = checkCra(explicitRequest = false)
+
+    private fun checkCra(explicitRequest: Boolean) {
         viewModelScope.launch {
             _uiState.update { it.copy(checkInProgress = true, craError = null) }
             val result = repository.checkCraLimits(
@@ -221,13 +226,13 @@ class SettingsViewModel(
             } catch (e: Exception) {
                 uiText(R.string.message_import_rejected, uiText(R.string.import_unreadable_file))
             }
-            load(replaceInputs = true)
-            _uiState.update { it.copy(message = message) }
+            // Typed drafts are replaced too: blank fields are the ones load() fills.
+            _uiState.update { it.copy(birthYear = "", fhsaOpeningDate = "", message = message) }
+            load()
         }
     }
 
-    private suspend fun craSnapshots(): List<CraSnapshot> = repository.craSnapshots()
-        .sortedWith(compareByDescending<CraSnapshot> { it.referenceDate }.thenByDescending { it.id })
+    private suspend fun craSnapshots(): List<CraSnapshot> = repository.craSnapshots().newestFirst()
 
     private suspend fun tfsaLimits(): List<AnnualLimit> = repository.limits().filter { it.account == Account.TFSA }.sortedBy { it.year }
 }

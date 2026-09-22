@@ -25,10 +25,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -43,24 +40,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import dev.celitracker.app.CeliTrackerApplication
 import dev.celitracker.app.R
+import dev.celitracker.app.ui.appViewModel
 import dev.celitracker.app.ui.components.AlertBanner
 import dev.celitracker.app.ui.components.CARD_SHAPE
 import dev.celitracker.app.ui.components.EmptyState
 import dev.celitracker.app.ui.components.IconBadge
+import dev.celitracker.app.ui.components.NoticeBanner
 import dev.celitracker.app.ui.components.RoomRing
 import dev.celitracker.app.ui.components.TileGrid
 import dev.celitracker.app.ui.components.WidthLimitedContent
@@ -68,10 +61,11 @@ import dev.celitracker.app.ui.components.isWideScreen
 import dev.celitracker.app.ui.format.formatAmount
 import dev.celitracker.app.ui.format.formatDate
 import dev.celitracker.app.ui.format.formatSignedAmount
+import dev.celitracker.app.ui.theme.AccountColors
+import dev.celitracker.app.ui.theme.colors
 import dev.celitracker.app.ui.theme.tabularFigures
 import dev.celitracker.engine.Account
 import dev.celitracker.engine.FhsaYear
-import dev.celitracker.engine.MonthlyExcess
 import dev.celitracker.engine.Profile
 import dev.celitracker.engine.SnapshotComparison
 import dev.celitracker.engine.TfsaYear
@@ -88,8 +82,7 @@ fun HomeScreen(
     onOpenJournal: (Account) -> Unit,
     onOpenSettings: () -> Unit,
 ) {
-    val application = LocalContext.current.applicationContext as CeliTrackerApplication
-    val viewModel: HomeViewModel = viewModel(factory = application.viewModelFactory)
+    val viewModel: HomeViewModel = appViewModel()
     LaunchedEffect(Unit) { viewModel.load() }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -139,9 +132,7 @@ fun HomeContent(
             modifier = cardModifier,
             name = stringResource(R.string.account_tfsa),
             icon = Icons.Filled.Savings,
-            color = MaterialTheme.colorScheme.primary,
-            container = MaterialTheme.colorScheme.primaryContainer,
-            onContainer = MaterialTheme.colorScheme.onPrimaryContainer,
+            colors = Account.TFSA.colors(),
             remainingRoom = state.tfsaCurrentYear?.endRoom,
             fraction = state.tfsaUsedFraction,
             tiles = listOfNotNull(
@@ -173,9 +164,7 @@ fun HomeContent(
                 modifier = cardModifier,
                 name = stringResource(R.string.account_fhsa),
                 icon = Icons.Filled.Home,
-                color = MaterialTheme.colorScheme.secondary,
-                container = MaterialTheme.colorScheme.secondaryContainer,
-                onContainer = MaterialTheme.colorScheme.onSecondaryContainer,
+                colors = Account.FHSA.colors(),
                 remainingRoom = state.fhsaRemainingRoom,
                 fraction = state.fhsaUsedFraction,
                 tiles = listOfNotNull(
@@ -234,10 +223,9 @@ private fun UsageAlert(usage: Usage?, year: Int) {
     when (u.level) {
         UsageLevel.NORMAL -> Unit
 
-        UsageLevel.WARNING -> AlertBanner(
+        UsageLevel.WARNING -> NoticeBanner(
             stringResource(R.string.alert_usage_warning, u.percent ?: 0, year, u.remaining.formatAmount()),
             Icons.Filled.Info,
-            severe = false,
         )
 
         UsageLevel.CRITICAL -> AlertBanner(
@@ -264,11 +252,8 @@ private fun NoFhsa(onOpenSettings: () -> Unit, modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        IconBadge(
-            icon = Icons.Filled.Home,
-            backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
-            tint = MaterialTheme.colorScheme.onSecondaryContainer,
-        )
+        val colors = Account.FHSA.colors()
+        IconBadge(icon = Icons.Filled.Home, backgroundColor = colors.container, tint = colors.onContainer)
         Column(modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.account_fhsa), style = MaterialTheme.typography.titleMedium)
             Text(
@@ -289,9 +274,7 @@ private fun NoFhsa(onOpenSettings: () -> Unit, modifier: Modifier = Modifier) {
 private fun AccountCard(
     name: String,
     icon: ImageVector,
-    color: Color,
-    container: Color,
-    onContainer: Color,
+    colors: AccountColors,
     remainingRoom: BigDecimal?,
     fraction: Float?,
     tiles: List<Pair<String, String>>,
@@ -312,11 +295,11 @@ private fun AccountCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(6.dp)
-                .background(color),
+                .background(colors.accent),
         )
         Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                IconBadge(icon = icon, backgroundColor = container, tint = onContainer)
+                IconBadge(icon = icon, backgroundColor = colors.container, tint = colors.onContainer)
                 Text(name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                 Icon(
                     Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -333,7 +316,7 @@ private fun AccountCard(
                     )
                     Text(stringResource(R.string.home_room_left), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                if (fraction != null) RoomRing(fraction = fraction, color = color)
+                if (fraction != null) RoomRing(fraction = fraction, color = colors.accent)
             }
             TileGrid(tiles)
             alerts()
@@ -341,7 +324,7 @@ private fun AccountCard(
                 FilledTonalButton(
                     onClick = onAdd,
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.filledTonalButtonColors(containerColor = container, contentColor = onContainer),
+                    colors = ButtonDefaults.filledTonalButtonColors(containerColor = colors.container, contentColor = colors.onContainer),
                 ) {
                     Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                     Text(stringResource(R.string.action_add), modifier = Modifier.padding(start = 8.dp))

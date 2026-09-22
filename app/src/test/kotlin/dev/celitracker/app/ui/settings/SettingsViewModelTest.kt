@@ -14,7 +14,7 @@ import dev.celitracker.engine.Settings
 import dev.celitracker.engine.UNSAVED_ID
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.test.Test
@@ -22,8 +22,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
+@ExtendWith(TestMainDispatcher::class)
 class SettingsViewModelTest {
-
     private val fixture = TestRepository()
     private val repository = fixture.repository
 
@@ -33,12 +33,6 @@ class SettingsViewModelTest {
 
     /** The startup CRA reading also writes `message`, and a StateFlow keeps only the latest value. */
     private val offline: suspend (String) -> String = { throw java.io.IOException("offline") }
-
-    companion object {
-        @JvmStatic
-        @BeforeAll
-        fun before() = TestMainDispatcher.install()
-    }
 
     @Test
     fun `saveProfile persists the valid profile`() = runTest {

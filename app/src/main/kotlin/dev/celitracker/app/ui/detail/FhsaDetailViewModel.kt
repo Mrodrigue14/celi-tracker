@@ -25,7 +25,7 @@ class FhsaDetailViewModel(private val repository: Repository) : ViewModel() {
             }
             val transactions = repository.transactions()
             _uiState.value = FhsaDetailUiState(
-                yearsWithTransactions = transactions.filter { it.account == Account.FHSA }.map { it.date.year }.toSet(),
+                yearsWithTransactions = transactions.yearsWith(Account.FHSA),
                 rows = FhsaEngine.roomByYear(profile, transactions, LocalDate.now().year),
             )
         }

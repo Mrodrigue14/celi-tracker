@@ -13,28 +13,21 @@ import dev.celitracker.engine.Transaction
 import dev.celitracker.engine.TransactionType
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
+@ExtendWith(TestMainDispatcher::class)
 class JournalViewModelTest {
-
     private val fixture = TestRepository()
     private val repository = fixture.repository
 
     /** Born in 2002: eligible for the TFSA in 2020. */
     private val profile = Profile(birthYear = 2002, fhsaOpeningDate = LocalDate.of(2023, 6, 1))
-
-    companion object {
-        @JvmStatic
-        @BeforeAll
-        fun before() = TestMainDispatcher.install()
-    }
 
     private fun tfsaDeposit(date: LocalDate, amount: String) = Transaction(Account.TFSA, date, TransactionType.DEPOSIT, BigDecimal(amount))
 

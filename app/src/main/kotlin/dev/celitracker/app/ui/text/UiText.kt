@@ -14,6 +14,7 @@ import dev.celitracker.data.CraFailureReason
 import dev.celitracker.data.ImportFailureReason
 import dev.celitracker.data.InputRejectionReason
 import dev.celitracker.engine.Account
+import dev.celitracker.engine.TransactionType
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -51,6 +52,14 @@ fun Account.labelRes(): Int = when (this) {
 
 @Composable
 fun Account.label(): String = stringResource(labelRes())
+
+@Composable
+fun TransactionType.label(): String = stringResource(
+    when (this) {
+        TransactionType.DEPOSIT -> R.string.type_deposit
+        TransactionType.WITHDRAWAL -> R.string.type_withdrawal
+    },
+)
 
 @StringRes
 fun InputRejectionReason.textRes(): Int = when (this) {
