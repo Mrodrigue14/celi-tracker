@@ -11,7 +11,10 @@ data class FhsaYear(
     val withdrawals: BigDecimal,
     val carryForwardOut: BigDecimal,
     val lifetimeLimitLeft: BigDecimal,
-)
+) {
+    /** Negative on over-contribution, unlike [Usage.remaining], which stops at zero. */
+    val remainingRoom: BigDecimal get() = yearRoom - deposits
+}
 
 /** Never shares room-restoration logic with [TfsaEngine]: an FHSA withdrawal restores nothing. */
 object FhsaEngine {

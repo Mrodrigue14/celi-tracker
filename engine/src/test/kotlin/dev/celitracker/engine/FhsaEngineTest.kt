@@ -6,12 +6,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-private fun toMoney(value: String): BigDecimal = BigDecimal(value).toMoney()
-
-private fun fhsaDeposit(date: String, amount: String) = Transaction(Account.FHSA, LocalDate.parse(date), TransactionType.DEPOSIT, toMoney(amount))
-
-private fun fhsaWithdrawal(date: String, amount: String) = Transaction(Account.FHSA, LocalDate.parse(date), TransactionType.WITHDRAWAL, toMoney(amount))
-
 class FhsaEngineTest {
 
     private val profileOpened2023 = Profile(
@@ -25,20 +19,20 @@ class FhsaEngineTest {
             .roomByYear(profileOpened2023, emptyList(), upTo = 2026)
             .associateBy { it.year }
 
-        assertEquals(toMoney("0.00"), room.getValue(2023).carryForwardIn)
-        assertEquals(toMoney("8000.00"), room.getValue(2023).yearRoom)
-        assertEquals(toMoney("8000.00"), room.getValue(2023).carryForwardOut)
+        assertEquals(money("0.00"), room.getValue(2023).carryForwardIn)
+        assertEquals(money("8000.00"), room.getValue(2023).yearRoom)
+        assertEquals(money("8000.00"), room.getValue(2023).carryForwardOut)
 
-        assertEquals(toMoney("8000.00"), room.getValue(2024).carryForwardIn)
-        assertEquals(toMoney("16000.00"), room.getValue(2024).yearRoom)
+        assertEquals(money("8000.00"), room.getValue(2024).carryForwardIn)
+        assertEquals(money("16000.00"), room.getValue(2024).yearRoom)
         // 8000, not 16000: the carry-forward does not accumulate.
-        assertEquals(toMoney("8000.00"), room.getValue(2024).carryForwardOut)
+        assertEquals(money("8000.00"), room.getValue(2024).carryForwardOut)
 
-        assertEquals(toMoney("16000.00"), room.getValue(2025).yearRoom)
-        assertEquals(toMoney("8000.00"), room.getValue(2025).carryForwardOut)
+        assertEquals(money("16000.00"), room.getValue(2025).yearRoom)
+        assertEquals(money("8000.00"), room.getValue(2025).carryForwardOut)
 
-        assertEquals(toMoney("16000.00"), room.getValue(2026).yearRoom)
-        assertEquals(toMoney("40000.00"), room.getValue(2026).lifetimeLimitLeft)
+        assertEquals(money("16000.00"), room.getValue(2026).yearRoom)
+        assertEquals(money("40000.00"), room.getValue(2026).lifetimeLimitLeft)
     }
 
     @Test
@@ -58,40 +52,40 @@ class FhsaEngineTest {
     @Test
     fun `a withdrawal never restores room`() {
         val transactions = listOf(
-            fhsaDeposit("2023-10-01", "8000.00"),
-            fhsaWithdrawal("2023-11-01", "8000.00"),
+            deposit("2023-10-01", "8000.00", Account.FHSA),
+            withdrawal("2023-11-01", "8000.00", Account.FHSA),
         )
 
         val room = FhsaEngine
             .roomByYear(profileOpened2023, transactions, upTo = 2024)
             .associateBy { it.year }
 
-        assertEquals(toMoney("8000.00"), room.getValue(2023).withdrawals)
+        assertEquals(money("8000.00"), room.getValue(2023).withdrawals)
         // 40000 - 8000: contributions stay consumed for life.
-        assertEquals(toMoney("32000.00"), room.getValue(2023).lifetimeLimitLeft)
-        assertEquals(toMoney("0.00"), room.getValue(2024).carryForwardIn)
-        assertEquals(toMoney("8000.00"), room.getValue(2024).yearRoom)
+        assertEquals(money("32000.00"), room.getValue(2023).lifetimeLimitLeft)
+        assertEquals(money("0.00"), room.getValue(2024).carryForwardIn)
+        assertEquals(money("8000.00"), room.getValue(2024).yearRoom)
     }
 
     @Test
     fun `a partial contribution carries forward the unused balance`() {
-        val transactions = listOf(fhsaDeposit("2023-10-01", "3000.00"))
+        val transactions = listOf(deposit("2023-10-01", "3000.00", Account.FHSA))
 
         val room = FhsaEngine
             .roomByYear(profileOpened2023, transactions, upTo = 2024)
             .associateBy { it.year }
 
         // 8000 - 3000 = 5000 unused.
-        assertEquals(toMoney("5000.00"), room.getValue(2023).carryForwardOut)
-        assertEquals(toMoney("13000.00"), room.getValue(2024).yearRoom)
+        assertEquals(money("5000.00"), room.getValue(2023).carryForwardOut)
+        assertEquals(money("13000.00"), room.getValue(2024).yearRoom)
     }
 
     @Test
     fun `the 40000 lifetime limit caps the annual room`() {
         val transactions = listOf(
-            fhsaDeposit("2023-10-01", "8000.00"),
-            fhsaDeposit("2024-10-01", "16000.00"),
-            fhsaDeposit("2025-10-01", "16000.00"),
+            deposit("2023-10-01", "8000.00", Account.FHSA),
+            deposit("2024-10-01", "16000.00", Account.FHSA),
+            deposit("2025-10-01", "16000.00", Account.FHSA),
         )
 
         val room = FhsaEngine
@@ -99,8 +93,8 @@ class FhsaEngineTest {
             .associateBy { it.year }
 
         // 8000 + 16000 + 16000 = 40000.
-        assertEquals(toMoney("0.00"), room.getValue(2025).lifetimeLimitLeft)
-        assertEquals(toMoney("0.00"), room.getValue(2026).yearRoom)
+        assertEquals(money("0.00"), room.getValue(2025).lifetimeLimitLeft)
+        assertEquals(money("0.00"), room.getValue(2026).yearRoom)
     }
 
     @Test

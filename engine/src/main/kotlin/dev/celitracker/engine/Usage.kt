@@ -29,17 +29,20 @@ data class Usage(val room: BigDecimal, val contributed: BigDecimal) {
 }
 
 /** Null if a limit is missing up to [year]: underestimated room would raise false over-contribution alerts. */
+fun tfsaUsage(rows: List<TfsaYear>, year: Int): Usage? {
+    if (rows.any { it.year <= year && it.limitMissing }) return null
+    return rows.find { it.year == year }?.let { Usage(room = it.startRoom, contributed = it.deposits) }
+}
+
+fun fhsaUsage(rows: List<FhsaYear>, year: Int): Usage? = rows
+    .find { it.year == year }
+    ?.let { Usage(room = it.yearRoom, contributed = it.deposits) }
+
 fun tfsaUsage(
     profile: Profile,
     limits: List<AnnualLimit>,
     transactions: List<Transaction>,
     year: Int,
-): Usage? {
-    val rows = TfsaEngine.roomByYear(profile, limits, transactions, year)
-    if (rows.any { it.limitMissing }) return null
-    return rows.find { it.year == year }?.let { Usage(room = it.startRoom, contributed = it.deposits) }
-}
+): Usage? = tfsaUsage(TfsaEngine.roomByYear(profile, limits, transactions, year), year)
 
-fun fhsaUsage(profile: Profile, transactions: List<Transaction>, year: Int): Usage? = FhsaEngine.roomByYear(profile, transactions, year)
-    .find { it.year == year }
-    ?.let { Usage(room = it.yearRoom, contributed = it.deposits) }
+fun fhsaUsage(profile: Profile, transactions: List<Transaction>, year: Int): Usage? = fhsaUsage(FhsaEngine.roomByYear(profile, transactions, year), year)
