@@ -94,8 +94,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     // No org.jetbrains.kotlin.* plugin on this module (AGP 9 built-in Kotlin): kotlin("test") is not guaranteed.
-    testImplementation("org.jetbrains.kotlin:kotlin-test:2.4.10")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:2.4.10")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:2.4.20")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:2.4.20")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
     // TestRepository calls the contextless JVM overload of Room.databaseBuilder. `implementation` resolves
     // to the -android variant, so without these -jvm coordinates compileDebugUnitTestKotlin fails with
