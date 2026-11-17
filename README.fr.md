@@ -51,6 +51,12 @@ Déjà livré :
    remplacer
 9. APK de release signé
 
+À venir :
+
+10. Google Play : un test interne d'abord, puis un test fermé et la fiche
+    publique. Les étapes, les textes de la fiche et les visuels sont dans
+    [`docs/play-store/`](docs/play-store/README.md) (en anglais).
+
 ## APK de release
 
 `./gradlew :app:assembleRelease` produit un APK réduit par R8. Il n'est signé
@@ -67,6 +73,9 @@ valeur officielle. Pour connaître vos droits de cotisation, fiez-vous à Mon
 dossier de l'Agence du revenu du Canada.
 
 ## Confidentialité
+
+La politique de confidentialité de l'appli est dans
+[`PRIVACY.fr.md`](PRIVACY.fr.md).
 
 Le dépôt est public et ne contient aucune donnée financière nominative. Les
 scénarios de test sont fictifs, et `.gitignore` exclut les bases de données et
