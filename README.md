@@ -45,6 +45,12 @@ Done:
    home screen sets it beside the calculated room without replacing it
 9. Signed release APK
 
+Next:
+
+10. Google Play: an internal test first, then a closed test and the public
+    listing. The steps, store text and graphics are in
+    [`docs/play-store/`](docs/play-store/README.md).
+
 ## Release APK
 
 `./gradlew :app:assembleRelease` builds a minified APK. It is signed only when
@@ -60,6 +66,8 @@ calculated from the data the user enters and have no official value. To know
 your contribution room, rely on My Account at the Canada Revenue Agency.
 
 ## Privacy
+
+The app's privacy policy is in [`PRIVACY.md`](PRIVACY.md).
 
 The repository is public and holds no named financial data. The test
 scenarios are made up, and `.gitignore` excludes databases and JSON exports.
